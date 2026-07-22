@@ -95,6 +95,18 @@ Jangan isi `S3_ENDPOINT` dengan `http://minio:9000` pada Vercel. Itu hanya host 
 4. Klik **Deploy**. Vercel menjalankan `npm ci` kemudian `npm run build`; build ini sudah menjalankan `prisma generate` tetapi **tidak** menjalankan migration otomatis. Migration sengaja dijalankan pada langkah 2 agar preview/redeploy tidak dapat mengubah database production secara tidak sengaja.
 5. Setelah deployment selesai, buka URL `*.vercel.app`, login dengan admin bootstrap, dan uji halaman Dashboard, Repository, Request, Directory, serta logout.
 
+### Menyalin seluruh data Docker lokal ke Neon
+
+Gunakan ini hanya bila data yang ada pada PostgreSQL Docker lokal memang harus menjadi isi Neon. Proses ini **menghapus dan mengganti tabel/data aplikasi di Neon**. Pastikan Docker lokal sedang menyala dan connection string Neon sudah memakai password yang aman.
+
+```bash
+export NEON_DATABASE_URL='postgresql://...connection-string-neon...'
+CONFIRM_NEON_REPLACE=REPLACE_NEON_DATA npm run db:clone:local-to-neon
+unset NEON_DATABASE_URL
+```
+
+Script tidak menyimpan connection string maupun membuat file dump di repository. Jika Neon sebelumnya sudah menjalankan migration, riwayat Prisma tetap dipertahankan; isi tabel aplikasi akan sama dengan database Docker lokal pada saat perintah dijalankan.
+
 ### 4. Hubungkan domain dan URL yang stabil (opsional)
 
 1. Di Vercel pilih project → **Settings → Domains**, lalu tambahkan domain perusahaan.

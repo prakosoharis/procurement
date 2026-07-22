@@ -12,7 +12,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",
     "db:seed": "prisma db seed",
-    "db:seed:production": "node prisma/seed-production.js"
+    "db:seed:production": "node prisma/seed-production.js",
+    "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js"
   },
   "engines": { "node": "22.x" },
   "prisma": { "seed": "node prisma/seed.js" },
