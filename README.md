@@ -34,9 +34,112 @@ npm run db:seed
 npm run dev
 ```
 
-## Staging / production
+## Deploy production: Vercel + Neon
 
-Tidak ada kode yang bergantung pada MinIO secara khusus. Ganti variabel `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, dan `S3_BUCKET` dengan kredensial S3/private S3-compatible storage. Tetap gunakan bucket privat dan URL download bertanda tangan (presigned URL).
+Panduan ini memakai **Vercel untuk aplikasi** dan **Neon untuk PostgreSQL**. Docker, PostgreSQL, dan MinIO di `docker-compose.yml` hanya untuk development lokal; Vercel tidak menjalankan Docker Compose.
+
+### 0. Prasyarat dan keputusan penting
+
+1. Pastikan branch `main` sudah dipush ke repository GitHub.
+2. Siapkan akun Vercel dan Neon. Paket gratis cocok untuk demo/internal dengan trafik kecil; periksa batas layanan sebelum dipakai untuk kebutuhan perusahaan.
+3. Aplikasi ini masih menggunakan API S3-compatible untuk file SOP. **MinIO lokal tidak bisa diakses oleh Vercel.** Database dan aplikasi dapat dideploy sekarang, tetapi upload/preview/download dokumen baru siap production setelah storage production dikonfigurasi. Migrasi ke Google Drive yang sedang ditunda dapat dikerjakan terpisah tanpa mengubah URL Vercel.
+
+### 1. Buat database Neon
+
+1. Masuk ke [Neon Console](https://console.neon.tech), lalu pilih **New project**.
+2. Pilih region yang paling dekat dengan pengguna (mis. Singapore), PostgreSQL versi default, lalu beri nama `procurement-production`.
+3. Setelah project jadi, buka **Connect** dan salin **pooled connection string** (biasanya hostname memuat `-pooler`). Jangan bagikan atau commit URL ini.
+4. Simpan URL tersebut pada password manager. URL harus tetap memuat `sslmode=require` jika Neon memberikannya.
+
+### 2. Terapkan schema ke Neon (sekali untuk database baru)
+
+Repository sudah memiliki baseline migration di `prisma/migrations`. Jalankan dari terminal lokal, dengan URL Neon disimpan sementara pada environment shell Anda:
+
+```bash
+export DATABASE_URL='postgresql://...connection-string-neon...'
+npm ci
+npm run db:migrate:deploy
+```
+
+Verifikasi hasilnya:
+
+```bash
+npm run db:migrate:status
+```
+
+Untuk bootstrap master data dan **satu** admin production, jalankan sekali. Script ini tidak membuat akun demo lokal.
+
+```bash
+export BOOTSTRAP_ADMIN_EMAIL='admin@perusahaan.com'
+export BOOTSTRAP_ADMIN_PASSWORD='gunakan-password-kuat-minimal-12-karakter'
+export BOOTSTRAP_ADMIN_NAME='Nama Administrator'
+npm run db:seed:production
+unset BOOTSTRAP_ADMIN_PASSWORD
+```
+
+Setelah itu, masuk dengan akun tersebut dan buat akun pengguna lain dari aplikasi. Jangan menjalankan `npm run db:seed` terhadap Neon karena itu adalah seed demo lokal.
+
+### 3. Siapkan environment variables di Vercel
+
+1. Buka [Vercel](https://vercel.com), login dengan GitHub, lalu pilih **Add New → Project**.
+2. Import `prakosoharis/procurement`, pilih branch production `main`, dan biarkan framework terdeteksi sebagai **Next.js**.
+3. Pada **Environment Variables**, tambahkan variabel berikut untuk target **Production** (dan Preview bila ingin deployment preview ikut memakai database terpisah):
+
+| Nama | Nilai |
+| --- | --- |
+| `DATABASE_URL` | pooled connection string dari Neon production |
+| `AUTH_SECRET` | secret acak minimal 32 byte; buat dengan `openssl rand -base64 48` |
+
+Jangan isi `S3_ENDPOINT` dengan `http://minio:9000` pada Vercel. Itu hanya host internal Docker lokal. Tambahkan konfigurasi storage production nanti setelah keputusan Google Drive selesai.
+
+4. Klik **Deploy**. Vercel menjalankan `npm ci` kemudian `npm run build`; build ini sudah menjalankan `prisma generate` tetapi **tidak** menjalankan migration otomatis. Migration sengaja dijalankan pada langkah 2 agar preview/redeploy tidak dapat mengubah database production secara tidak sengaja.
+5. Setelah deployment selesai, buka URL `*.vercel.app`, login dengan admin bootstrap, dan uji halaman Dashboard, Repository, Request, Directory, serta logout.
+
+### 4. Hubungkan domain dan URL yang stabil (opsional)
+
+1. Di Vercel pilih project → **Settings → Domains**, lalu tambahkan domain perusahaan.
+2. Ikuti record DNS yang diberikan Vercel sampai statusnya valid.
+3. URL deployment preview memang berubah-ubah. Gunakan domain production atau URL production Vercel sebagai URL aplikasi yang stabil. Endpoint API aplikasi relatif (`/api/...`), sehingga tidak perlu diubah ketika domain berubah.
+
+### 5. Alur deploy berikutnya
+
+Untuk perubahan aplikasi biasa:
+
+```bash
+git add .
+git commit -m "deskripsi perubahan"
+git push origin main
+```
+
+Push ke `main` akan memicu deployment production Vercel. Pull request/branch lain sebaiknya memakai Preview Deployment dan database Neon terpisah agar data production tidak tercampur.
+
+Untuk perubahan `prisma/schema.prisma`:
+
+```bash
+npx prisma migrate dev --name nama_perubahan
+git add prisma/migrations prisma/schema.prisma
+git commit -m "add database migration"
+git push origin main
+```
+
+Sebelum atau tepat saat rilis production, jalankan migration yang sudah ter-commit ke database Neon production:
+
+```bash
+export DATABASE_URL='postgresql://...connection-string-neon-production...'
+npm run db:migrate:deploy
+```
+
+Selalu backup data dan periksa SQL migration sebelum menjalankannya pada production. Jangan gunakan `prisma db push` atau `prisma migrate reset` terhadap Neon production.
+
+### Checklist go-live
+
+- [ ] `DATABASE_URL` Neon hanya tersimpan sebagai secret, bukan Git.
+- [ ] `AUTH_SECRET` berbeda dari lokal dan cukup panjang.
+- [ ] Migration status menunjukkan semua migration diterapkan.
+- [ ] Tidak ada akun demo `demo12345` di production.
+- [ ] Storage production untuk upload SOP sudah diputuskan dan diuji.
+- [ ] Domain production, akses admin, dan logout sudah diuji.
+- [ ] Backup/retention Neon dan batas penggunaan Vercel sudah ditinjau.
 
 ## Batas MVP yang disengaja
 
