@@ -23,6 +23,7 @@ export async function POST(request){
   const user=await currentUser();
   if(!user)return NextResponse.json({error:'Authentication required'},{status:401});
   const {title,requestType='REVISION',description,sopDocumentId,changeType,clauseReference,currentText,proposedText,businessImpact,priority='MEDIUM',clientRequestKey}=await request.json();
+  if(requestType==='EXCEPTION'&&user.role!=='BU_PIC')return NextResponse.json({error:'Request for Exception hanya dapat diajukan oleh Business Unit.'},{status:403});
   if(!title||!description||!sopDocumentId||!changeType||!clauseReference||!proposedText||!clientRequestKey)return NextResponse.json({error:'Lengkapi SOP, pasal, jenis perubahan, usulan perubahan, dan alasan bisnis.'},{status:400});
   const existing=await db.sopRequest.findUnique({where:{clientRequestKey}});
   if(existing)return NextResponse.json({id:existing.id,duplicate:true},{status:200});

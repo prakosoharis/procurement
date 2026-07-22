@@ -26,8 +26,8 @@ export async function POST(request) {
     if (!owner) return NextResponse.json({error:'Selected PIC must belong to the selected business unit.'},{status:400});
     const document = await db.sopDocument.create({data:{businessUnitId,documentTypeId,title,language,ownerId,status:'DRAFT',currentVersion:'v1.0'}});
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_'), key = `documents/${businessUnitId}/${document.id}/v1.0/${randomUUID()}-${safeName}`;
-    await uploadObject({key,body:Buffer.from(await file.arrayBuffer()),contentType:file.type});
-    const version = await db.sopVersion.create({data:{sopDocumentId:document.id,versionNo:'v1.0',fileKey:key,fileName:file.name,fileSize:file.size,contentType:file.type,changeSummary:'Initial upload',approvalStatus:'DRAFT'}});
+    const stored = await uploadObject({key,body:Buffer.from(await file.arrayBuffer()),contentType:file.type});
+    const version = await db.sopVersion.create({data:{sopDocumentId:document.id,versionNo:'v1.0',fileKey:stored.key,fileName:file.name,fileSize:file.size,contentType:file.type,changeSummary:'Initial upload',approvalStatus:'DRAFT'}});
     await writeAudit(user.id,'SopDocument',document.id,'CREATE_DRAFT',JSON.stringify({version:version.versionNo,fileName:file.name}));
     return NextResponse.json({id:document.id,versionId:version.id,status:'DRAFT',version:'v1.0'},{status:201});
   } catch (error) { console.error(error); return NextResponse.json({error:'Document upload failed.'},{status:500}); }

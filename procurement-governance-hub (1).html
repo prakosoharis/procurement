@@ -348,12 +348,12 @@ tr{cursor:pointer}
   </div>
 
   <!-- Quick Actions -->
-  <div class="grid-actions">
-    <div class="card action-card" onclick="nav('repository')"><div class="action-icon">📄</div><div class="action-title">Request for Exception</div><div class="action-sub">Generate Template</div></div>
-    <div class="card action-card" onclick="nav('repository')"><div class="action-icon">📤</div><div class="action-title">Upload / Update SOP</div><div class="action-sub">Start Refinement</div></div>
+  <div class="grid-actions" id="quickActions">
+    <div class="card action-card" data-quick-action="exception" onclick="nav('requests')"><div class="action-icon">📄</div><div class="action-title">Request for Exception</div><div class="action-sub">Ajukan pengecualian</div></div>
+    <div class="card action-card" data-quick-action="upload" onclick="nav('repository')"><div class="action-icon">📤</div><div class="action-title">Upload / Update SOP</div><div class="action-sub">Admin & Tim Compliance</div></div>
     <div class="card action-card" onclick="nav('insights')"><div class="action-icon">📋</div><div class="action-title">View My Actions</div><div class="action-sub">Ask AI Copilot</div></div>
     <div class="card action-card" onclick="nav('requests')"><div class="action-icon">☑️</div><div class="action-title">My To-Dos</div><div class="action-sub">3 actions due this week</div></div>
-    <div class="card action-card accent" onclick="nav('insights')"><div class="action-icon">🤖</div><div class="action-title">AI Copilot</div><div class="action-sub">Ask strategic or task questions</div></div>
+    <div class="card action-card accent" data-quick-action="copilot" onclick="nav('insights')"><div class="action-icon">🤖</div><div class="action-title">AI Copilot</div><div class="action-sub">Ask strategic or task questions</div></div>
   </div>
 
   <!-- Bottom Widgets -->
@@ -413,7 +413,7 @@ tr{cursor:pointer}
 <div class="page gap-20" id="page-repository">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div><h2 style="font-size:20px;font-weight:700">SOP Repository</h2><p style="font-size:14px;color:var(--muted-fg);margin-top:4px">Kelola seluruh dokumen SOP dari semua Bisnis Unit</p></div>
-    <div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm admin-only" onclick="openMasterDataModal()">⚙ Kelola Master Data</button><button class="btn btn-primary btn-sm admin-only" onclick="openCreateSopModal()">+ Buat SOP Baru</button></div>
+    <div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm admin-only" onclick="openMasterDataModal()">⚙ Kelola Master Data</button><button class="btn btn-primary btn-sm compliance-manager-only" onclick="openCreateSopModal()">+ Buat SOP Baru</button></div>
   </div>
   <div class="repo-summary" id="repositorySummary"></div>
   <div class="repo-tabs"><button class="repo-tab active" data-repo-view="library" onclick="switchRepositoryView('library')">SOP Library & Versions</button><button class="repo-tab" data-repo-view="compliance" onclick="switchRepositoryView('compliance')">Document Compliance</button></div>
@@ -744,7 +744,7 @@ Skor Kepatuhan BU Logistik A: 78% (Kategori: Sebagian Patuh)</textarea>
 <script>
 
 // SOP DATA
-var repositoryManagerRoles=['COMPLIANCE_ADMIN','CORPORATE_PROCUREMENT'],viewerAccessRole=new URLSearchParams(window.location.search).get('role')||'';
+var repositoryManagerRoles=['COMPLIANCE_ADMIN','COMPLIANCE_REVIEWER'],viewerAccessRole=new URLSearchParams(window.location.search).get('role')||'';
 var sopData=[
   {id:"SOP-001",name:"SOP Proses Tender Terbuka NANOVEST",group:"SMMA",bu:"NANOVEST",industry:"Financial Services",version:"v2.1",status:"Aktif",pic:{name:"Anita Pramesti",email:"anita.p@nanovest.co.id",phone:"+62 812-1000-1001"},lastUpdated:"12 Jul 2026",history:[{version:"v2.1",date:"12 Jul 2026",author:"Anita Pramesti",notes:"Penyesuaian proses tender digital"}]},
   {id:"SOP-002",name:"SOP Manajemen Vendor NARINDO",group:"SMMA",bu:"NARINDO",industry:"Financial Services",version:"v1.4",status:"Aktif",pic:{name:"Rizky Hidayat",email:"rizky.h@narindo.co.id",phone:"+62 812-1000-1002"},lastUpdated:"10 Jul 2026",history:[{version:"v1.4",date:"10 Jul 2026",author:"Rizky Hidayat",notes:"Update due diligence vendor"}]},
@@ -900,7 +900,7 @@ function openSopDetail(idx){
     hHtml+='<div style="display:flex;gap:12px;margin-bottom:12px"><div style="display:flex;flex-direction:column;align-items:center"><div style="width:10px;height:10px;border-radius:50%;background:'+(i===0?'var(--primary)':'var(--border)')+';flex-shrink:0"></div>'+(i<s.history.length-1?'<div style="width:1px;flex:1;background:var(--border)"></div>':'')+'</div><div><div><span class="badge" style="font-family:monospace">'+h.version+'</span> <span style="font-size:10px;color:var(--muted-fg)">'+h.date+'</span></div><div style="font-size:12px;margin-top:4px">'+h.notes+'</div><div style="font-size:10px;color:var(--muted-fg)">oleh '+h.author+'</div></div></div>';
   });
   document.getElementById('sopModalHistory').innerHTML=hHtml||'<div style="font-size:12px;color:var(--muted-fg);padding:12px 0">Belum ada riwayat versi.</div>';
-  document.getElementById('sopModalActions').innerHTML='<button class="btn btn-primary btn-sm" style="flex:1" onclick="closeModal(\'sopDetailModal\');openUpdateSop('+idx+')">✏️ Update SOP</button>'+(s.status==='Draft'?'<button class="btn btn-outline btn-sm" onclick="approveSop('+idx+')">✓ Approve</button>':'')+'<button class="btn btn-outline btn-sm" onclick="closeModal(\'sopDetailModal\')">Tutup</button>';
+  var canManage=repositoryManagerRoles.includes(viewerAccessRole);document.getElementById('sopModalActions').innerHTML=(canManage?'<button class="btn btn-primary btn-sm" style="flex:1" onclick="closeModal(\'sopDetailModal\');openUpdateSop('+idx+')">✏️ Update SOP</button>'+(s.status==='Draft'?'<button class="btn btn-outline btn-sm" onclick="approveSop('+idx+')">✓ Approve</button>':''):'')+'<button class="btn btn-outline btn-sm" onclick="closeModal(\'sopDetailModal\')">Tutup</button>';
   openModal('sopDetailModal');
 }
 var requirementContext=null;
@@ -924,7 +924,7 @@ function populateMasterDataSelectors(){var group=document.getElementById('master
 function openCreatePicModal(){var select=document.getElementById('newPicBusinessUnit');select.innerHTML=optionList(repositoryUnits,'Pilih Business Unit');openModal('createPicModal')}
 async function createPic(event){event.preventDefault();var body={name:document.getElementById('newPicName').value,email:document.getElementById('newPicEmail').value,phone:document.getElementById('newPicPhone').value,jobTitle:document.getElementById('newPicJobTitle').value,locale:document.getElementById('newPicLocale').value,businessUnitId:document.getElementById('newPicBusinessUnit').value,temporaryPassword:document.getElementById('newPicPassword').value};var response=await fetch('/api/pics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),result=await response.json();if(!response.ok){showToast(result.error||'Gagal membuat PIC');return}event.currentTarget.reset();closeModal('createPicModal');showToast('PIC '+result.name+' berhasil ditambahkan');await loadPics();}
 async function createMasterData(event,kind){event.preventDefault();var form=event.currentTarget,body={kind:kind,name:form.elements.name.value.trim()};if(kind==='businessUnit'){body.organizationGroupId=document.getElementById('masterBuGroup').value;body.industryId=document.getElementById('masterBuIndustry').value}if(kind==='documentType'){body.code=document.getElementById('masterDocumentCode').value;body.category=document.getElementById('masterDocumentCategory').value}var response=await fetch('/api/master-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),result=await response.json();if(!response.ok){showToast(result.error||'Gagal membuat master data');return}form.reset();showToast('Master data berhasil ditambahkan');loadRepositoryData();}
-function openRequirementAction(bu,type,index){var name=(type==='mandatory'?mandatoryDocuments:additionalDocuments)[index],code=documentRequirementCode(type,index),available=documentAvailable(bu,type,index);if(liveRepositoryLoaded){var sopDocument=documentByRequirementKey[bu+'|'+code];if(sopDocument){openLiveDocumentUpdate(sopDocument);return}openRequirementCreateSop(bu,type,index,name,code);return}if(available){requirementContext={bu:bu,type:type,index:index,name:name,mode:'update'};document.getElementById('updateSopIndex').value='requirement';document.getElementById('updateSopTitle').value=name+' — '+bu;document.getElementById('updateSopCurrentVersion').value='v1.0';document.getElementById('updateSopNextVersion').value='v1.1';document.getElementById('updateSopNotes').value='';document.getElementById('updateSopFile').value='';openModal('updateSopModal')}else{openRequirementCreateSop(bu,type,index,name,code)}}
+function openRequirementAction(bu,type,index){if(!repositoryManagerRoles.includes(viewerAccessRole)){showToast('Upload dan update SOP hanya dapat dilakukan oleh Admin atau Tim Compliance.');return}var name=(type==='mandatory'?mandatoryDocuments:additionalDocuments)[index],code=documentRequirementCode(type,index),available=documentAvailable(bu,type,index);if(liveRepositoryLoaded){var sopDocument=documentByRequirementKey[bu+'|'+code];if(sopDocument){openLiveDocumentUpdate(sopDocument);return}openRequirementCreateSop(bu,type,index,name,code);return}if(available){requirementContext={bu:bu,type:type,index:index,name:name,mode:'update'};document.getElementById('updateSopIndex').value='requirement';document.getElementById('updateSopTitle').value=name+' — '+bu;document.getElementById('updateSopCurrentVersion').value='v1.0';document.getElementById('updateSopNextVersion').value='v1.1';document.getElementById('updateSopNotes').value='';document.getElementById('updateSopFile').value='';openModal('updateSopModal')}else{openRequirementCreateSop(bu,type,index,name,code)}}
 function showUpdateDocumentActions(sopDocument){var box=document.getElementById('updateSopDocumentActions'),preview=document.getElementById('updateSopPreviewLink'),download=document.getElementById('updateSopDownloadLink'),frame=document.getElementById('updateSopPreviewFrame');if(!box||!preview||!download||!frame)return;if(!sopDocument.fileKey){box.style.display='none';frame.style.display='none';return}var base='/api/files/download?key='+encodeURIComponent(sopDocument.fileKey),isPdf=sopDocument.contentType==='application/pdf'||/\.pdf$/i.test(sopDocument.fileName||'');box.style.display='block';download.href=base;download.download=sopDocument.fileName||'document';preview.href=base+'&mode=inline';preview.style.display=isPdf?'inline-flex':'none';frame.style.display=isPdf?'block':'none';frame.src=isPdf?base+'&mode=inline':'about:blank'}
 function renderUpdateHistory(sopDocument){var wrap=document.getElementById('updateSopHistoryWrap'),list=document.getElementById('updateSopHistory'),history=sopDocument.versionHistory||sopDocument.history||[];if(!wrap||!list)return;if(!history.length){wrap.style.display='none';return}wrap.style.display='block';list.innerHTML=history.map(function(item){var version=item.versionNo||item.version,status=item.approvalStatus||item.status||'DRAFT',date=item.uploadedAt?new Date(item.uploadedAt).toLocaleDateString('id-ID'):item.date||'—',note=item.changeSummary||item.notes||'Tidak ada catatan perubahan';return '<div style="padding:10px 12px;border-bottom:1px solid var(--border)"><div style="display:flex;justify-content:space-between;gap:8px"><span class="badge" style="font-family:monospace">'+version+'</span><span class="badge '+(status==='APPROVED'?'badge-green':'badge-amber')+'">'+(status==='APPROVED'?'Approved':'Draft')+'</span></div><div style="font-size:11px;margin-top:6px">'+note+'</div><div style="font-size:10px;color:var(--muted-fg);margin-top:4px">'+date+'</div></div>'}).join('')}
 function openLiveDocumentUpdate(sopDocument){requirementContext=null;document.getElementById('updateSopIndex').value=sopDocument.id;document.getElementById('updateSopTitle').value=sopDocument.title||sopDocument.name;document.getElementById('updateSopCurrentVersion').value=sopDocument.currentVersion||sopDocument.version||'v1.0';document.getElementById('updateSopNextVersion').value=nextVersion(sopDocument.currentVersion||sopDocument.version||'v1.0');document.getElementById('updateSopNotes').value='';document.getElementById('updateSopFile').value='';showUpdateDocumentActions(sopDocument);renderUpdateHistory(sopDocument);openModal('updateSopModal')}
@@ -961,7 +961,8 @@ var slides=[
 ];
 var curSlide=0;
 function goSlide(i){curSlide=i;var s=slides[i];
-  document.getElementById('heroImg').src=s.img;
+  var image=document.getElementById('heroImg');if(!image)return;
+  image.src=s.img;
   document.getElementById('heroBadge').textContent=s.badge;
   document.getElementById('heroTitle').textContent=s.title;
   document.getElementById('heroDesc').textContent=s.desc;
@@ -1046,11 +1047,13 @@ function getAIResponse(msg){
   return 'Saya adalah AI Compliance Copilot. Saya bisa membantu:\n\n1. Membuat Template SOP\n2. Cek Status Kepatuhan\n3. Rekomendasi Tindakan\n\nSilakan ajukan pertanyaan spesifik!';
 }
 
+function applyDashboardRole(role){var isAdmin=role==='COMPLIANCE_ADMIN',isBU=role==='BU_PIC',isComplianceManager=isAdmin||role==='COMPLIANCE_REVIEWER',quickActions=document.getElementById('quickActions'),exception=document.querySelector('[data-quick-action="exception"]'),upload=document.querySelector('[data-quick-action="upload"]'),copilot=document.querySelector('[data-quick-action="copilot"]');document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=isAdmin?'':'none'});document.querySelectorAll('.compliance-manager-only').forEach(function(el){el.style.display=isComplianceManager?'':'none'});if(exception)exception.style.display=isBU?'':'none';if(upload)upload.style.display=isComplianceManager?'':'none';if(quickActions&&copilot&&(isAdmin||isBU))quickActions.prepend(copilot)}
+
 // INIT
 document.addEventListener('DOMContentLoaded',function(){
   var initialPage=new URLSearchParams(window.location.search).get('page')||'home';
   var viewerRole=new URLSearchParams(window.location.search).get('role');
-  if(!['COMPLIANCE_ADMIN','CORPORATE_PROCUREMENT'].includes(viewerRole))document.querySelectorAll('.admin-only').forEach(function(el){el.style.display='none'});
+  applyDashboardRole(viewerRole);
   showPage(initialPage);
   // Each route renders only its own content. Dashboard content is removed from
   // non-home routes, instead of merely being hidden below another page.

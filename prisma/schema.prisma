@@ -228,3 +228,11 @@ model AuditLog {
   detail String?
   createdAt DateTime @default(now())
 }
+model StorageIntegration {
+  id String @id @default(cuid())
+  provider String @unique
+  folderId String
+  refreshTokenEncrypted String
+  connectedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

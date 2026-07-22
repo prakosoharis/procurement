@@ -107,6 +107,61 @@ unset NEON_DATABASE_URL
 
 Script tidak menyimpan connection string maupun membuat file dump di repository. Jika Neon sebelumnya sudah menjalankan migration, riwayat Prisma tetap dipertahankan; isi tabel aplikasi akan sama dengan database Docker lokal pada saat perintah dijalankan.
 
+## Google Drive sebagai storage dokumen
+
+Google Drive tersedia sebagai alternatif MinIO/S3. Integrasi ini memakai OAuth account pribadi: admin menghubungkan Drive satu kali, aplikasi membuat folder privat **Procurement Governance Hub**, dan refresh token disimpan terenkripsi di database. Jangan menyimpan client secret atau token di Git.
+
+### Uji Google Drive di Docker lokal
+
+1. Buat file `.env` dari `.env.example` bila belum ada, lalu isi nilai dari OAuth Client Google Cloud Anda:
+
+```dotenv
+STORAGE_PROVIDER="s3"
+GOOGLE_DRIVE_CLIENT_ID="nilai-client-id"
+GOOGLE_DRIVE_CLIENT_SECRET="nilai-client-secret"
+GOOGLE_DRIVE_REDIRECT_URI="http://localhost:3000/api/integrations/google-drive/callback"
+GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY="hasil-openssl-rand-base64-32"
+```
+
+2. Buat key enkripsi dengan terminal (jalankan sekali), lalu simpan hasilnya sebagai `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY`:
+
+```bash
+openssl rand -base64 32
+```
+
+3. Restart aplikasi agar environment variable terbaca. MinIO dan PostgreSQL tidak dihapus:
+
+```bash
+docker compose up -d
+```
+
+4. Login lokal sebagai `COMPLIANCE_ADMIN`, buka menu akun di kanan atas, lalu klik **Hubungkan Google Drive**. Login dan setujui akses untuk akun Drive pribadi Anda.
+5. Setelah kembali ke Repository, cek Drive: folder **Procurement Governance Hub** harus sudah dibuat otomatis.
+6. Ubah `STORAGE_PROVIDER` menjadi `google-drive`, restart aplikasi, lalu unggah PDF uji. File baru akan masuk Google Drive; MinIO tetap berjalan tetapi tidak dipakai oleh upload baru.
+
+```bash
+docker compose up -d
+```
+
+Untuk kembali memakai MinIO lokal, ubah kembali `STORAGE_PROVIDER="s3"` dan restart aplikasi. File lama yang disimpan di masing-masing provider tidak dipindahkan otomatis.
+
+### Aktifkan di Vercel
+
+1. Jalankan `npm run db:migrate:deploy` terhadap Neon setelah commit migration ini.
+2. Di Vercel → Project → Settings → Environment Variables, tambahkan untuk **Production**:
+
+| Nama | Nilai |
+| --- | --- |
+| `STORAGE_PROVIDER` | `google-drive` |
+| `GOOGLE_DRIVE_CLIENT_ID` | OAuth Client ID Google Cloud |
+| `GOOGLE_DRIVE_CLIENT_SECRET` | OAuth Client Secret Google Cloud |
+| `GOOGLE_DRIVE_REDIRECT_URI` | `https://procurement-bice.vercel.app/api/integrations/google-drive/callback` |
+| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | key base64 32-byte yang sama dan stabil |
+
+3. Deploy Vercel, login sebagai admin pada URL production, lalu klik **Hubungkan Google Drive** sekali lagi. Langkah ini wajib dilakukan di production karena token koneksi disimpan pada database Neon, bukan pada PostgreSQL Docker lokal.
+
+Scope yang digunakan adalah `drive.file`, yaitu akses sempit untuk file yang dibuat/diakses oleh aplikasi. Google merekomendasikan scope sesempit mungkin; refresh token diperlukan agar aplikasi dapat mengakses file ketika admin tidak sedang membuka browser. [Google Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth), [OAuth web-server](https://developers.google.com/identity/protocols/oauth2/web-server)
+
 ### 4. Hubungkan domain dan URL yang stabil (opsional)
 
 1. Di Vercel pilih project → **Settings → Domains**, lalu tambahkan domain perusahaan.
