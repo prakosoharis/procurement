@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'; import { db } from '../../../lib/db'; import { canReview,currentUser } from '../../../lib/current-user';
+export async function GET(){const user=await currentUser();if(!canReview(user))return NextResponse.json({error:'Reviewer access required'},{status:403});const rows=await db.finding.findMany({where:{status:'PENDING'},include:{request:true},orderBy:{createdAt:'asc'}});return NextResponse.json(rows)}

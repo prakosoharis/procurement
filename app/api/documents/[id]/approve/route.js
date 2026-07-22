@@ -1,0 +1,6 @@
+import { NextResponse } from 'next/server';
+import { db } from '../../../../../lib/db';
+import { currentUser } from '../../../../../lib/current-user';
+import { canReview } from '../../../../../lib/current-user';
+import { writeAudit } from '../../../../../lib/documents';
+export async function POST(request,{params}) { const user=await currentUser(); if(!canReview(user))return NextResponse.json({error:'Compliance reviewer access required'},{status:403}); const {id}=await params; const document=await db.sopDocument.findUnique({where:{id},include:{versions:{orderBy:{uploadedAt:'desc'},take:1}}}); if(!document?.versions[0])return NextResponse.json({error:'Draft document not found'},{status:404}); const version=document.versions[0]; if(version.approvalStatus!=='DRAFT')return NextResponse.json({error:'Only draft versions can be approved'},{status:409}); await db.$transaction([db.sopVersion.update({where:{id:version.id},data:{approvalStatus:'APPROVED',approvedAt:new Date(),approvedById:user.id}}),db.sopDocument.update({where:{id},data:{status:'APPROVED',currentVersion:version.versionNo}})]); await writeAudit(user.id,'SopDocument',id,'APPROVE_VERSION',JSON.stringify({version:version.versionNo})); return NextResponse.json({status:'APPROVED',version:version.versionNo}); }
