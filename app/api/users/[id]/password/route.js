@@ -4,16 +4,14 @@ import { db } from '../../../../../lib/db';
 import { currentUser } from '../../../../../lib/current-user';
 import { writeAudit } from '../../../../../lib/documents';
 
-const resettableRoles = new Set(['BUSINESS_UNIT_PIC']);
-
 export async function PATCH(request, { params }) {
   const admin = await currentUser();
-  if (!['SUPER_USER', 'CORPORATE_GOVERNANCE'].includes(admin?.role)) return NextResponse.json({ error: 'Corporate Governance access required' }, { status: 403 });
+  if (admin?.role !== 'SUPER_USER') return NextResponse.json({ error: 'Super User access required' }, { status: 403 });
   const { id } = await params;
   const { password } = await request.json();
   if (typeof password !== 'string' || password.length < 8) return NextResponse.json({ error: 'Password baru minimal 8 karakter.' }, { status: 400 });
   const target = await db.user.findUnique({ where: { id }, select: { id: true, name: true, role: true } });
-  if (!target || !(admin.role === 'SUPER_USER' || resettableRoles.has(target.role))) return NextResponse.json({ error: 'User tidak ditemukan atau tidak dapat diubah dari menu ini.' }, { status: 404 });
+  if (!target) return NextResponse.json({ error: 'User tidak ditemukan.' }, { status: 404 });
   await db.user.update({ where: { id }, data: { passwordHash: await bcrypt.hash(password, 10) } });
   await writeAudit(admin.id, 'User', id, 'RESET_PASSWORD', JSON.stringify({ name: target.name, role: target.role }));
   return NextResponse.json({ ok: true, name: target.name });
