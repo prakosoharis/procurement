@@ -3,7 +3,7 @@ import { db } from '../../../lib/db';
 import { currentUser } from '../../../lib/current-user';
 import { writeAudit } from '../../../lib/documents';
 
-const calendarManagers = new Set(['COMPLIANCE_ADMIN', 'COMPLIANCE_REVIEWER']);
+const calendarManagers = new Set(['SUPER_USER', 'COMPLIANCE_ADMIN', 'COMPLIANCE_REVIEWER']);
 const eventFormats = new Set(['ONSITE', 'REMOTE', 'HYBRID']);
 const audiences = new Set(['SELECTED_PICS', 'ALL_BUSINESS_UNITS']);
 

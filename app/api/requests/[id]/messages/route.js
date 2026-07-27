@@ -10,6 +10,6 @@ export async function POST(request,{params}){
   if(['APPROVED','REJECTED'].includes(ticket.status))return NextResponse.json({error:'Ticket sudah closed dan tidak dapat diberi respons.'},{status:409});
   const message=await db.requestMessage.create({data:{requestId:id,senderId:user.id,body:body.trim()}});
   await db.sopRequest.update({where:{id},data:{status:ticket.status==='REVISION_REQUIRED'?'IN_REVIEW':ticket.status}});
-  if(user.role==='BU_PIC'){const recipients=await db.user.findMany({where:{role:{in:['COMPLIANCE_ADMIN','CORPORATE_PROCUREMENT']}},select:{id:true}});if(recipients.length)await db.ticketNotification.createMany({data:recipients.map(recipient=>({messageId:message.id,recipientId:recipient.id})),skipDuplicates:true});}
+  if(user.role==='BU_PIC'){const recipients=await db.user.findMany({where:{role:{in:['SUPER_USER','COMPLIANCE_ADMIN','CORPORATE_PROCUREMENT']}},select:{id:true}});if(recipients.length)await db.ticketNotification.createMany({data:recipients.map(recipient=>({messageId:message.id,recipientId:recipient.id})),skipDuplicates:true});}
   return NextResponse.json({ok:true},{status:201});
 }

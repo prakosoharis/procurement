@@ -10,7 +10,7 @@ export async function GET(request) {
   return NextResponse.json(await db.user.findMany({where,select:{id:true,name:true,email:true,phone:true,jobTitle:true,locale:true,businessUnitId:true,businessUnit:{select:{name:true,groupName:true,industry:true}}},orderBy:{name:'asc'}}));
 }
 export async function POST(request) {
-  const user=await currentUser(); if(user?.role!=='COMPLIANCE_ADMIN')return NextResponse.json({error:'Admin access required'},{status:403});
+  const user=await currentUser(); if(!['SUPER_USER','COMPLIANCE_ADMIN'].includes(user?.role))return NextResponse.json({error:'Admin access required'},{status:403});
   const {name,email,phone,jobTitle,locale,businessUnitId,temporaryPassword}=await request.json();
   if(!name?.trim()||!email?.trim()||!businessUnitId||!temporaryPassword||temporaryPassword.length<8)return NextResponse.json({error:'Name, email, business unit, and a minimum 8-character password are required.'},{status:400});
   const businessUnit=await db.businessUnit.findUnique({where:{id:businessUnitId}});if(!businessUnit)return NextResponse.json({error:'Business unit not found'},{status:404});

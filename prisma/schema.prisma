@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum Role {
+  SUPER_USER
   BU_PIC
   CORPORATE_PROCUREMENT
   COMPLIANCE_REVIEWER

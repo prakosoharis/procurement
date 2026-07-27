@@ -8,7 +8,7 @@ export async function GET() {
   return NextResponse.json({groups,industries,businessUnits,documentTypes});
 }
 export async function POST(request) {
-  const user=await currentUser(); if(!['COMPLIANCE_ADMIN','CORPORATE_PROCUREMENT'].includes(user?.role))return NextResponse.json({error:'Admin or Corporate Procurement access required'},{status:403});
+  const user=await currentUser(); if(!['SUPER_USER','COMPLIANCE_ADMIN','CORPORATE_PROCUREMENT'].includes(user?.role))return NextResponse.json({error:'Admin or Corporate Procurement access required'},{status:403});
   const {kind,name,code,category,organizationGroupId,industryId}=await request.json(); if(!name?.trim())return NextResponse.json({error:'Name is required'},{status:400});
   try {
     if(kind==='group')return NextResponse.json(await db.organizationGroup.create({data:{name:name.trim()}}),{status:201});
