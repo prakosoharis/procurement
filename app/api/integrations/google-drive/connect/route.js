@@ -5,7 +5,7 @@ import { googleAuthorizationUrl, googleDriveConfigured } from '../../../../../li
 
 export async function GET(request) {
   const user = await currentUser();
-  if (!['SUPER_USER', 'COMPLIANCE_ADMIN'].includes(user?.role)) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  if (!['SUPER_USER', 'CORPORATE_GOVERNANCE'].includes(user?.role)) return NextResponse.json({ error: 'Corporate Governance access required' }, { status: 403 });
   if (!googleDriveConfigured()) return NextResponse.json({ error: 'Google Drive belum dikonfigurasi. Isi environment variable Google Drive terlebih dahulu.' }, { status: 503 });
   const state = crypto.randomBytes(32).toString('base64url');
   const response = NextResponse.redirect(googleAuthorizationUrl(state));

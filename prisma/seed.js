@@ -18,8 +18,8 @@ async function main() {
   for (const [index,name] of mandatory.entries()) await prisma.documentType.upsert({where:{code:`M${index+1}`},update:{name,category:'MANDATORY',sortOrder:index+1},create:{code:`M${index+1}`,name,category:'MANDATORY',sortOrder:index+1}});
   for (const [index,name] of additional.entries()) await prisma.documentType.upsert({where:{code:`A${index+1}`},update:{name,category:'ADDITIONAL',sortOrder:index+1},create:{code:`A${index+1}`,name,category:'ADDITIONAL',sortOrder:index+7}});
   const bkes = await prisma.businessUnit.findUnique({where:{name:'BKES'}});
-  await prisma.user.upsert({where:{email:'admin@procurement.local'},update:{name:'Corporate Compliance Admin',role:Role.COMPLIANCE_ADMIN,passwordHash},create:{name:'Corporate Compliance Admin',email:'admin@procurement.local',passwordHash,role:Role.COMPLIANCE_ADMIN}});
-  await prisma.user.upsert({where:{email:'procurement@procurement.local'},update:{name:'Corporate Procurement',role:Role.CORPORATE_PROCUREMENT,passwordHash},create:{name:'Corporate Procurement',email:'procurement@procurement.local',passwordHash,role:Role.CORPORATE_PROCUREMENT}});
-  await prisma.user.upsert({where:{email:'budi@procurement.local'},update:{name:'Budi Santoso',role:Role.BU_PIC,passwordHash,businessUnitId:bkes.id},create:{name:'Budi Santoso',email:'budi@procurement.local',passwordHash,role:Role.BU_PIC,businessUnitId:bkes.id}});
+  await prisma.user.upsert({where:{email:'admin@procurement.local'},update:{name:'Corporate Governance',role:Role.CORPORATE_GOVERNANCE,passwordHash},create:{name:'Corporate Governance',email:'admin@procurement.local',passwordHash,role:Role.CORPORATE_GOVERNANCE}});
+  await prisma.user.upsert({where:{email:'procurement@procurement.local'},update:{name:'Corporate Procurement',role:Role.CORPORATE_GOVERNANCE,passwordHash},create:{name:'Corporate Procurement',email:'procurement@procurement.local',passwordHash,role:Role.CORPORATE_GOVERNANCE}});
+  await prisma.user.upsert({where:{email:'budi@procurement.local'},update:{name:'Budi Santoso',role:Role.BUSINESS_UNIT_PIC,passwordHash,businessUnitId:bkes.id},create:{name:'Budi Santoso',email:'budi@procurement.local',passwordHash,role:Role.BUSINESS_UNIT_PIC,businessUnitId:bkes.id}});
 }
 main().catch(error=>{console.error(error);process.exit(1)}).finally(()=>prisma.$disconnect());

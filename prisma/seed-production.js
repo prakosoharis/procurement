@@ -49,8 +49,8 @@ async function main() {
   const passwordHash = await bcrypt.hash(password, 12);
   await prisma.user.upsert({
     where: { email },
-    update: { name, role: Role.COMPLIANCE_ADMIN, passwordHash },
-    create: { name, email, passwordHash, role: Role.COMPLIANCE_ADMIN }
+    update: { name, role: Role.CORPORATE_GOVERNANCE, passwordHash },
+    create: { name, email, passwordHash, role: Role.CORPORATE_GOVERNANCE }
   });
   console.log(`Production master data dan admin ${email} siap.`);
 }

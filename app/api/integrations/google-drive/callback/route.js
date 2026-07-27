@@ -10,7 +10,7 @@ export async function GET(request) {
   const state = url.searchParams.get('state');
   const expectedState = (await cookies()).get('google_drive_oauth_state')?.value;
   const redirect = new URL('/hub/repository', request.url);
-  if (!['SUPER_USER', 'COMPLIANCE_ADMIN'].includes(user?.role) || !code || !state || state !== expectedState) {
+  if (!['SUPER_USER', 'CORPORATE_GOVERNANCE'].includes(user?.role) || !code || !state || state !== expectedState) {
     redirect.searchParams.set('googleDrive', 'failed');
     const response = NextResponse.redirect(redirect);
     response.cookies.delete('google_drive_oauth_state');

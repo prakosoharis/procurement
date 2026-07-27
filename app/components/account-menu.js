@@ -21,7 +21,7 @@ export default function AccountMenu({ name, role }) {
     </button>
     {open && <div style={{ position: 'absolute', right: 0, top: 51, minWidth: 182, border: '1px solid #e2e5ea', borderRadius: 9, background: '#fff', padding: 6, boxShadow: '0 10px 25px rgba(0,0,0,.13)' }}>
       <div style={{ padding: '8px 10px 9px', borderBottom: '1px solid #eef0f3', fontSize: 11, color: '#6b7280' }}>Sesi aktif</div>
-      {['SUPER_USER', 'COMPLIANCE_ADMIN'].includes(role) && <button onClick={connectGoogleDrive} style={{ width: '100%', marginTop: 4, padding: '9px 10px', border: 0, borderRadius: 6, textAlign: 'left', background: 'transparent', color: '#1d4ed8', cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>▣ Hubungkan Google Drive</button>}
+      {['SUPER_USER', 'CORPORATE_GOVERNANCE'].includes(role) && <button onClick={connectGoogleDrive} style={{ width: '100%', marginTop: 4, padding: '9px 10px', border: 0, borderRadius: 6, textAlign: 'left', background: 'transparent', color: '#1d4ed8', cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>▣ Hubungkan Google Drive</button>}
       <button onClick={logout} disabled={busy} style={{ width: '100%', marginTop: 4, padding: '9px 10px', border: 0, borderRadius: 6, textAlign: 'left', background: 'transparent', color: '#b42318', cursor: 'pointer', fontWeight: 600, fontSize: 12 }}>{busy ? 'Keluar…' : '↪  Keluar'}</button>
     </div>}
   </div>;

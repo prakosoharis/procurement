@@ -6,7 +6,7 @@ import { documentDto } from '../../../lib/documents';
 export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({error:'Authentication required'},{status:401});
-  const businessUnitWhere = user.role === 'BU_PIC' ? {id:user.businessUnitId} : {};
+  const businessUnitWhere = user.role === 'BUSINESS_UNIT_PIC' ? {id:user.businessUnitId} : {};
   const [businessUnits, documentTypes, documents, groups, industries] = await Promise.all([
     db.businessUnit.findMany({where:businessUnitWhere,select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true},orderBy:{name:'asc'}}),
     db.documentType.findMany({orderBy:{sortOrder:'asc'}}),

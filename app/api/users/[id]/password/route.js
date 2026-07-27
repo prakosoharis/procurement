@@ -4,11 +4,11 @@ import { db } from '../../../../../lib/db';
 import { currentUser } from '../../../../../lib/current-user';
 import { writeAudit } from '../../../../../lib/documents';
 
-const resettableRoles = new Set(['BU_PIC', 'COMPLIANCE_REVIEWER', 'CORPORATE_PROCUREMENT']);
+const resettableRoles = new Set(['BUSINESS_UNIT_PIC']);
 
 export async function PATCH(request, { params }) {
   const admin = await currentUser();
-  if (!['SUPER_USER', 'COMPLIANCE_ADMIN'].includes(admin?.role)) return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  if (!['SUPER_USER', 'CORPORATE_GOVERNANCE'].includes(admin?.role)) return NextResponse.json({ error: 'Corporate Governance access required' }, { status: 403 });
   const { id } = await params;
   const { password } = await request.json();
   if (typeof password !== 'string' || password.length < 8) return NextResponse.json({ error: 'Password baru minimal 8 karakter.' }, { status: 400 });

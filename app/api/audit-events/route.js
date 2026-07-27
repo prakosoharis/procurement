@@ -3,7 +3,7 @@ import { db } from '../../../lib/db';
 import { currentUser } from '../../../lib/current-user';
 import { writeAudit } from '../../../lib/documents';
 
-const calendarManagers = new Set(['SUPER_USER', 'COMPLIANCE_ADMIN', 'COMPLIANCE_REVIEWER']);
+const calendarManagers = new Set(['SUPER_USER', 'CORPORATE_GOVERNANCE']);
 const eventFormats = new Set(['ONSITE', 'REMOTE', 'HYBRID']);
 const audiences = new Set(['SELECTED_PICS', 'ALL_BUSINESS_UNITS']);
 
@@ -17,7 +17,7 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
-  const isBusinessUnitUser = user.role === 'BU_PIC';
+  const isBusinessUnitUser = user.role === 'BUSINESS_UNIT_PIC';
   // Audit is private to explicitly invited PICs. General events, such as a
   // workshop, are intentionally visible to every Business Unit PIC.
   const where = isBusinessUnitUser ? {
@@ -65,7 +65,7 @@ export async function POST(request) {
 
   const [businessUnit, participants] = await Promise.all([
     businessUnitId ? db.businessUnit.findUnique({ where: { id: businessUnitId } }) : null,
-    participantIds.length ? db.user.findMany({ where: { id: { in: participantIds }, role: 'BU_PIC' }, select: { id: true } }) : []
+    participantIds.length ? db.user.findMany({ where: { id: { in: participantIds }, role: 'BUSINESS_UNIT_PIC' }, select: { id: true } }) : []
   ]);
   if (businessUnitId && !businessUnit) return NextResponse.json({ error: 'Business Unit tujuan tidak ditemukan.' }, { status: 404 });
   if (participants.length !== participantIds.length) return NextResponse.json({ error: 'Satu atau lebih PIC tidak ditemukan di Directory.' }, { status: 400 });
