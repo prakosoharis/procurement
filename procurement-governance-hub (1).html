@@ -289,7 +289,7 @@ tr{cursor:pointer}
   </div>
   <nav class="nav" id="mainNav">
     <a onclick="nav('home')" class="active" data-page="home">Home</a>
-    <a onclick="nav('requests')" data-page="requests">Requests</a>
+    <a onclick="nav('requests')" data-page="requests" data-request-menu>Requests</a>
     <a onclick="nav('repository')" data-page="repository">Repository</a>
     <a onclick="nav('refinement')" data-page="refinement">Refinement</a>
     <a onclick="nav('calendar')" data-page="calendar">Calendar</a>
@@ -352,7 +352,7 @@ tr{cursor:pointer}
     <div class="card action-card" data-quick-action="exception" onclick="nav('requests')"><div class="action-icon">📄</div><div class="action-title">Request for Exception</div><div class="action-sub">Ajukan pengecualian</div></div>
     <div class="card action-card" data-quick-action="upload" onclick="nav('repository')"><div class="action-icon">📤</div><div class="action-title">Upload / Update SOP</div><div class="action-sub">Admin & Tim Compliance</div></div>
     <div class="card action-card" onclick="nav('insights')"><div class="action-icon">📋</div><div class="action-title">View My Actions</div><div class="action-sub">Ask AI Copilot</div></div>
-    <div class="card action-card" onclick="nav('requests')"><div class="action-icon">☑️</div><div class="action-title">My To-Dos</div><div class="action-sub">3 actions due this week</div></div>
+    <div class="card action-card" data-request-quick-action onclick="nav('requests')"><div class="action-icon">☑️</div><div class="action-title">My To-Dos</div><div class="action-sub">3 actions due this week</div></div>
     <div class="card action-card accent" data-quick-action="copilot" onclick="nav('insights')"><div class="action-icon">🤖</div><div class="action-title">AI Copilot</div><div class="action-sub">Ask strategic or task questions</div></div>
   </div>
 
@@ -1089,7 +1089,7 @@ function getAIResponse(msg){
   return 'Saya adalah AI Compliance Copilot. Saya bisa membantu:\n\n1. Membuat Template SOP\n2. Cek Status Kepatuhan\n3. Rekomendasi Tindakan\n\nSilakan ajukan pertanyaan spesifik!';
 }
 
-function applyDashboardRole(role){var isAdmin=role==='COMPLIANCE_ADMIN',isBU=role==='BU_PIC',isComplianceManager=isAdmin||role==='COMPLIANCE_REVIEWER',quickActions=document.getElementById('quickActions'),exception=document.querySelector('[data-quick-action="exception"]'),upload=document.querySelector('[data-quick-action="upload"]'),copilot=document.querySelector('[data-quick-action="copilot"]');document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=isAdmin?'':'none'});document.querySelectorAll('.compliance-manager-only').forEach(function(el){el.style.display=isComplianceManager?'':'none'});if(exception)exception.style.display=isBU?'':'none';if(upload)upload.style.display=isComplianceManager?'':'none';if(quickActions&&copilot&&(isAdmin||isBU))quickActions.prepend(copilot)}
+function applyDashboardRole(role){var isAdmin=role==='COMPLIANCE_ADMIN',isBU=role==='BU_PIC',isComplianceManager=isAdmin||role==='COMPLIANCE_REVIEWER',quickActions=document.getElementById('quickActions'),exception=document.querySelector('[data-quick-action="exception"]'),upload=document.querySelector('[data-quick-action="upload"]'),copilot=document.querySelector('[data-quick-action="copilot"]');document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=isAdmin?'':'none'});document.querySelectorAll('.compliance-manager-only').forEach(function(el){el.style.display=isComplianceManager?'':'none'});document.querySelectorAll('[data-request-menu],[data-request-quick-action]').forEach(function(el){el.style.display=isAdmin?'none':''});if(exception)exception.style.display=isBU?'':'none';if(upload)upload.style.display=isComplianceManager?'':'none';if(quickActions&&copilot&&(isAdmin||isBU))quickActions.prepend(copilot)}
 
 // INIT
 document.addEventListener('DOMContentLoaded',function(){
