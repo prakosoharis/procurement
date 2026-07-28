@@ -68,6 +68,13 @@ enum AuditEventAudience {
   ALL_BUSINESS_UNITS
 }
 
+enum AttendanceStatus {
+  INVITED
+  CONFIRMED
+  ATTENDED
+  DECLINED
+}
+
 model BusinessUnit {
   id                  String             @id @default(cuid())
   name                String             @unique
@@ -143,11 +150,14 @@ model AuditEvent {
 }
 
 model AuditEventParticipant {
-  auditEventId String
-  userId       String
-  auditEvent   AuditEvent @relation(fields: [auditEventId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt    DateTime   @default(now())
+  auditEventId   String
+  userId         String
+  responseStatus AttendanceStatus @default(INVITED)
+  respondedAt    DateTime?
+  attendedAt     DateTime?
+  auditEvent     AuditEvent @relation(fields: [auditEventId], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime   @default(now())
 
   @@id([auditEventId, userId])
   @@index([userId])
