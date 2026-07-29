@@ -11,6 +11,7 @@ enum Role {
   SUPER_USER
   CORPORATE_GOVERNANCE
   BUSINESS_UNIT_PIC
+  EXECUTIVE
 }
 
 enum SopStatus {
@@ -75,20 +76,117 @@ enum AttendanceStatus {
   DECLINED
 }
 
+enum SopVersionLifecycleState {
+  DRAFT
+  SUBMITTED
+  REFINEMENT
+  VALIDATION
+  APPROVED
+  READY_TO_PUBLISH
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReviewIntervalSource {
+  VERSION_OVERRIDE
+  CATEGORY_CONFIGURATION
+  BUSINESS_UNIT_CONFIGURATION
+  SYSTEM_DEFAULT
+}
+
+enum RefinementJobStatus {
+  QUEUED
+  PREPARING
+  RETRIEVING
+  ANALYZING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum RefinementFindingHumanStatus {
+  PENDING
+  ACCEPTED
+  ACCEPTED_WITH_MODIFICATION
+  REJECTED
+  RETURNED_FOR_REFINEMENT
+}
+
+enum ValidationDecisionType {
+  ACCEPTED
+  ACCEPTED_WITH_MODIFICATION
+  REJECTED
+  RETURNED_FOR_REFINEMENT
+}
+
+enum PublishingStatus {
+  NOT_READY
+  READY
+  IN_PROGRESS
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+enum AuditReviewStatus {
+  SCHEDULED
+  DUE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AiFeature {
+  REFINEMENT
+  CHATBOT
+  EXECUTIVE_COPILOT
+}
+
+enum AiProvider {
+  ANTHROPIC
+  OPENAI
+}
+
+enum AiEventType {
+  BLOCKED_SCOPE
+  PROVIDER_FAILURE
+  FALLBACK_USED
+  INVALID_OUTPUT
+  RETRY
+  RATE_LIMITED
+  REQUEST_CANCELLED
+}
+
 model BusinessUnit {
-  id                  String             @id @default(cuid())
-  name                String             @unique
-  country             String?
-  groupName           String             @default("Unclassified")
-  industry            String             @default("Unclassified")
-  organizationGroupId String?
-  organizationGroup   OrganizationGroup? @relation(fields: [organizationGroupId], references: [id])
-  industryId          String?
-  industryMaster      Industry?          @relation(fields: [industryId], references: [id])
-  users               User[]
-  sops                SopDocument[]
-  auditEvents         AuditEvent[]
-  createdAt           DateTime           @default(now())
+  id                          String                  @id @default(cuid())
+  name                        String                  @unique
+  country                     String?
+  groupName                   String                  @default("Unclassified")
+  industry                    String                  @default("Unclassified")
+  organizationGroupId         String?
+  organizationGroup           OrganizationGroup?      @relation(fields: [organizationGroupId], references: [id])
+  industryId                  String?
+  industryMaster              Industry?               @relation(fields: [industryId], references: [id])
+  users                       User[]
+  sops                        SopDocument[]
+  auditEvents                 AuditEvent[]
+  userScopes                  UserBusinessUnitScope[]
+  refinementJobs              RefinementJob[]
+  auditReviews                AuditReview[]
+  aiUsages                    AiUsage[]
+  aiEvents                    AiEvent[]
+  defaultReviewIntervalMonths Int?
+  createdAt                   DateTime                @default(now())
+}
+
+model SopCategory {
+  id                   String        @id @default(cuid())
+  name                 String        @unique
+  reviewIntervalMonths Int?
+  isHighRisk           Boolean       @default(false)
+  documents            SopDocument[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 }
 
 model OrganizationGroup {
@@ -106,26 +204,51 @@ model Industry {
 }
 
 model User {
-  id                       String                  @id @default(cuid())
-  businessUnitId           String?
-  businessUnit             BusinessUnit?           @relation(fields: [businessUnitId], references: [id])
-  name                     String
-  email                    String                  @unique
-  passwordHash             String
-  role                     Role
-  phone                    String?
-  jobTitle                 String?
-  locale                   String                  @default("id")
-  requests                 SopRequest[]            @relation("Requester")
-  actions                  ActionItem[]            @relation("ActionOwner")
-  auditLogs                AuditLog[]
-  approvedVersions         SopVersion[]            @relation("VersionApprover")
-  ownedSopDocuments        SopDocument[]           @relation("DocumentOwner")
-  requestMessages          RequestMessage[]
-  ticketNotifications      TicketNotification[]
-  createdAuditEvents       AuditEvent[]            @relation("AuditEventCreator")
-  auditEventParticipations AuditEventParticipant[]
-  createdAt                DateTime                @default(now())
+  id                        String                  @id @default(cuid())
+  businessUnitId            String?
+  businessUnit              BusinessUnit?           @relation(fields: [businessUnitId], references: [id])
+  name                      String
+  email                     String                  @unique
+  passwordHash              String
+  role                      Role
+  phone                     String?
+  jobTitle                  String?
+  locale                    String                  @default("id")
+  requests                  SopRequest[]            @relation("Requester")
+  actions                   ActionItem[]            @relation("ActionOwner")
+  auditLogs                 AuditLog[]
+  approvedVersions          SopVersion[]            @relation("VersionApprover")
+  ownedSopDocuments         SopDocument[]           @relation("DocumentOwner")
+  requestMessages           RequestMessage[]
+  ticketNotifications       TicketNotification[]
+  createdAuditEvents        AuditEvent[]            @relation("AuditEventCreator")
+  auditEventParticipations  AuditEventParticipant[]
+  businessUnitScopes        UserBusinessUnitScope[] @relation("UserBusinessUnitScopes")
+  grantedBusinessUnitScopes UserBusinessUnitScope[] @relation("BusinessUnitScopeGrantedBy")
+  reviewedSopVersions       SopVersion[]            @relation("SopVersionReviewer")
+  submittedSopVersions      SopVersion[]            @relation("SopVersionSubmitter")
+  requestedRefinementJobs   RefinementJob[]         @relation("RefinementJobRequester")
+  validationDecisions       ValidationDecision[]
+  publishingRecords         PublishingRecord[]      @relation("PublishingRecordPublisher")
+  auditReviews              AuditReview[]           @relation("AuditReviewOwner")
+  aiUsages                  AiUsage[]
+  aiEvents                  AiEvent[]
+  createdAt                 DateTime                @default(now())
+}
+
+model UserBusinessUnitScope {
+  id             String       @id @default(cuid())
+  userId         String
+  businessUnitId String
+  createdById    String?
+  user           User         @relation("UserBusinessUnitScopes", fields: [userId], references: [id], onDelete: Cascade)
+  businessUnit   BusinessUnit @relation(fields: [businessUnitId], references: [id], onDelete: Cascade)
+  createdBy      User?        @relation("BusinessUnitScopeGrantedBy", fields: [createdById], references: [id])
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, businessUnitId])
+  @@index([businessUnitId])
+  @@index([createdById])
 }
 
 model AuditEvent {
@@ -143,6 +266,7 @@ model AuditEvent {
   createdById    String
   createdBy      User                    @relation("AuditEventCreator", fields: [createdById], references: [id])
   participants   AuditEventParticipant[]
+  auditReview    AuditReview?
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
 
@@ -155,51 +279,81 @@ model AuditEventParticipant {
   responseStatus AttendanceStatus @default(INVITED)
   respondedAt    DateTime?
   attendedAt     DateTime?
-  auditEvent     AuditEvent @relation(fields: [auditEventId], references: [id], onDelete: Cascade)
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt      DateTime   @default(now())
+  auditEvent     AuditEvent       @relation(fields: [auditEventId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
 
   @@id([auditEventId, userId])
   @@index([userId])
 }
 
 model SopDocument {
-  id             String        @id @default(cuid())
-  businessUnitId String
-  businessUnit   BusinessUnit  @relation(fields: [businessUnitId], references: [id])
-  ownerId        String?
-  owner          User?         @relation("DocumentOwner", fields: [ownerId], references: [id])
-  documentTypeId String?
-  documentType   DocumentType? @relation(fields: [documentTypeId], references: [id])
-  title          String
-  language       String        @default("id")
-  status         SopStatus     @default(DRAFT)
-  currentVersion String?
-  versions       SopVersion[]
-  requests       SopRequest[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  businessUnitId     String
+  businessUnit       BusinessUnit  @relation(fields: [businessUnitId], references: [id])
+  ownerId            String?
+  owner              User?         @relation("DocumentOwner", fields: [ownerId], references: [id])
+  documentTypeId     String?
+  documentType       DocumentType? @relation(fields: [documentTypeId], references: [id])
+  categoryId         String?
+  category           SopCategory?  @relation(fields: [categoryId], references: [id])
+  title              String
+  language           String        @default("id")
+  status             SopStatus     @default(DRAFT)
+  currentVersion     String?
+  versions           SopVersion[]  @relation("SopDocumentVersions")
+  publishedVersionId String?       @unique
+  publishedVersion   SopVersion?   @relation("SopDocumentPublishedVersion", fields: [publishedVersionId], references: [id], onDelete: SetNull)
+  isArchived         Boolean       @default(false)
+  archivedAt         DateTime?
+  requests           SopRequest[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  auditReviews       AuditReview[]
 
   @@index([businessUnitId, documentTypeId])
+  @@index([categoryId])
 }
 
 model SopVersion {
-  id             String      @id @default(cuid())
-  sopDocumentId  String
-  sopDocument    SopDocument @relation(fields: [sopDocumentId], references: [id])
-  versionNo      String
-  fileKey        String?
-  fileName       String?
-  fileSize       Int?
-  contentType    String?
-  changeSummary  String?
-  approvalStatus SopStatus   @default(DRAFT)
-  approvedAt     DateTime?
-  approvedById   String?
-  approvedBy     User?       @relation("VersionApprover", fields: [approvedById], references: [id])
-  uploadedAt     DateTime    @default(now())
+  id                   String                   @id @default(cuid())
+  sopDocumentId        String
+  sopDocument          SopDocument              @relation("SopDocumentVersions", fields: [sopDocumentId], references: [id])
+  versionNo            String
+  fileKey              String?
+  fileName             String?
+  fileSize             Int?
+  contentType          String?
+  changeSummary        String?
+  approvalStatus       SopStatus                @default(DRAFT)
+  lifecycleState       SopVersionLifecycleState @default(DRAFT)
+  approvedAt           DateTime?
+  approvedById         String?
+  approvedBy           User?                    @relation("VersionApprover", fields: [approvedById], references: [id])
+  uploadedAt           DateTime                 @default(now())
+  effectiveAt          DateTime?
+  nextReviewAt         DateTime?
+  reviewIntervalMonths Int?
+  reviewIntervalSource ReviewIntervalSource?
+  reviewOverrideReason String?
+  reviewerId           String?
+  reviewer             User?                    @relation("SopVersionReviewer", fields: [reviewerId], references: [id])
+  submittedAt          DateTime?
+  submittedById        String?
+  submittedBy          User?                    @relation("SopVersionSubmitter", fields: [submittedById], references: [id])
+  contentHash          String?
+  publishedForDocument SopDocument?             @relation("SopDocumentPublishedVersion")
+  refinementJobs       RefinementJob[]
+  refinementFindings   RefinementFinding[]
+  validationDecisions  ValidationDecision[]
+  publishingRecords    PublishingRecord[]
+  auditReviews         AuditReview[]
 
   @@unique([sopDocumentId, versionNo])
+  @@index([lifecycleState])
+  @@index([nextReviewAt])
+  @@index([reviewerId])
+  @@index([submittedById])
 }
 
 model DocumentType {
@@ -262,8 +416,10 @@ model TicketNotification {
 
 model Finding {
   id              String        @id @default(cuid())
-  requestId       String
-  request         SopRequest    @relation(fields: [requestId], references: [id])
+  requestId       String?
+  request         SopRequest?   @relation(fields: [requestId], references: [id])
+  auditReviewId   String?
+  auditReview     AuditReview?  @relation(fields: [auditReviewId], references: [id])
   title           String
   evidence        String
   recommendation  String
@@ -272,18 +428,25 @@ model Finding {
   reviewerComment String?
   actions         ActionItem[]
   createdAt       DateTime      @default(now())
+
+  @@index([requestId])
+  @@index([auditReviewId])
 }
 
 model ActionItem {
-  id        String       @id @default(cuid())
-  findingId String?
-  finding   Finding?     @relation(fields: [findingId], references: [id])
-  ownerId   String
-  owner     User         @relation("ActionOwner", fields: [ownerId], references: [id])
-  title     String
-  dueDate   DateTime?
-  status    ActionStatus @default(OPEN)
-  createdAt DateTime     @default(now())
+  id                  String             @id @default(cuid())
+  findingId           String?
+  finding             Finding?           @relation(fields: [findingId], references: [id])
+  refinementFindingId String?
+  refinementFinding   RefinementFinding? @relation(fields: [refinementFindingId], references: [id])
+  ownerId             String
+  owner               User               @relation("ActionOwner", fields: [ownerId], references: [id])
+  title               String
+  dueDate             DateTime?
+  status              ActionStatus       @default(OPEN)
+  createdAt           DateTime           @default(now())
+
+  @@index([refinementFindingId])
 }
 
 model ReferenceSource {
@@ -293,7 +456,199 @@ model ReferenceSource {
   fileKey       String?
   sourceUrl     String?
   effectiveDate DateTime?
+  contentHash   String?
+  isApproved    Boolean   @default(false)
+  approvedAt    DateTime?
   createdAt     DateTime  @default(now())
+}
+
+model RefinementJob {
+  id                String              @id @default(cuid())
+  sopVersionId      String
+  requestedById     String
+  businessUnitId    String
+  fingerprint       String
+  status            RefinementJobStatus @default(QUEUED)
+  provider          AiProvider?
+  model             String?
+  promptVersion     String?
+  configurationJson Json?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  errorType         String?
+  errorMessage      String?
+  sopVersion        SopVersion          @relation(fields: [sopVersionId], references: [id], onDelete: Cascade)
+  requestedBy       User                @relation("RefinementJobRequester", fields: [requestedById], references: [id])
+  businessUnit      BusinessUnit        @relation(fields: [businessUnitId], references: [id])
+  findings          RefinementFinding[]
+  aiUsages          AiUsage[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([sopVersionId])
+  @@index([businessUnitId])
+  @@index([requestedById])
+  @@index([fingerprint])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RefinementFinding {
+  id                  String                       @id @default(cuid())
+  refinementJobId     String
+  sopVersionId        String
+  category            String
+  severity            RiskLevel
+  currentState        String?
+  gap                 String
+  recommendation      String
+  confidence          Float?
+  evidenceJson        Json?
+  humanStatus         RefinementFindingHumanStatus @default(PENDING)
+  refinementJob       RefinementJob                @relation(fields: [refinementJobId], references: [id], onDelete: Cascade)
+  sopVersion          SopVersion                   @relation(fields: [sopVersionId], references: [id], onDelete: Cascade)
+  validationDecisions ValidationDecision[]
+  actionItems         ActionItem[]
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+
+  @@index([refinementJobId])
+  @@index([sopVersionId])
+  @@index([humanStatus])
+  @@index([severity])
+}
+
+model ValidationDecision {
+  id                      String                   @id @default(cuid())
+  sopVersionId            String
+  refinementFindingId     String?
+  reviewerId              String
+  decision                ValidationDecisionType
+  comment                 String?
+  previousLifecycleState  SopVersionLifecycleState
+  resultingLifecycleState SopVersionLifecycleState
+  metadataJson            Json?
+  sopVersion              SopVersion               @relation(fields: [sopVersionId], references: [id], onDelete: Cascade)
+  refinementFinding       RefinementFinding?       @relation(fields: [refinementFindingId], references: [id])
+  reviewer                User                     @relation(fields: [reviewerId], references: [id])
+  createdAt               DateTime                 @default(now())
+
+  @@index([sopVersionId])
+  @@index([refinementFindingId])
+  @@index([reviewerId])
+  @@index([createdAt])
+}
+
+model PublishingRecord {
+  id                String           @id @default(cuid())
+  sopVersionId      String
+  status            PublishingStatus @default(NOT_READY)
+  externalSystem    String           @default("IMEMO")
+  externalReference String?
+  externalUrl       String?
+  publishedAt       DateTime?
+  publishedById     String?
+  notes             String?
+  errorMessage      String?
+  sopVersion        SopVersion       @relation(fields: [sopVersionId], references: [id], onDelete: Cascade)
+  publishedBy       User?            @relation("PublishingRecordPublisher", fields: [publishedById], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([sopVersionId])
+  @@index([status])
+  @@index([publishedById])
+}
+
+model AuditReview {
+  id              String            @id @default(cuid())
+  sopDocumentId   String
+  sopVersionId    String?
+  businessUnitId  String
+  auditEventId    String?           @unique
+  ownerId         String
+  status          AuditReviewStatus @default(SCHEDULED)
+  dueAt           DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  completionNotes String?
+  sopDocument     SopDocument       @relation(fields: [sopDocumentId], references: [id], onDelete: Cascade)
+  sopVersion      SopVersion?       @relation(fields: [sopVersionId], references: [id])
+  businessUnit    BusinessUnit      @relation(fields: [businessUnitId], references: [id])
+  auditEvent      AuditEvent?       @relation(fields: [auditEventId], references: [id])
+  owner           User              @relation("AuditReviewOwner", fields: [ownerId], references: [id])
+  findings        Finding[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([sopDocumentId])
+  @@index([sopVersionId])
+  @@index([businessUnitId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+model AiUsage {
+  id                String         @id @default(cuid())
+  userId            String?
+  businessUnitId    String?
+  feature           AiFeature
+  provider          AiProvider
+  model             String
+  promptVersion     String?
+  requestTimestamp  DateTime
+  responseTimestamp DateTime?
+  latencyMs         Int?
+  inputTokens       Int?
+  outputTokens      Int?
+  totalTokens       Int?
+  estimatedCost     Float?
+  costCurrency      String         @default("USD")
+  pricingVersion    String?
+  pricingInputRate  Float?
+  pricingOutputRate Float?
+  success           Boolean        @default(false)
+  errorType         String?
+  fallbackUsed      Boolean        @default(false)
+  refinementJobId   String?
+  user              User?          @relation(fields: [userId], references: [id])
+  businessUnit      BusinessUnit?  @relation(fields: [businessUnitId], references: [id])
+  refinementJob     RefinementJob? @relation(fields: [refinementJobId], references: [id])
+  events            AiEvent[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([businessUnitId])
+  @@index([feature])
+  @@index([provider])
+  @@index([refinementJobId])
+  @@index([createdAt])
+}
+
+model AiEvent {
+  id             String        @id @default(cuid())
+  aiUsageId      String?
+  userId         String?
+  businessUnitId String?
+  feature        AiFeature
+  eventType      AiEventType
+  provider       AiProvider?
+  model          String?
+  reason         String?
+  metadataJson   Json?
+  aiUsage        AiUsage?      @relation(fields: [aiUsageId], references: [id], onDelete: SetNull)
+  user           User?         @relation(fields: [userId], references: [id])
+  businessUnit   BusinessUnit? @relation(fields: [businessUnitId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@index([aiUsageId])
+  @@index([userId])
+  @@index([businessUnitId])
+  @@index([feature])
+  @@index([eventType])
+  @@index([createdAt])
 }
 
 model AuditLog {
