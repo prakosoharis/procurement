@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { roleDisplayName } from '../../lib/authorization/roles';
 
 export default function AccountMenu({ name, role }) {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function AccountMenu({ name, role }) {
   return <div style={{ position: 'fixed', top: 9, right: 22, zIndex: 200 }}>
     <button onClick={() => setOpen(!open)} aria-expanded={open} style={{ height: 46, display: 'flex', alignItems: 'center', gap: 9, padding: '5px 8px 5px 11px', border: 0, borderRadius: 8, background: 'rgba(255,255,255,.96)', cursor: 'pointer', color: '#1a2236', boxShadow: open ? '0 2px 10px rgba(0,0,0,.10)' : 'none' }}>
       <span style={{ width: 31, height: 31, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(153,27,27,.1)', color: '#991b1b', fontWeight: 700, fontSize: 12 }}>{name.split(' ').map(x => x[0]).join('').slice(0, 2)}</span>
-      <span style={{ textAlign: 'left', lineHeight: 1.2 }}><span style={{ display: 'block', fontWeight: 600, fontSize: 12 }}>{name}</span><span style={{ display: 'block', color: '#6b7280', fontSize: 10 }}>{role.replaceAll('_', ' ')}</span></span>
+      <span style={{ textAlign: 'left', lineHeight: 1.2 }}><span style={{ display: 'block', fontWeight: 600, fontSize: 12 }}>{name}</span><span style={{ display: 'block', color: '#6b7280', fontSize: 10 }}>{roleDisplayName(role)}</span></span>
       <span style={{ color: '#6b7280', fontSize: 14 }}>⌄</span>
     </button>
     {open && <div style={{ position: 'absolute', right: 0, top: 51, minWidth: 182, border: '1px solid #e2e5ea', borderRadius: 9, background: '#fff', padding: 6, boxShadow: '0 10px 25px rgba(0,0,0,.13)' }}>
