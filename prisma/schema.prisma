@@ -604,13 +604,13 @@ model AiUsage {
   outputTokens      Int?
   totalTokens       Int?
   /// USD per 1,000,000 tokens; serialize as a decimal string at API boundaries.
-  estimatedCost     Decimal?        @db.Decimal(20, 10)
+  estimatedCost     Decimal?       @db.Decimal(20, 10)
   costCurrency      String         @default("USD")
   pricingVersion    String?
   /// USD per 1,000,000 input tokens; serialize as a decimal string at API boundaries.
-  pricingInputRate  Decimal?        @db.Decimal(20, 10)
+  pricingInputRate  Decimal?       @db.Decimal(20, 10)
   /// USD per 1,000,000 output tokens; serialize as a decimal string at API boundaries.
-  pricingOutputRate Decimal?        @db.Decimal(20, 10)
+  pricingOutputRate Decimal?       @db.Decimal(20, 10)
   success           Boolean        @default(false)
   errorType         String?
   fallbackUsed      Boolean        @default(false)
