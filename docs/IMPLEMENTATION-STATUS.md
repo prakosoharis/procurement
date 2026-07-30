@@ -5,8 +5,8 @@
 **M1 — Native SOP Repository & Core Operations**
 
 Active checkpoint: **M1-C1 Repository Experience Completion**
-Active task: **M1-C1-T1 Complete native repository filtering and URL query state**
-Current status: **READY**
+Active task: **None — awaiting acceptance of M1-C1-T1**
+Current status: **DONE**
 
 ## Completed commits
 
@@ -34,7 +34,7 @@ Current status: **READY**
 
 | Task | Status | Dependency | Commit | Evidence |
 |---|---|---|---|---|
-| M1-C1-T1 | READY | M0 | — | API and native repository foundations exist |
+| M1-C1-T1 | DONE | M0 | pending | URL query state, filters, loading/error/empty states |
 
 ## Remaining checklist
 
