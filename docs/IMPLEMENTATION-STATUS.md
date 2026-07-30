@@ -5,7 +5,7 @@
 **M2 — SOP Request & Intake**
 
 Active checkpoint: **M2-C6 Convert Approved Submission to SOP Draft or Revision**
-Active task: **M2-C6-T2 Implement transactional conversion service**
+Active task: **M2-C6-T3 Expose secure named conversion API**
 
 ## Objective
 
@@ -39,13 +39,15 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-**M2-C6-T2 — Implement transactional conversion service** is READY. The user
-accepted `conversionIntent`/`requestedBusinessUnitId` and the append-only
-`SubmissionConversion` model with `requestId @unique`.
+**M2-C6-T3 — Expose secure named conversion API** is READY. M2-C6-T2 added the
+additive schema migration, serializable service, official-source revision
+validation inside the transaction, audit evidence, and service-level rollback
+coverage.
 
 ## Remaining checklist
 
-- [ ] Complete M2-C6 transactional service, API, UI, and test tasks.
+- [x] M2-C6 transactional conversion service and additive migration.
+- [ ] Complete M2-C6 API, UI, and final integration-test tasks.
 - [ ] Complete M2-C7 final acceptance evidence.
 - [ ] Obtain explicit milestone acceptance before marking M2 ACCEPTED.
 
@@ -54,8 +56,10 @@ accepted `conversionIntent`/`requestedBusinessUnitId` and the append-only
 - Legacy request routes remain operational and remain the source of existing
   request records during the migration.
 - Native request review uses the established status model. M2-C6 conversion is
-  planned but no schema or product code has been introduced by this definition
-  commit.
+  implemented at the service layer only; no conversion API or UI exists yet.
+- The local Docker database uses `prisma db push` and has no historic
+  `_prisma_migrations` baseline. The committed migration is ready for a
+  migration-managed environment but was not recorded as applied locally.
 - Notification delivery remains in-app through `TicketNotification`; no email
   or external delivery channel is introduced.
 
@@ -65,7 +69,7 @@ None.
 
 ## Prohibited scope
 
-Do not start M2-C6-T3 before M2-C6-T2 is committed. Do not start M3, change
+Do not start M2-C6-T4 before M2-C6-T3 is committed. Do not start M3, change
 request lifecycle semantics, remove legacy routes, push, deploy, alter Neon, or
 add external integrations without explicit approval.
 

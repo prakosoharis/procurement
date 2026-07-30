@@ -30,6 +30,11 @@ enum RequestStatus {
   REJECTED
 }
 
+enum SubmissionConversionMode {
+  CREATE_SOP
+  CREATE_REVISION
+}
+
 enum FindingStatus {
   PENDING
   VALIDATED
@@ -169,6 +174,7 @@ model BusinessUnit {
   industryMaster              Industry?               @relation(fields: [industryId], references: [id])
   users                       User[]
   sops                        SopDocument[]
+  requestedSopRequests        SopRequest[]           @relation("RequestedSopBusinessUnit")
   auditEvents                 AuditEvent[]
   userScopes                  UserBusinessUnitScope[]
   refinementJobs              RefinementJob[]
@@ -215,6 +221,7 @@ model User {
   jobTitle                  String?
   locale                    String                  @default("id")
   requests                  SopRequest[]            @relation("Requester")
+  convertedSubmissions      SubmissionConversion[]  @relation("SubmissionConversionActor")
   actions                   ActionItem[]            @relation("ActionOwner")
   auditLogs                 AuditLog[]
   approvedVersions          SopVersion[]            @relation("VersionApprover")
@@ -307,6 +314,7 @@ model SopDocument {
   isArchived         Boolean       @default(false)
   archivedAt         DateTime?
   requests           SopRequest[]
+  submissionConversions SubmissionConversion[] @relation("SubmissionConversionDocument")
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   auditReviews       AuditReview[]
@@ -349,6 +357,8 @@ model SopVersion {
   validationDecisions  ValidationDecision[]
   publishingRecords    PublishingRecord[]
   auditReviews         AuditReview[]
+  generatedSubmissionConversion SubmissionConversion? @relation("SubmissionConversionResultVersion")
+  sourceSubmissionConversions SubmissionConversion[]  @relation("SubmissionConversionSourceVersion")
 
   @@unique([sopDocumentId, versionNo])
   @@index([lifecycleState])
@@ -374,6 +384,9 @@ model SopRequest {
   requester        User             @relation("Requester", fields: [requesterId], references: [id])
   sopDocumentId    String?
   sopDocument      SopDocument?     @relation(fields: [sopDocumentId], references: [id])
+  requestedBusinessUnitId String?
+  requestedBusinessUnit   BusinessUnit? @relation("RequestedSopBusinessUnit", fields: [requestedBusinessUnitId], references: [id])
+  conversionIntent SubmissionConversionMode?
   title            String
   requestType      String
   description      String?
@@ -390,6 +403,29 @@ model SopRequest {
   updatedAt        DateTime         @updatedAt
   findings         Finding[]
   messages         RequestMessage[]
+  conversion       SubmissionConversion?
+
+  @@index([requestedBusinessUnitId])
+}
+
+model SubmissionConversion {
+  id              String                   @id @default(cuid())
+  requestId       String                   @unique
+  request         SopRequest               @relation(fields: [requestId], references: [id], onDelete: Restrict)
+  mode            SubmissionConversionMode
+  sopDocumentId   String
+  sopDocument     SopDocument              @relation("SubmissionConversionDocument", fields: [sopDocumentId], references: [id], onDelete: Restrict)
+  sopVersionId    String                   @unique
+  sopVersion      SopVersion               @relation("SubmissionConversionResultVersion", fields: [sopVersionId], references: [id], onDelete: Restrict)
+  sourceVersionId String?
+  sourceVersion   SopVersion?              @relation("SubmissionConversionSourceVersion", fields: [sourceVersionId], references: [id], onDelete: Restrict)
+  convertedById   String
+  convertedBy     User                     @relation("SubmissionConversionActor", fields: [convertedById], references: [id], onDelete: Restrict)
+  convertedAt     DateTime                 @default(now())
+
+  @@index([sopDocumentId])
+  @@index([sourceVersionId])
+  @@index([convertedById])
 }
 
 model RequestMessage {

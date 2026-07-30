@@ -22,14 +22,25 @@ business decisions now authorize M2-C6-T2.
 
 ## M2-C6-T2 — Implement transactional conversion service
 
-Status: READY. Add the approved migration and a single transactional service
-for both branches. Reuse `createRevisionFromPublished()` policy or factor it
-safely; never weaken official-source validation. The transaction creates all
-records or none, records `AuditLog`, and makes the conversion durable/idempotent.
+Status: DONE. Added the additive `SubmissionConversion` migration and a single
+serializable transactional service. The service reuses transaction-aware
+official-source revision validation, creates audit evidence, and returns an
+idempotent result for an existing conversion. Focused service tests verify both
+conversion branches and rollback.
+
+Implementation scope:
+
+- `prisma/migrations/20260730010000_add_submission_conversion`;
+- `lib/governance/requests/submission-conversion-service.js`;
+- transaction-aware revision helper;
+- focused `test/submission-conversion-service.test.mjs`.
+
+The local Docker PostgreSQL schema was synchronized using `prisma db push`;
+its pre-existing database does not contain Prisma's historical migration table.
 
 ## M2-C6-T3 — Expose secure named conversion API
 
-Status: PLANNED. Add only the named governance operation with strict allowlisted
+Status: READY. Add only the named governance operation with strict allowlisted
 input, standard error contract, effective-BU authorization, server-derived
 capabilities, and safe idempotent success DTO.
 

@@ -11,8 +11,8 @@ discussion history.
   progress. Its reconciliation recommendations are accepted: new native
   Submissions use `conversionIntent`/`requestedBusinessUnitId`, and an
   append-only `SubmissionConversion` model enforces one conversion per
-  Submission. M2-C6-T2 may now add the approved migration and transactional
-  service.
+  Submission. M2-C6-T2 has added the migration and transactional service;
+  M2-C6-T3 can now expose it through the named governance API.
 - **M2-C7 — M2 Final Acceptance** is `PLANNED` and now owns final milestone
   acceptance. It does not alter the completed M2-C1 through M2-C5 history.
 
