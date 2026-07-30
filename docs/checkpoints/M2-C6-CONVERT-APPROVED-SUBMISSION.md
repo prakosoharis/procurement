@@ -1,6 +1,6 @@
 # M2-C6 — Convert Approved Submission to SOP Draft or Revision
 
-Status: READY — M2-C6-T3 complete; M2-C6-T4 is next
+Status: READY — M2-C6-T4 complete; M2-C6-T5 is next
 
 ## Business outcome
 
@@ -101,7 +101,7 @@ conversion mode, and `idempotent` indicator.
    its recommendations are accepted.
 2. **M2-C6-T2** — Add the approved migration and transactional service. Complete.
 3. **M2-C6-T3** — Add the named, server-authorized conversion API. Complete.
-4. **M2-C6-T4** — Add capability-gated action UX to approved Submission detail.
+4. **M2-C6-T4** — Add capability-gated action UX to approved Submission detail. Complete.
 5. **M2-C6-T5** — Add idempotency, role/scope, rollback, API, and UI tests;
    update operational documentation.
 

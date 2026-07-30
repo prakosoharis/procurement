@@ -12,8 +12,9 @@ discussion history.
   Submissions use `conversionIntent`/`requestedBusinessUnitId`, and an
   append-only `SubmissionConversion` model enforces one conversion per
   Submission. M2-C6-T2 added the migration and transactional service, and
-  M2-C6-T3 exposed it through the named governance API. M2-C6-T4 can now add
-  the capability-gated native detail action.
+  M2-C6-T3 exposed it through the named governance API, and M2-C6-T4 added the
+  capability-gated native detail action. M2-C6-T5 can now complete final
+  idempotency/authorization coverage and operational documentation.
 - **M2-C7 — M2 Final Acceptance** is `PLANNED` and now owns final milestone
   acceptance. It does not alter the completed M2-C1 through M2-C5 history.
 

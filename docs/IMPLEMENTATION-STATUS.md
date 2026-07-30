@@ -5,7 +5,7 @@
 **M2 — SOP Request & Intake**
 
 Active checkpoint: **M2-C6 Convert Approved Submission to SOP Draft or Revision**
-Active task: **M2-C6-T4 Add conversion action to approved Submission detail**
+Active task: **M2-C6-T5 Add idempotency, authorization, integration tests, and documentation**
 
 ## Objective
 
@@ -39,15 +39,16 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-**M2-C6-T4 — Add conversion action to approved Submission detail** is READY.
-M2-C6-T3 added the strict named conversion endpoint and server-derived detail
-capability while preserving standard governance error responses.
+**M2-C6-T5 — Add idempotency, authorization, integration tests, and
+documentation** is READY. M2-C6-T4 added the native action, capability/state
+gate, error feedback, refresh, and generated-draft link.
 
 ## Remaining checklist
 
 - [x] M2-C6 transactional conversion service and additive migration.
 - [x] M2-C6 named conversion API and server-derived capability.
-- [ ] Complete M2-C6 detail action and final integration-test tasks.
+- [x] M2-C6 capability-gated native detail action.
+- [ ] Complete M2-C6 final integration-test and documentation tasks.
 - [ ] Complete M2-C7 final acceptance evidence.
 - [ ] Obtain explicit milestone acceptance before marking M2 ACCEPTED.
 
@@ -56,7 +57,7 @@ capability while preserving standard governance error responses.
 - Legacy request routes remain operational and remain the source of existing
   request records during the migration.
 - Native request review uses the established status model. M2-C6 conversion has
-  a service and API; the native detail action is still pending.
+  a service, API, and native detail action; final acceptance coverage remains.
 - The local Docker database uses `prisma db push` and has no historic
   `_prisma_migrations` baseline. The committed migration is ready for a
   migration-managed environment but was not recorded as applied locally.
@@ -69,9 +70,9 @@ None.
 
 ## Prohibited scope
 
-Do not start M2-C6-T5 before M2-C6-T4 is committed. Do not start M3, change
-request lifecycle semantics, remove legacy routes, push, deploy, alter Neon, or
-add external integrations without explicit approval.
+Do not start M2-C7 before M2-C6-T5 is committed. Do not start M3, change request
+lifecycle semantics, remove legacy routes, push, deploy, alter Neon, or add
+external integrations without explicit approval.
 
 ## Phase acceptance criteria
 

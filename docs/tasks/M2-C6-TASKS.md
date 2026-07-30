@@ -49,12 +49,14 @@ Submission detail now exposes the additive server-derived
 
 ## M2-C6-T4 — Add conversion action to approved Submission detail
 
-Status: READY. Use the server-provided capability plus `APPROVED` state to
-show a clear conversion action. Preserve existing discussion/review controls;
-do not infer conversion permission from a raw client role.
+Status: DONE. The native detail uses the server-provided
+`canConvertSubmission` capability together with `APPROVED` state. It preserves
+the existing discussion controls, handles recoverable API errors without clearing
+the discussion input, refreshes the result after conversion, and links to the
+generated SOP draft. No raw client role comparison was added.
 
 ## M2-C6-T5 — Add idempotency, authorization, integration tests, and documentation
 
-Status: PLANNED. Cover each branch, concurrent/repeated calls, non-approved
+Status: READY. Cover each branch, concurrent/repeated calls, non-approved
 state, all roles, effective-BU scope, invalid/forged target/source, immutable
 published source, rollback, audit link, API contract, and UI feedback.
