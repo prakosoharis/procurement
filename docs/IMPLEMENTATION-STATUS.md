@@ -4,8 +4,8 @@
 
 **M2 — SOP Request & Intake**
 
-Latest completed checkpoint: **M2-C5 Native Request Discussion and History**
-Latest completed task: **M2-C5-T1 Native request discussion and history**
+Active checkpoint: **M2-C6 Convert Approved Submission to SOP Draft or Revision**
+Active task: **M2-C6-T1 Reconcile conversion data contract and schema**
 
 ## Objective
 
@@ -34,23 +34,30 @@ without changing its established statuses or legacy source evidence.
 - [x] Executive remains read-only for request discussions.
 - [x] Approved and rejected requests are discussion read-only.
 - [x] New discussion messages create notifications and audit evidence.
+- [x] M2-C6 and M2-C7 delivery/acceptance boundaries are documented without
+  changing completed M2 checkpoint history.
 
 ## Current next item
 
-No further M2 checkpoint is defined or marked READY. Define and approve the
-next M2 checkpoint before implementation begins; do not start M3.
+**M2-C6-T1 — Reconcile conversion data contract and schema** is READY. It is a
+documentation and design task only: it must resolve the proposed one-to-one
+conversion record, new-SOP intake representation, concurrency contract, and
+named conversion API before any product code is written.
 
 ## Remaining checklist
 
-- [ ] Define the remaining M2 request-workflow checkpoint(s), if any.
+- [ ] Resolve `DR-M2-01` and `DR-M2-02` during M2-C6-T1.
+- [ ] Complete M2-C6 transactional service, API, UI, and test tasks.
+- [ ] Complete M2-C7 final acceptance evidence.
 - [ ] Obtain explicit milestone acceptance before marking M2 ACCEPTED.
 
 ## Accepted known limitations
 
 - Legacy request routes remain operational and remain the source of existing
   request records during the migration.
-- Native request review uses the established status model; no Refinement
-  redesign or SOP conversion workflow is included in M2-C5.
+- Native request review uses the established status model. M2-C6 conversion is
+  planned but no schema or product code has been introduced by this definition
+  commit.
 - Notification delivery remains in-app through `TicketNotification`; no email
   or external delivery channel is introduced.
 
@@ -60,13 +67,14 @@ None.
 
 ## Prohibited scope
 
-Do not start M3, change request lifecycle semantics, remove legacy routes,
-push, deploy, alter Neon, or add external integrations without explicit
-approval.
+Do not implement M2-C6 in this planning commit, start M3, change request
+lifecycle semantics, remove legacy routes, push, deploy, alter Neon, or add
+external integrations without explicit approval.
 
 ## Phase acceptance criteria
 
 - [x] M0 architecture hardening is accepted.
 - [x] M1 native repository core operations are accepted.
-- [ ] M2 is accepted only after all M2 checkpoints are defined, completed, and
-  explicitly approved.
+- [ ] M2-C6 converts approved submissions exactly once into controlled drafts.
+- [ ] M2-C7 records complete evidence and explicit user approval before M2 is
+  marked `ACCEPTED`.

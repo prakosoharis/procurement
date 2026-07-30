@@ -3,8 +3,8 @@
 | Milestone | Outcome | Status |
 |---|---|---|
 | M0 | Architecture hardening | ACCEPTED |
-| M1 | Native SOP repository & core operations | IN_PROGRESS |
-| M2 | SOP request & intake | PLANNED |
+| M1 | Native SOP repository & core operations | ACCEPTED |
+| M2 | SOP request & intake | IN_PROGRESS — M2-C6 READY |
 | M3 | Refinement redesign | PLANNED — DECISION_REQUIRED |
 | M4 | Validation & approval | PLANNED |
 | M5 | Publishing & official versions | PLANNED |
