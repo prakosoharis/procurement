@@ -4,8 +4,8 @@
 
 **M1 — Native SOP Repository & Core Operations**
 
-Active checkpoint: **M1-C1 Repository Experience Completion**
-Active task: **None — awaiting acceptance of M1-C1-T1**
+Active checkpoint: **M1-C3 Edit Draft**
+Active task: **M1-C3-T1 Edit Draft form**
 Current status: **DONE**
 
 ## Completed commits
