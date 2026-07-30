@@ -1,6 +1,6 @@
 # M2-C6 — Convert Approved Submission to SOP Draft or Revision
 
-Status: READY — M2-C6-T4 complete; M2-C6-T5 is next
+Status: DONE — M2-C6-T5 verification complete
 
 ## Business outcome
 
@@ -69,7 +69,7 @@ write the conversion record, then write `AuditLog`. A precondition mismatch is
 `CONCURRENT_MODIFICATION`; a duplicate key race re-reads and returns the sole
 conversion result.
 
-## Proposed named API
+## Implemented named API
 
 `POST /api/governance/requests/[requestId]/conversion`
 
@@ -77,16 +77,8 @@ Allowlisted input:
 
 ```json
 {
-  "mode": "CREATE_SOP | CREATE_REVISION",
   "expectedStatus": "APPROVED",
-  "expectedUpdatedAt": "ISO-8601 timestamp",
-  "businessUnitId": "required only for CREATE_SOP",
-  "title": "required only for CREATE_SOP",
-  "categoryId": "optional for CREATE_SOP",
-  "documentTypeId": "optional for CREATE_SOP",
-  "ownerId": "optional for CREATE_SOP",
-  "initialVersionNumber": "required only for CREATE_SOP",
-  "reason": "required only for CREATE_REVISION"
+  "expectedUpdatedAt": "ISO-8601 timestamp"
 }
 ```
 
@@ -103,7 +95,7 @@ conversion mode, and `idempotent` indicator.
 3. **M2-C6-T3** — Add the named, server-authorized conversion API. Complete.
 4. **M2-C6-T4** — Add capability-gated action UX to approved Submission detail. Complete.
 5. **M2-C6-T5** — Add idempotency, role/scope, rollback, API, and UI tests;
-   update operational documentation.
+   update operational documentation. Complete.
 
 ## Acceptance criteria
 

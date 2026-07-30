@@ -1,3 +1,106 @@
-import{db}from '../../../../lib/db';import{actor,json,error,serial}from '../../../../lib/api/governance';
-export async function GET(){try{const u=await actor();const where=u.role==='BUSINESS_UNIT_PIC'?{requesterId:u.id}:{};const rows=await db.sopRequest.findMany({where,orderBy:{updatedAt:'desc'},include:{requester:{select:{id:true,name:true}},sopDocument:{select:{id:true,title:true,businessUnit:{select:{id:true,name:true}}}}}});return json(serial(rows.map(r=>({requestId:r.id,title:r.title,status:r.status,requestType:r.requestType,priority:r.priority,requester:r.requester,sop:r.sopDocument,createdAt:r.createdAt,updatedAt:r.updatedAt}))));}catch(e){return error(e);}}
-export async function POST(req){try{const u=await actor(),b=await req.json();if(!b.title||!b.description||!b.sopDocumentId||!b.changeType||!b.clauseReference||!b.proposedText)throw Object.assign(new Error('Required request fields are missing.'),{code:'MISSING_REQUIRED_METADATA'});const sop=await db.sopDocument.findUnique({where:{id:b.sopDocumentId}});if(!sop)throw Object.assign(new Error('SOP not found.'),{code:'NOT_FOUND'});if(u.role==='BUSINESS_UNIT_PIC'&&u.businessUnitId!==sop.businessUnitId)throw Object.assign(new Error('Business Unit scope is required.'),{code:'OUT_OF_SCOPE'});const row=await db.sopRequest.create({data:{clientRequestKey:crypto.randomUUID(),title:b.title,requestType:b.requestType||'REVISION',description:b.description,sopDocumentId:b.sopDocumentId,changeType:b.changeType,clauseReference:b.clauseReference,proposedText:b.proposedText,businessImpact:b.businessImpact||null,priority:b.priority||'MEDIUM',requesterId:u.id}});return json(serial({requestId:row.id}),201);}catch(e){return error(e);}}
+import { db } from '../../../../lib/db';
+import { actor, body, domain, error, json, serial } from '../../../../lib/api/governance';
+import { fields } from '../../../../lib/api/mutation';
+import { assertBusinessUnitScope } from '../../../../lib/authorization/scope';
+import { can, Permission } from '../../../../lib/authorization/permissions';
+
+const CREATE_REQUEST_FIELDS = [
+  'title',
+  'description',
+  'sopDocumentId',
+  'changeType',
+  'clauseReference',
+  'proposedText',
+  'businessImpact',
+  'priority',
+  'conversionIntent',
+  'requestedBusinessUnitId'
+];
+
+export async function GET() {
+  try {
+    const user = await actor();
+    const where = user.role === 'BUSINESS_UNIT_PIC' ? { requesterId: user.id } : {};
+    const rows = await db.sopRequest.findMany({
+      where,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        requester: { select: { id: true, name: true } },
+        sopDocument: { select: { id: true, title: true, businessUnit: { select: { id: true, name: true } } } }
+      }
+    });
+    return json(serial(rows.map((row) => ({
+      requestId: row.id,
+      title: row.title,
+      status: row.status,
+      requestType: row.requestType,
+      priority: row.priority,
+      requester: row.requester,
+      sop: row.sopDocument,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt
+    }))));
+  } catch (caught) {
+    return error(caught);
+  }
+}
+
+export async function POST(request) {
+  try {
+    const user = await actor();
+    if (!can(user, Permission.SOP_REQUEST_CREATE)) {
+      throw domain('FORBIDDEN', 'Your role cannot create submissions.');
+    }
+
+    const input = await body(request);
+    fields(input, CREATE_REQUEST_FIELDS);
+    if (!input.title || !input.description || !input.changeType || !input.clauseReference || !input.proposedText) {
+      throw domain('MISSING_REQUIRED_METADATA', 'Required submission fields are missing.');
+    }
+    if (!['CREATE_SOP', 'CREATE_REVISION'].includes(input.conversionIntent)) {
+      throw domain('INVALID_INPUT', 'A valid conversion intent is required.');
+    }
+
+    let sop = null;
+    let requestedBusinessUnitId;
+    if (input.conversionIntent === 'CREATE_SOP') {
+      if (!input.requestedBusinessUnitId || input.sopDocumentId) {
+        throw domain('MISSING_REQUIRED_METADATA', 'New SOP submissions require a Business Unit and no existing SOP.');
+      }
+      assertBusinessUnitScope(user, input.requestedBusinessUnitId);
+      requestedBusinessUnitId = input.requestedBusinessUnitId;
+    } else {
+      if (!input.sopDocumentId) {
+        throw domain('MISSING_REQUIRED_METADATA', 'Revision submissions require an existing SOP.');
+      }
+      sop = await db.sopDocument.findUnique({ where: { id: input.sopDocumentId } });
+      if (!sop) throw domain('NOT_FOUND', 'SOP not found.');
+      assertBusinessUnitScope(user, sop.businessUnitId);
+      if (input.requestedBusinessUnitId && input.requestedBusinessUnitId !== sop.businessUnitId) {
+        throw domain('INVALID_INPUT', 'Requested Business Unit does not match the target SOP.');
+      }
+      requestedBusinessUnitId = sop.businessUnitId;
+    }
+
+    const row = await db.sopRequest.create({
+      data: {
+        clientRequestKey: crypto.randomUUID(),
+        title: input.title,
+        requestType: input.conversionIntent === 'CREATE_SOP' ? 'NEW_SOP' : 'REVISION',
+        description: input.description,
+        sopDocumentId: sop?.id || null,
+        requestedBusinessUnitId,
+        conversionIntent: input.conversionIntent,
+        changeType: input.changeType,
+        clauseReference: input.clauseReference,
+        proposedText: input.proposedText,
+        businessImpact: input.businessImpact || null,
+        priority: input.priority || 'MEDIUM',
+        requesterId: user.id
+      }
+    });
+    return json(serial({ requestId: row.id }), 201);
+  } catch (caught) {
+    return error(caught);
+  }
+}

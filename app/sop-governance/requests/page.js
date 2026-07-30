@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 
 export default function Requests() {
   const [requests, setRequests] = useState(null);
+  const [businessUnits, setBusinessUnits] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [conversionIntent, setConversionIntent] = useState('CREATE_REVISION');
   const [feedback, setFeedback] = useState('');
 
   const load = async () => {
@@ -15,7 +17,12 @@ export default function Requests() {
     if (!response.ok) setFeedback(payload.error?.message || 'Requests could not be loaded.');
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch('/api/governance/options')
+      .then((response) => response.json())
+      .then((payload) => setBusinessUnits(payload.data?.businessUnits || []));
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
@@ -29,8 +36,9 @@ export default function Requests() {
     const payload = await response.json();
     if (!response.ok) return setFeedback(payload.error?.message || 'Request could not be created.');
     form.reset();
+    setConversionIntent('CREATE_REVISION');
     setShowCreate(false);
-    setFeedback('Request created.');
+    setFeedback('Submission created. It can be reviewed before conversion.');
     await load();
   }
 
@@ -43,8 +51,27 @@ export default function Requests() {
       </button>
       {showCreate && (
         <form className="repository-card" onSubmit={submit}>
+          <label>
+            Submission type
+            <select name="conversionIntent" value={conversionIntent} onChange={(event) => setConversionIntent(event.target.value)}>
+              <option value="CREATE_REVISION">Change existing SOP</option>
+              <option value="CREATE_SOP">Create new SOP</option>
+            </select>
+          </label>
           <input name="title" placeholder="Request title" required />
-          <input name="sopDocumentId" placeholder="SOP ID" required />
+          {conversionIntent === 'CREATE_REVISION' ? (
+            <input name="sopDocumentId" placeholder="Existing SOP ID" required />
+          ) : (
+            <label>
+              Business Unit
+              <select name="requestedBusinessUnitId" required>
+                <option value="">Select Business Unit</option>
+                {businessUnits.map((businessUnit) => (
+                  <option key={businessUnit.id} value={businessUnit.id}>{businessUnit.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
           <input name="changeType" placeholder="Change type" required />
           <input name="clauseReference" placeholder="Clause reference" required />
           <textarea name="description" placeholder="Business context" required />
@@ -60,7 +87,7 @@ export default function Requests() {
             {!requests ? <tr><td colSpan="4">Loading…</td></tr> : requests.map((item) => (
               <tr key={item.requestId}>
                 <td><Link href={`/sop-governance/requests/${item.requestId}`}>{item.title}</Link></td>
-                <td>{item.sop?.title || '—'}</td>
+                <td>{item.sop?.title || 'New SOP'}</td>
                 <td>{item.status}</td>
                 <td>{item.requester?.name}</td>
               </tr>

@@ -57,6 +57,8 @@ generated SOP draft. No raw client role comparison was added.
 
 ## M2-C6-T5 — Add idempotency, authorization, integration tests, and documentation
 
-Status: READY. Cover each branch, concurrent/repeated calls, non-approved
-state, all roles, effective-BU scope, invalid/forged target/source, immutable
-published source, rollback, audit link, API contract, and UI feedback.
+Status: DONE. The focused conversion suite covers both branches, repeat and
+unique-key race idempotency, non-approved/stale states, Superuser/Tim
+Procurement cross-BU authority, Business Unit/Executive denial, forged sources,
+rollback, API input/capability contract, and UI visibility. See
+`docs/reports/M2-C6-VERIFICATION.md`.

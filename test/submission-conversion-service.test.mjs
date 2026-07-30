@@ -21,7 +21,13 @@ function approvedSubmission(overrides = {}) {
   };
 }
 
-function makeDb({ submission, sourceVersion = null, existingConversion = null, failAudit = false }) {
+function makeDb({
+  submission,
+  sourceVersion = null,
+  existingConversion = null,
+  raceConversion = null,
+  failAudit = false
+}) {
   const state = {
     documents: [],
     versions: sourceVersion ? [sourceVersion] : [],
@@ -85,6 +91,13 @@ function makeDb({ submission, sourceVersion = null, existingConversion = null, f
         audit: state.audit
       });
       const result = await callback(txFor(draft));
+      if (raceConversion) {
+        state.conversions.push(raceConversion);
+        const race = new Error('unique request conversion race');
+        race.code = 'P2002';
+        race.meta = { target: ['requestId'] };
+        throw race;
+      }
       state.documents = draft.documents;
       state.versions = draft.versions;
       state.conversions = draft.conversions;
@@ -212,4 +225,82 @@ test('only governance actors can invoke conversion', async () => {
     () => convertApprovedSubmission({ ...conversionInput(db), actor: { id: 'exec-1', role: 'EXECUTIVE' } }),
     { code: 'FORBIDDEN' }
   );
+  await assert.rejects(
+    () => convertApprovedSubmission({
+      ...conversionInput(db),
+      actor: { id: 'bu-1', role: 'BUSINESS_UNIT_PIC', businessUnitId: 'bu-1' }
+    }),
+    { code: 'FORBIDDEN' }
+  );
+});
+
+test('Superuser and Tim Procurement retain approved cross-BU conversion authority', async () => {
+  const db = makeDb({ submission: approvedSubmission({ requestedBusinessUnitId: 'another-bu' }) });
+  const result = await convertApprovedSubmission({
+    ...conversionInput(db),
+    actor: { id: 'superuser-1', role: 'SUPER_USER' }
+  });
+
+  assert.equal(result.idempotent, false);
+  assert.equal(db.state.documents[0].businessUnitId, 'another-bu');
+});
+
+test('stale or non-approved submissions cannot be converted', async () => {
+  const staleDb = makeDb({ submission: approvedSubmission() });
+  await assert.rejects(
+    () => convertApprovedSubmission({
+      ...conversionInput(staleDb),
+      expectedUpdatedAt: '2026-07-30T00:00:01.000Z'
+    }),
+    { code: 'CONCURRENT_MODIFICATION' }
+  );
+
+  const submittedDb = makeDb({ submission: approvedSubmission({ status: 'SUBMITTED' }) });
+  await assert.rejects(
+    () => convertApprovedSubmission(conversionInput(submittedDb)),
+    { code: 'INVALID_TRANSITION' }
+  );
+});
+
+test('a concurrent request-id uniqueness race returns the sole conversion idempotently', async () => {
+  const raceConversion = {
+    id: 'conversion-race',
+    requestId: 'submission-1',
+    mode: 'CREATE_SOP',
+    sopDocumentId: 'document-race',
+    sopVersionId: 'version-race'
+  };
+  const db = makeDb({ submission: approvedSubmission(), raceConversion });
+  const result = await convertApprovedSubmission(conversionInput(db));
+
+  assert.equal(result.idempotent, true);
+  assert.equal(result.conversionId, 'conversion-race');
+  assert.equal(db.state.documents.length, 0);
+  assert.equal(db.state.audit.length, 0);
+});
+
+test('a forged non-published revision source cannot produce a draft', async () => {
+  const source = {
+    id: 'forged-source',
+    sopDocumentId: 'document-existing',
+    versionNo: '3.0',
+    lifecycleState: 'DRAFT',
+    sopDocument: {
+      id: 'document-existing',
+      businessUnitId: 'bu-1',
+      publishedVersionId: 'forged-source'
+    }
+  };
+  const submission = approvedSubmission({
+    conversionIntent: 'CREATE_REVISION',
+    requestedBusinessUnitId: 'bu-1',
+    sopDocumentId: 'document-existing',
+    sopDocument: source.sopDocument
+  });
+  const db = makeDb({ submission, sourceVersion: source });
+
+  await assert.rejects(() => convertApprovedSubmission(conversionInput(db)), {
+    code: 'INVALID_TRANSITION'
+  });
+  assert.equal(db.state.conversions.length, 0);
 });
