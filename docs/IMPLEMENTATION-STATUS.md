@@ -22,11 +22,11 @@ Objective: reconcile the native governance runtime, authorization, API contracts
 
 ## Current next item
 
-Add a real `SopVersion.updatedAt` concurrency token and apply it to draft update preconditions. This requires a local-only migration and focused stale-write tests.
+Complete repository API pagination/filter/sort contract validation.
 
 ## Remaining checklist
 
-- [ ] Real concurrency token migration and atomic stale-write checks.
+- [x] Real concurrency token migration and draft-update preconditions.
 - [ ] Repository API pagination/filter/sort contract completion.
 - [ ] Route-level integration-test foundation and Phase 0 acceptance audit.
 
@@ -50,6 +50,6 @@ Do not start the next phase without approval. Do not push, deploy, alter Neon, r
 - [x] Multi-BU scope is enforced consistently server-side.
 - [x] Governance errors use a standard safe contract.
 - [x] Revision source is the official published version.
-- [ ] `updatedAt` concurrency contract is implemented.
+- [x] `updatedAt` concurrency contract is implemented.
 - [ ] Repository API contract is fully validated.
 - [ ] Focused route-level acceptance tests pass.
