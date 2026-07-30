@@ -1,10 +1,12 @@
-# Implementation status
+# Current Execution Status
 
 ## Active phase
 
-**PHASE 0 — Architecture Reconciliation & CP3B Hardening**
+**M1 — Native SOP Repository & Core Operations**
 
-Objective: reconcile the native governance runtime, authorization, API contracts, concurrency, and repository correctness before adding further governance UX.
+Active checkpoint: **M1-C1 Repository Experience Completion**
+Active task: **M1-C1-T1 Complete native repository filtering and URL query state**
+Current status: **READY**
 
 ## Completed commits
 
@@ -20,9 +22,19 @@ Objective: reconcile the native governance runtime, authorization, API contracts
 - [x] Governance API middleware and route errors have safe request-ID contracts.
 - [x] Revision UI uses `publishedVersion`; service verifies it is the current official source.
 
-## Current next item
+## Milestone Progress
 
-PHASE 0 is complete locally; wait for explicit approval before starting the next phase.
+| Milestone | Status | Checkpoints | Progress |
+|---|---|---:|---:|
+| M0 | ACCEPTED | 0 | 100% |
+| M1 | IN_PROGRESS | 5 | 0% |
+| M2–M9 | PLANNED | catalogued | 0% |
+
+## Active Checkpoint Progress
+
+| Task | Status | Dependency | Commit | Evidence |
+|---|---|---|---|---|
+| M1-C1-T1 | READY | M0 | — | API and native repository foundations exist |
 
 ## Remaining checklist
 

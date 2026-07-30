@@ -1,9 +1,5 @@
-# Repository execution workflow
+# Execution workflow
 
-`docs/MASTER-EXECUTION.md` is the architectural source of truth. Before coding, read it and `docs/IMPLEMENTATION-STATUS.md`, then inspect `git status`, `git diff`, and recent commits.
+Read `docs/MASTER-EXECUTION.md`, `docs/PROJECT-PLAN.json`, `docs/IMPLEMENTATION-STATUS.md`, the active checkpoint, and active task before coding. Inspect git status/diff/history. Execute only the active or next READY task; preserve prior work, test, commit one coherent task, then update plan, status, task evidence, and checkpoint progress.
 
-Continue the next unchecked item in the active phase. Preserve completed work, implement one coherent slice at a time, test it, commit it, and update `docs/IMPLEMENTATION-STATUS.md` after every commit.
-
-Never claim a phase is complete while acceptance criteria remain unchecked. Do not send progress-only responses. Stop only for a proven destructive-data, security, missing-schema, or corrupted-repository blocker.
-
-Never start the next phase without explicit approval. Never push, deploy, or modify Neon unless explicitly authorized.
+Use `DECISION_REQUIRED` for unclear business behavior. Never mark milestones ACCEPTED without explicit user approval. Never push, deploy, or modify Neon without authorization. Never send progress-only responses; stop only for destructive-data, security, missing-decision/schema, or repository-corruption blockers.
