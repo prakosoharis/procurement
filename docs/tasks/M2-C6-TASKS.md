@@ -2,7 +2,7 @@
 
 ## M2-C6-T1 — Reconcile conversion data contract and schema
 
-Status: READY
+Status: BLOCKED — awaiting DR-M2-01 and DR-M2-02
 
 Inspect the current `SopRequest`, `SopDocument`, `SopVersion`, revision service,
 request detail API/UI, and centralized authorization before modifying any product
@@ -16,8 +16,9 @@ code. Produce the final migration and DTO/API contract decision. Required output
 - resolve or explicitly retain every `DECISION_REQUIRED` item;
 - document final API operation/name and allowlisted input fields.
 
-No product schema or source code is in scope until this task is completed and
-its required decisions are resolved.
+Reconciliation evidence is in
+`docs/reports/M2-C6-T1-CONVERSION-RECONCILIATION.md`. No product schema or
+source code is in scope until DR-M2-01 and DR-M2-02 are explicitly resolved.
 
 ## M2-C6-T2 — Implement transactional conversion service
 

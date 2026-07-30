@@ -39,14 +39,14 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-**M2-C6-T1 — Reconcile conversion data contract and schema** is READY. It is a
-documentation and design task only: it must resolve the proposed one-to-one
-conversion record, new-SOP intake representation, concurrency contract, and
-named conversion API before any product code is written.
+**M2-C6-T1 — Reconcile conversion data contract and schema** is complete as a
+reconciliation report and blocked on two explicit decisions. The report confirms
+that the current schema cannot provide durable new-SOP intent, generated-version
+traceability, or database-enforced idempotency without a migration.
 
 ## Remaining checklist
 
-- [ ] Resolve `DR-M2-01` and `DR-M2-02` during M2-C6-T1.
+- [ ] Approve or replace `DR-M2-01` and `DR-M2-02` before M2-C6-T2.
 - [ ] Complete M2-C6 transactional service, API, UI, and test tasks.
 - [ ] Complete M2-C7 final acceptance evidence.
 - [ ] Obtain explicit milestone acceptance before marking M2 ACCEPTED.
@@ -63,13 +63,15 @@ named conversion API before any product code is written.
 
 ## Blockers
 
-None.
+M2-C6-T1 requires explicit resolution of `DR-M2-01` (new-SOP intent/BU data)
+and `DR-M2-02` (append-only conversion record). Creating that persistent schema
+without approval would silently set business rules and is out of scope.
 
 ## Prohibited scope
 
-Do not implement M2-C6 in this planning commit, start M3, change request
-lifecycle semantics, remove legacy routes, push, deploy, alter Neon, or add
-external integrations without explicit approval.
+Do not start M2-C6-T2 until the two M2-C6 decisions are approved. Do not start
+M3, change request lifecycle semantics, remove legacy routes, push, deploy,
+alter Neon, or add external integrations without explicit approval.
 
 ## Phase acceptance criteria
 
