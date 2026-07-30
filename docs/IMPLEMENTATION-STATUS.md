@@ -22,12 +22,12 @@ Objective: reconcile the native governance runtime, authorization, API contracts
 
 ## Current next item
 
-Complete repository API pagination/filter/sort contract validation.
+Establish focused route-level acceptance tests and complete the Phase 0 acceptance audit.
 
 ## Remaining checklist
 
 - [x] Real concurrency token migration and draft-update preconditions.
-- [ ] Repository API pagination/filter/sort contract completion.
+- [x] Repository API pagination/filter/sort contract completion.
 - [ ] Route-level integration-test foundation and Phase 0 acceptance audit.
 
 ## Accepted known limitations
@@ -51,5 +51,5 @@ Do not start the next phase without approval. Do not push, deploy, alter Neon, r
 - [x] Governance errors use a standard safe contract.
 - [x] Revision source is the official published version.
 - [x] `updatedAt` concurrency contract is implemented.
-- [ ] Repository API contract is fully validated.
+- [x] Repository API contract is fully validated.
 - [ ] Focused route-level acceptance tests pass.
