@@ -6,6 +6,8 @@
 **Repository baseline:** branch `cp2a-governance-foundation`  
 **Latest user-confirmed commit:** `15cb018 feat: wire governance capabilities to native actions`  
 
+**PHASE 0 status:** Native repository shell reconciliation and runtime effective multi-BU scope enforcement completed locally; remaining Phase 0 slices continue.
+
 ---
 
 ## 1. Purpose
