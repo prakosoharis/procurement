@@ -5,7 +5,7 @@
 **M2 — SOP Request & Intake**
 
 Active checkpoint: **M2-C6 Convert Approved Submission to SOP Draft or Revision**
-Active task: **M2-C6-T1 Reconcile conversion data contract and schema**
+Active task: **M2-C6-T2 Implement transactional conversion service**
 
 ## Objective
 
@@ -39,14 +39,12 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-**M2-C6-T1 — Reconcile conversion data contract and schema** is complete as a
-reconciliation report and blocked on two explicit decisions. The report confirms
-that the current schema cannot provide durable new-SOP intent, generated-version
-traceability, or database-enforced idempotency without a migration.
+**M2-C6-T2 — Implement transactional conversion service** is READY. The user
+accepted `conversionIntent`/`requestedBusinessUnitId` and the append-only
+`SubmissionConversion` model with `requestId @unique`.
 
 ## Remaining checklist
 
-- [ ] Approve or replace `DR-M2-01` and `DR-M2-02` before M2-C6-T2.
 - [ ] Complete M2-C6 transactional service, API, UI, and test tasks.
 - [ ] Complete M2-C7 final acceptance evidence.
 - [ ] Obtain explicit milestone acceptance before marking M2 ACCEPTED.
@@ -63,15 +61,13 @@ traceability, or database-enforced idempotency without a migration.
 
 ## Blockers
 
-M2-C6-T1 requires explicit resolution of `DR-M2-01` (new-SOP intent/BU data)
-and `DR-M2-02` (append-only conversion record). Creating that persistent schema
-without approval would silently set business rules and is out of scope.
+None.
 
 ## Prohibited scope
 
-Do not start M2-C6-T2 until the two M2-C6 decisions are approved. Do not start
-M3, change request lifecycle semantics, remove legacy routes, push, deploy,
-alter Neon, or add external integrations without explicit approval.
+Do not start M2-C6-T3 before M2-C6-T2 is committed. Do not start M3, change
+request lifecycle semantics, remove legacy routes, push, deploy, alter Neon, or
+add external integrations without explicit approval.
 
 ## Phase acceptance criteria
 

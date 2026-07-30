@@ -1,6 +1,6 @@
 # M2-C6 — Convert Approved Submission to SOP Draft or Revision
 
-Status: IN_PROGRESS — M2-C6-T1 is DECISION_REQUIRED
+Status: READY — M2-C6-T1 accepted; M2-C6-T2 is next
 
 ## Business outcome
 
@@ -49,8 +49,8 @@ into the existing SOP lifecycle.
 
 ## Required schema and idempotency contract
 
-M2-C6-T1 has documented the final recommendation, but cannot select a final
-migration without explicit business/schema approval. The recommended shape is
+M2-C6-T1 has documented the final recommendation, and the user approved its
+business/schema decisions. The selected shape is
 an append-only `SubmissionConversion` model, with `requestId @unique`,
 `sopDocumentId`, `sopVersionId`, `mode`, `convertedById`, `convertedAt`, and
 appropriate foreign keys/indexes. `requestId @unique` is the database authority
@@ -97,8 +97,8 @@ conversion mode, and `idempotent` indicator.
 
 ## Task sequence
 
-1. **M2-C6-T1** — Reconcile the conversion data contract and schema. Its report
-   is complete; it remains blocked on the decision-required items below.
+1. **M2-C6-T1** — Reconcile the conversion data contract and schema. Complete;
+   its recommendations are accepted.
 2. **M2-C6-T2** — Add the approved migration and transactional service.
 3. **M2-C6-T3** — Add the named, server-authorized conversion API.
 4. **M2-C6-T4** — Add capability-gated action UX to approved Submission detail.

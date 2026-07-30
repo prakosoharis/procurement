@@ -1,6 +1,6 @@
 # M2-C6-T1 — Submission Conversion Reconciliation
 
-Status: DECISION_REQUIRED
+Status: ACCEPTED — user approved the recommended DR-M2-01 and DR-M2-02 design on 2026-07-30.
 
 This report records the current repository contract and the exact schema/API
 decisions required before M2-C6 product code begins.
@@ -145,15 +145,13 @@ metadata. It must return a safe DTO:
 }
 ```
 
-## Decisions required before M2-C6-T2
+## Approved decisions for M2-C6-T2
 
-1. **DR-M2-01:** approve the recommended `conversionIntent` and
-   `requestedBusinessUnitId` fields for new native Submissions, including the
-   rule that `EXCEPTION` cannot convert; or provide an alternative authoritative
-   intake contract.
-2. **DR-M2-02:** approve the recommended append-only `SubmissionConversion`
-   model with `requestId @unique`; or provide an alternative schema that
-   preserves the same immutable traceability and database-enforced idempotency.
+1. **DR-M2-01 accepted:** add `conversionIntent` and
+   `requestedBusinessUnitId` for new native Submissions; `EXCEPTION` is not
+   convertible.
+2. **DR-M2-02 accepted:** add the append-only `SubmissionConversion` model with
+   `requestId @unique` as the idempotency authority.
 
-Without both decisions, implementing a migration would silently select business
-rules and persistent schema on the user's behalf.
+M2-C6-T2 may implement the approved additive migration and transactional
+conversion service. It must preserve every rule in this report.

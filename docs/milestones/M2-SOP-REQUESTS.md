@@ -8,11 +8,11 @@ discussion history.
 ## Remaining delivery path
 
 - **M2-C6 — Convert Approved Submission to SOP Draft or Revision** is in
-  progress but blocked after its reconciliation task documented two required
-  business/schema decisions. It supplies the missing controlled handoff from an
-  approved Submission to either a new SOP draft or an official-source revision
-  draft. Product code awaits the decisions recorded in
-  `docs/DECISIONS-REQUIRED.md` and the reconciliation report.
+  progress. Its reconciliation recommendations are accepted: new native
+  Submissions use `conversionIntent`/`requestedBusinessUnitId`, and an
+  append-only `SubmissionConversion` model enforces one conversion per
+  Submission. M2-C6-T2 may now add the approved migration and transactional
+  service.
 - **M2-C7 — M2 Final Acceptance** is `PLANNED` and now owns final milestone
   acceptance. It does not alter the completed M2-C1 through M2-C5 history.
 
