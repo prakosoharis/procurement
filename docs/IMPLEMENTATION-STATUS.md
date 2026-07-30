@@ -2,11 +2,11 @@
 
 ## Active phase
 
-**M1 — Native SOP Repository & Core Operations**
+**M2 — SOP Request & Intake**
 
-Active checkpoint: **M1-C5 Tests, Documentation, and Acceptance**
-Active task: **M1-C5-T1 M1 acceptance evidence**
-Current status: **DONE — awaiting user acceptance**
+Active checkpoint: **M2-C1 Request Workflow Reconciliation**
+Active task: **M2-C1-T1 Legacy request contract reconciliation**
+Current status: **DONE**
 
 ## Completed commits
 
