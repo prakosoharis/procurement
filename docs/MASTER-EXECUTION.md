@@ -8,6 +8,8 @@
 
 **PHASE 0 status:** Native repository shell reconciliation and runtime effective multi-BU scope enforcement completed locally; remaining Phase 0 slices continue.
 
+**PHASE 0 update:** Governance API error responses now use a standardized request-ID contract, including middleware authentication failures.
+
 ---
 
 ## 1. Purpose
