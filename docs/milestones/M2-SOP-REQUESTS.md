@@ -1,6 +1,6 @@
 # M2 — SOP Request & Intake
 
-Status: IN_PROGRESS. The legacy request model (`SopRequest`, discussion messages, notifications, and request statuses) remains the source of business evidence. Native migration begins with reconciliation before any request state behavior changes.
+Status: ACCEPTED. The legacy request model (`SopRequest`, discussion messages, notifications, and request statuses) remains the source of business evidence. Native migration completed without changing its established statuses or removing the legacy evidence path.
 
 Completed native checkpoints: list, intake, detail/review, and chronological
 discussion history.
@@ -15,8 +15,9 @@ discussion history.
   M2-C6-T3 exposed it through the named governance API, and M2-C6-T4 added the
   capability-gated native detail action. M2-C6-T5 completed final
   idempotency/authorization coverage and operational documentation.
-- **M2-C7 — M2 Final Acceptance** is `PLANNED` and now owns final milestone
-  acceptance. It does not alter the completed M2-C1 through M2-C5 history.
+- **M2-C7 — M2 Final Acceptance** is `ACCEPTED`. It did not alter the completed
+  M2-C1 through M2-C5 history; its evidence is in
+  `docs/reports/M2-C7-FINAL-ACCEPTANCE.md`.
 
-M2-C6 is complete. M2 remains in progress until M2-C7 evidence is recorded and
-the user explicitly accepts the milestone.
+M2-C6 and M2-C7 are complete. M2 is accepted following documented validation,
+legacy compatibility verification, and explicit user acceptance.
