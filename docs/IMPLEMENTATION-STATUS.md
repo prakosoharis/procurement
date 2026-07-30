@@ -2,10 +2,10 @@
 
 ## Active phase
 
-**M2 — SOP Request & Intake — ACCEPTED**
+**M3 — Refinement Workspace Redesign — IN_PROGRESS**
 
-Most recently accepted checkpoint: **M2-C7 M2 Final Acceptance**
-Most recently accepted task: **M2-C7-T1 Record M2 final acceptance evidence**
+Most recently completed checkpoint: **M3-C1 Data Contract and API Reconciliation**
+Most recently completed task: **M3-C1-T1 Reconcile Refinement data contract and API architecture**
 
 ## Objective
 
@@ -39,10 +39,10 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-M2 is accepted. Its final evidence is recorded in
-`docs/reports/M2-C7-FINAL-ACCEPTANCE.md`. M3-C0 product and UX specification
-is accepted and persisted; M3 remains planned. M3-C1 reconciliation has not
-started and requires explicit approval before activation.
+M2 is accepted. M3-C0 product and UX specification is accepted, and M3-C1 has
+reconciled it with the current repository. M3-C2 is not started: it requires
+approval of the additive data-model, document-preview, ActionItem, and endpoint
+decisions in `docs/reports/M3-C1-RECONCILIATION.md`.
 
 ## Remaining checklist
 
@@ -53,8 +53,9 @@ started and requires explicit approval before activation.
 - [x] Complete M2-C7 final acceptance evidence.
 - [x] Record explicit user acceptance and mark M2 ACCEPTED.
 - [x] Persist accepted M3-C0 Refinement product and UX specification.
-- [ ] Start M3-C1 only after explicit approval and reconciliation of the current
-  schema/services/authorization/storage/API architecture.
+- [x] Complete M3-C1 reconciliation of current schema/services/authorization/
+  storage/API architecture.
+- [ ] Approve M3-C1 technical decisions before starting M3-C2.
 
 ## Accepted known limitations
 
@@ -75,8 +76,8 @@ None.
 
 ## Prohibited scope
 
-Do not start M3-C1 or any M3 product implementation without explicit approval.
-Do not change request lifecycle semantics, remove legacy routes, push,
+Do not start M3-C2 without explicit approval of M3-C1 technical decisions. Do
+not change request lifecycle semantics, remove legacy routes, push,
 deploy, alter Neon, or add external integrations without explicit approval.
 
 ## Phase acceptance criteria

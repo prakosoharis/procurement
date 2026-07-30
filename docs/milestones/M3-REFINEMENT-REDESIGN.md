@@ -1,7 +1,7 @@
 # M3 — Refinement Workspace Redesign
 
-Status: **PLANNED**. The product and UX specification is accepted, but no M3
-implementation has started.
+Status: **IN_PROGRESS**. M3-C0 product/UX specification and M3-C1 technical
+reconciliation are complete. Product implementation has not started.
 
 ## Business outcome
 
@@ -24,7 +24,7 @@ governance decision.
 | Checkpoint | Status | Outcome |
 | --- | --- | --- |
 | M3-C0 Product and UX Specification | ACCEPTED | Product, UX, roles, and controls are explicitly defined. |
-| M3-C1 Data Contract and API Reconciliation | PLANNED | Reconcile accepted design with repository reality and define compatibility/migration plan. |
+| M3-C1 Data Contract and API Reconciliation | DONE | Reconciled repository reality; additive implementation decisions remain pending. |
 | M3-C2 Document and Reference Workspace | PLANNED | Build queue, workspace shell, safe document area, and reference set. |
 | M3-C3 Human Findings, Evidence, and Clarification | PLANNED | Build human finding workflow, evidence, clarification, history, and capabilities. |
 | M3-C4 Human-Only Completion | PLANNED | Build summary, readiness, server-side completion, and audit trail. |
@@ -44,4 +44,5 @@ governance decision.
 
 The accepted product specification is indexed under
 `docs/design/refinement/` and M3-C0 evidence is in
-`docs/checkpoints/M3-C0-PRODUCT-UX.md`.
+`docs/checkpoints/M3-C0-PRODUCT-UX.md`. M3-C1 evidence is in
+`docs/reports/M3-C1-RECONCILIATION.md`.
