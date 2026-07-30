@@ -40,13 +40,16 @@ its pre-existing database does not contain Prisma's historical migration table.
 
 ## M2-C6-T3 — Expose secure named conversion API
 
-Status: READY. Add only the named governance operation with strict allowlisted
-input, standard error contract, effective-BU authorization, server-derived
-capabilities, and safe idempotent success DTO.
+Status: DONE. Added `POST /api/governance/requests/[requestId]/conversion` with
+only `expectedStatus` and `expectedUpdatedAt` as input. The route delegates all
+authorization, effective-BU scope, official-source, transaction, and idempotency
+rules to the conversion service and returns the standard governance contract.
+Submission detail now exposes the additive server-derived
+`canConvertSubmission` capability; no client role inference was added.
 
 ## M2-C6-T4 — Add conversion action to approved Submission detail
 
-Status: PLANNED. Use the server-provided capability plus `APPROVED` state to
+Status: READY. Use the server-provided capability plus `APPROVED` state to
 show a clear conversion action. Preserve existing discussion/review controls;
 do not infer conversion permission from a raw client role.
 
