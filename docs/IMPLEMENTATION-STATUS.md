@@ -22,13 +22,13 @@ Objective: reconcile the native governance runtime, authorization, API contracts
 
 ## Current next item
 
-Establish focused route-level acceptance tests and complete the Phase 0 acceptance audit.
+PHASE 0 is complete locally; wait for explicit approval before starting the next phase.
 
 ## Remaining checklist
 
 - [x] Real concurrency token migration and draft-update preconditions.
 - [x] Repository API pagination/filter/sort contract completion.
-- [ ] Route-level integration-test foundation and Phase 0 acceptance audit.
+- [x] Route-level integration-test foundation and Phase 0 acceptance audit.
 
 ## Accepted known limitations
 
@@ -52,4 +52,4 @@ Do not start the next phase without approval. Do not push, deploy, alter Neon, r
 - [x] Revision source is the official published version.
 - [x] `updatedAt` concurrency contract is implemented.
 - [x] Repository API contract is fully validated.
-- [ ] Focused route-level acceptance tests pass.
+- [x] Focused route-level acceptance tests pass.
