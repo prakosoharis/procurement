@@ -40,8 +40,9 @@ without changing its established statuses or legacy source evidence.
 ## Current next item
 
 M2 is accepted. Its final evidence is recorded in
-`docs/reports/M2-C7-FINAL-ACCEPTANCE.md`. No M3 work has started; M3 remains
-planned and requires explicit approval before activation.
+`docs/reports/M2-C7-FINAL-ACCEPTANCE.md`. M3-C0 product and UX specification
+is accepted and persisted; M3 remains planned. M3-C1 reconciliation has not
+started and requires explicit approval before activation.
 
 ## Remaining checklist
 
@@ -51,6 +52,9 @@ planned and requires explicit approval before activation.
 - [x] M2-C6 final integration-test and documentation tasks.
 - [x] Complete M2-C7 final acceptance evidence.
 - [x] Record explicit user acceptance and mark M2 ACCEPTED.
+- [x] Persist accepted M3-C0 Refinement product and UX specification.
+- [ ] Start M3-C1 only after explicit approval and reconciliation of the current
+  schema/services/authorization/storage/API architecture.
 
 ## Accepted known limitations
 
@@ -71,8 +75,8 @@ None.
 
 ## Prohibited scope
 
-Do not start M3 without explicit approval. Do not change request lifecycle
-semantics, remove legacy routes, push,
+Do not start M3-C1 or any M3 product implementation without explicit approval.
+Do not change request lifecycle semantics, remove legacy routes, push,
 deploy, alter Neon, or add external integrations without explicit approval.
 
 ## Phase acceptance criteria
