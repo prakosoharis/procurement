@@ -1,0 +1,2 @@
+import{actor,body,json,error,serial}from '../../../../../../lib/api/governance';import{createRevisionFromPublished}from '../../../../../../lib/governance';
+export async function POST(req,{params}){try{const u=await actor(),b=await body(req),{sopId}=await params;if(b.expectedState!=='PUBLISHED')throw Object.assign(new Error('State changed.'),{code:'CONCURRENT_MODIFICATION'});return json(serial(await createRevisionFromPublished({sopDocumentId:sopId,sourceVersionId:b.sourceVersionId,actor:u,reason:b.reason})),201);}catch(e){return error(e);}}
