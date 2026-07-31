@@ -873,7 +873,13 @@ function showPage(page){
 }
 function nav(page){
   if(window.top!==window){
-    window.top.location.href=page==='home'?'/' : '/hub/'+encodeURIComponent(page);
+    // Refinement is no longer the static prototype. Preserve the remaining
+    // legacy dashboard navigation while opening the native M3 workspace.
+    window.top.location.href=page==='home'?'/' : page==='refinement'?'/sop-governance/refinement' : '/hub/'+encodeURIComponent(page);
+    return;
+  }
+  if(page==='refinement'){
+    window.location.href='/sop-governance/refinement';
     return;
   }
   showPage(page);

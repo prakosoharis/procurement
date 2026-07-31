@@ -72,6 +72,10 @@ and awaits explicit product-owner acceptance; M4 is not started.
 
 ## Accepted known limitations
 
+- Legacy Refinement entry points (`/refinement`, `/hub/refinement`, and the
+  legacy dashboard menu) redirect to the native Human-Only Refinement queue;
+  the retired static AI Findings prototype is no longer an active refinement
+  workspace.
 - Legacy request routes remain operational and remain the source of existing
   request records during the migration.
 - Native request review uses the established status model. M2-C6 conversion has
