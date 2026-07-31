@@ -117,6 +117,15 @@ enum RefinementFindingHumanStatus {
   RETURNED_FOR_REFINEMENT
 }
 
+enum RefinementSessionStatus {
+  NEW
+  IN_PROGRESS
+  WAITING_FOR_CLARIFICATION
+  BLOCKED
+  READY_FOR_COMPLETION
+  COMPLETED
+}
+
 enum ValidationDecisionType {
   ACCEPTED
   ACCEPTED_WITH_MODIFICATION
@@ -178,6 +187,7 @@ model BusinessUnit {
   auditEvents                 AuditEvent[]
   userScopes                  UserBusinessUnitScope[]
   refinementJobs              RefinementJob[]
+  refinementSessions          RefinementSession[]
   auditReviews                AuditReview[]
   aiUsages                    AiUsage[]
   aiEvents                    AiEvent[]
@@ -235,6 +245,7 @@ model User {
   reviewedSopVersions       SopVersion[]            @relation("SopVersionReviewer")
   submittedSopVersions      SopVersion[]            @relation("SopVersionSubmitter")
   requestedRefinementJobs   RefinementJob[]         @relation("RefinementJobRequester")
+  startedRefinementSessions RefinementSession[]
   validationDecisions       ValidationDecision[]
   publishingRecords         PublishingRecord[]      @relation("PublishingRecordPublisher")
   auditReviews              AuditReview[]           @relation("AuditReviewOwner")
@@ -353,6 +364,7 @@ model SopVersion {
   contentHash          String?
   publishedForDocument SopDocument?             @relation("SopDocumentPublishedVersion")
   refinementJobs       RefinementJob[]
+  refinementSessions   RefinementSession[]
   refinementFindings   RefinementFinding[]
   validationDecisions  ValidationDecision[]
   publishingRecords    PublishingRecord[]
@@ -528,6 +540,27 @@ model RefinementJob {
   @@index([fingerprint])
   @@index([status])
   @@index([createdAt])
+}
+
+model RefinementSession {
+  id             String                  @id @default(cuid())
+  sopVersionId   String
+  businessUnitId String
+  startedById    String
+  cycleNo        Int
+  mode           String                  @default("HUMAN_ONLY")
+  status         RefinementSessionStatus @default(NEW)
+  summary        String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  sopVersion     SopVersion              @relation(fields: [sopVersionId], references: [id], onDelete: Cascade)
+  businessUnit   BusinessUnit            @relation(fields: [businessUnitId], references: [id])
+  startedBy      User                    @relation(fields: [startedById], references: [id])
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@unique([sopVersionId, cycleNo])
+  @@index([businessUnitId, status])
 }
 
 model RefinementFinding {
