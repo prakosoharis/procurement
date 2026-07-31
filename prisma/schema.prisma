@@ -132,6 +132,11 @@ enum HumanRefinementFindingStatus {
   DEFERRED
   DISMISSED
 }
+enum RefinementClarificationStatus {
+  OPEN
+  RESPONDED
+  CLOSED
+}
 
 enum ValidationDecisionType {
   ACCEPTED
@@ -195,6 +200,7 @@ model BusinessUnit {
   userScopes                  UserBusinessUnitScope[]
   refinementJobs              RefinementJob[]
   refinementSessions          RefinementSession[]
+  requestedRefinementClarifications RefinementClarification[]
   auditReviews                AuditReview[]
   aiUsages                    AiUsage[]
   aiEvents                    AiEvent[]
@@ -254,6 +260,7 @@ model User {
   requestedRefinementJobs   RefinementJob[]         @relation("RefinementJobRequester")
   startedRefinementSessions RefinementSession[]
   createdHumanRefinementFindings HumanRefinementFinding[]
+  requestedRefinementClarifications RefinementClarification[] @relation("ClarificationRequester")
   validationDecisions       ValidationDecision[]
   publishingRecords         PublishingRecord[]      @relation("PublishingRecordPublisher")
   auditReviews              AuditReview[]           @relation("AuditReviewOwner")
@@ -588,7 +595,34 @@ model HumanRefinementFinding {
  updatedAt DateTime @updatedAt
  refinementSession RefinementSession @relation(fields:[refinementSessionId],references:[id],onDelete:Cascade)
  createdBy User @relation(fields:[createdById],references:[id])
+ evidence HumanRefinementEvidence[]
+ clarifications RefinementClarification[]
  @@index([refinementSessionId,status])
+}
+model HumanRefinementEvidence {
+ id String @id @default(cuid())
+ findingId String
+ type String
+ description String
+ source String?
+ documentLocation String?
+ createdAt DateTime @default(now())
+ finding HumanRefinementFinding @relation(fields:[findingId],references:[id],onDelete:Cascade)
+}
+model RefinementClarification {
+ id String @id @default(cuid())
+ findingId String
+ requestedById String
+ requestedBusinessUnitId String
+ question String
+ response String?
+ status RefinementClarificationStatus @default(OPEN)
+ dueAt DateTime?
+ respondedAt DateTime?
+ closedAt DateTime?
+ finding HumanRefinementFinding @relation(fields:[findingId],references:[id],onDelete:Cascade)
+ requestedBy User @relation("ClarificationRequester",fields:[requestedById],references:[id])
+ requestedBusinessUnit BusinessUnit @relation(fields:[requestedBusinessUnitId],references:[id])
 }
 
 model RefinementSessionReference {
