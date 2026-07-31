@@ -207,17 +207,18 @@ export default function Workspace({ params }) {
     params.then(({ versionId: id }) => { setVersionId(id); load(id); });
   }, [params]);
 
-  if (!data) return <main className="native-page">Loading Refinement workspace…</main>;
+  if (!data) return <main className="native-page" role="status" aria-live="polite">Loading Refinement workspace…</main>;
   const capabilities = data.capabilities || {};
 
   return <main className="native-page">
     <header><p className="eyebrow">Human-only refinement</p><h1>{data.sop.title}</h1><p>{data.businessUnit.name} · {data.version}</p></header>
-    {message && <p role="status">{message}</p>}
+    {message && <p className="live-message" role="status" aria-live="polite" aria-atomic="true">{message}</p>}
     <section className="repository-card"><h2>Document</h2><p>{data.file.name || 'No document attached'}</p>{data.file.key && <a className="button" href={`/api/files/download?key=${encodeURIComponent(data.file.key)}&mode=inline`}>Open document securely</a>}</section>
     <section className="repository-card"><h2>Reference set</h2>{refs.length ? refs.map(reference => <p key={reference.id}>{reference.referenceSource.title}</p>) : <p>No active reference selected yet.</p>}</section>
     <section className="repository-card">
       <h2>Completion checklist</h2>
-      {readiness ? <>{readiness.checks.map(check => <p key={check.key}>{check.complete ? '✓' : '○'} {check.label}</p>)}<p>{readiness.unresolvedFindingCount} unresolved finding(s) · {readiness.pendingClarificationCount} clarification(s) awaiting review</p></> : <p>Loading completion checklist…</p>}
+      {readiness ? <ul aria-label="Completion readiness">{readiness.checks.map(check => <li key={check.key}><strong>{check.complete ? 'Complete:' : 'Incomplete:'}</strong> {check.label}</li>)}</ul> : <p>Loading completion checklist…</p>}
+      {readiness && <p>{readiness.unresolvedFindingCount} unresolved finding(s) · {readiness.pendingClarificationCount} clarification(s) awaiting review</p>}
       {capabilities.canEditSummary && summary && <form className="form" onSubmit={async event => {
         event.preventDefault();
         try {

@@ -1,7 +1,7 @@
 # M3 — Refinement Workspace Redesign
 
-Status: **IN_PROGRESS**. M3-C0 through M3-C4 are complete. M3-C5 remains the
-final planned verification and acceptance checkpoint.
+Status: **DONE — pending explicit product-owner acceptance**. M3-C0 through
+M3-C5 are complete; M4 is not started.
 
 ## Business outcome
 
@@ -28,7 +28,7 @@ governance decision.
 | M3-C2 Document and Reference Workspace | DONE | Native queue, session workspace, safe document area, and reference set. |
 | M3-C3 Human Findings, Evidence, and Clarification | DONE | Structured human findings, evidence, clarification, disposition, history, and server-derived capabilities. |
 | M3-C4 Human-Only Completion | DONE | Server-derived readiness, concurrent-safe summary, controlled transition, and audit trail. |
-| M3-C5 History, Tests, Accessibility, and Acceptance | PLANNED | Complete verification, accessibility, responsive evidence, and milestone acceptance. |
+| M3-C5 History, Tests, Accessibility, and Acceptance | DONE | Focused/regression verification, accessibility, responsive behaviour, and acceptance evidence. |
 
 ## Locked product boundaries
 

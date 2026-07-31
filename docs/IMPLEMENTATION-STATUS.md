@@ -4,8 +4,8 @@
 
 **M3 — Refinement Workspace Redesign — IN_PROGRESS**
 
-Most recently completed checkpoint: **M3-C4 Human-Only Completion**
-Most recently completed task: **M3-C4-T4 Expose native completion UI and verify checkpoint**
+Most recently completed checkpoint: **M3-C5 History, Tests, Accessibility, and Acceptance**
+Most recently completed task: **M3-C5-T3 Record M3 acceptance evidence and status**
 
 ## Objective
 
@@ -27,6 +27,8 @@ without changing its established statuses or legacy source evidence.
 - `ae61dc1` — added evidence and clarification flows.
 - `62101ab` — added evidence UI and activity history.
 - `5d34edf` — restricted clarification responses to the assigned Business Unit.
+- `d280649` — completed Human Findings, evidence, clarification, and disposition.
+- `3d84b4b` — completed server-validated Human-Only Refinement completion.
 
 ## Completed checklist
 
@@ -44,9 +46,9 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-M3-C4 is complete: server-derived readiness, concurrent-safe summary, and the
-transactional Human-Only completion transition to Validation are present.
-M3-C5 remains planned and is not started.
+M3-C5 is complete: M3 workflow, accessibility, responsive behaviour, focused
+tests, regression tests, and acceptance evidence are recorded. M3 is `DONE`
+and awaits explicit product-owner acceptance; M4 is not started.
 
 ## Remaining checklist
 
@@ -65,7 +67,8 @@ M3-C5 remains planned and is not started.
 - [x] Complete M3-C2 Document and Reference Workspace.
 - [x] Complete M3-C3 Human Findings, Evidence, and Clarification.
 - [x] Complete M3-C4 Human-Only Completion.
-- [ ] Start M3-C5 History, Tests, Accessibility, and Acceptance only after explicit approval.
+- [x] Complete M3-C5 History, Tests, Accessibility, and Acceptance.
+- [ ] Record explicit M3 product-owner acceptance before marking M3 `ACCEPTED`.
 
 ## Accepted known limitations
 
@@ -86,7 +89,7 @@ None.
 
 ## Prohibited scope
 
-Do not start M3-C5 without explicit approval. Do not change request lifecycle
+Do not start M4 without explicit approval. Do not change request lifecycle
 semantics, remove legacy routes, push,
 deploy, alter Neon, or add external integrations without explicit approval.
 
