@@ -39,9 +39,9 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-M3-C1 decisions were explicitly approved on 2026-07-31. M3-C2 is in progress;
-its first slice adds the native, scoped Refinement Queue without fabricating
-Human-only findings or changing legacy Refinement evidence.
+M3-C2 is complete: native queue, Human-Only session foundation, scoped document
+workspace, secure document access, and session-owned Reference Set are present.
+M3-C3 is the next planned checkpoint for findings, evidence, and clarification.
 
 ## Remaining checklist
 
@@ -57,6 +57,8 @@ Human-only findings or changing legacy Refinement evidence.
 - [x] Approve M3-C1 technical decisions before starting M3-C2.
 - [x] Add native scoped Refinement Queue (M3-C2-T1).
 - [x] Add session, document/reference workspace, and safe workspace detail.
+- [x] Complete M3-C2 Document and Reference Workspace.
+- [ ] Start M3-C3 Human Findings, Evidence, and Clarification.
 
 ## Accepted known limitations
 
