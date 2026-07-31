@@ -39,10 +39,9 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-M2 is accepted. M3-C0 product and UX specification is accepted, and M3-C1 has
-reconciled it with the current repository. M3-C2 is not started: it requires
-approval of the additive data-model, document-preview, ActionItem, and endpoint
-decisions in `docs/reports/M3-C1-RECONCILIATION.md`.
+M3-C1 decisions were explicitly approved on 2026-07-31. M3-C2 is in progress;
+its first slice adds the native, scoped Refinement Queue without fabricating
+Human-only findings or changing legacy Refinement evidence.
 
 ## Remaining checklist
 
@@ -55,7 +54,10 @@ decisions in `docs/reports/M3-C1-RECONCILIATION.md`.
 - [x] Persist accepted M3-C0 Refinement product and UX specification.
 - [x] Complete M3-C1 reconciliation of current schema/services/authorization/
   storage/API architecture.
-- [ ] Approve M3-C1 technical decisions before starting M3-C2.
+- [x] Approve M3-C1 technical decisions before starting M3-C2.
+- [x] Add native scoped Refinement Queue (M3-C2-T1).
+- [ ] Add session, document/reference workspace, and safe workspace detail in a
+  later M3-C2 slice.
 
 ## Accepted known limitations
 
