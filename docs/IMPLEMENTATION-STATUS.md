@@ -56,8 +56,7 @@ Human-only findings or changing legacy Refinement evidence.
   storage/API architecture.
 - [x] Approve M3-C1 technical decisions before starting M3-C2.
 - [x] Add native scoped Refinement Queue (M3-C2-T1).
-- [ ] Add session, document/reference workspace, and safe workspace detail in a
-  later M3-C2 slice.
+- [x] Add session, document/reference workspace, and safe workspace detail.
 
 ## Accepted known limitations
 

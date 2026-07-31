@@ -509,6 +509,7 @@ model ReferenceSource {
   isApproved    Boolean   @default(false)
   approvedAt    DateTime?
   createdAt     DateTime  @default(now())
+  refinementSessionReferences RefinementSessionReference[]
 }
 
 model RefinementJob {
@@ -558,9 +559,22 @@ model RefinementSession {
   startedBy      User                    @relation(fields: [startedById], references: [id])
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
+  references     RefinementSessionReference[]
 
   @@unique([sopVersionId, cycleNo])
   @@index([businessUnitId, status])
+}
+
+model RefinementSessionReference {
+  id String @id @default(cuid())
+  refinementSessionId String
+  referenceSourceId String
+  active Boolean @default(true)
+  relevanceNote String?
+  createdAt DateTime @default(now())
+  refinementSession RefinementSession @relation(fields:[refinementSessionId],references:[id],onDelete:Cascade)
+  referenceSource ReferenceSource @relation(fields:[referenceSourceId],references:[id])
+  @@unique([refinementSessionId,referenceSourceId])
 }
 
 model RefinementFinding {

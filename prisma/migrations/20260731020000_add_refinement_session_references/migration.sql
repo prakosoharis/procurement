@@ -1,0 +1,4 @@
+CREATE TABLE "RefinementSessionReference" ("id" TEXT NOT NULL,"refinementSessionId" TEXT NOT NULL,"referenceSourceId" TEXT NOT NULL,"active" BOOLEAN NOT NULL DEFAULT true,"relevanceNote" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,CONSTRAINT "RefinementSessionReference_pkey" PRIMARY KEY ("id"));
+CREATE UNIQUE INDEX "RefinementSessionReference_refinementSessionId_referenceSourceId_key" ON "RefinementSessionReference"("refinementSessionId","referenceSourceId");
+ALTER TABLE "RefinementSessionReference" ADD CONSTRAINT "RefinementSessionReference_refinementSessionId_fkey" FOREIGN KEY ("refinementSessionId") REFERENCES "RefinementSession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "RefinementSessionReference" ADD CONSTRAINT "RefinementSessionReference_referenceSourceId_fkey" FOREIGN KEY ("referenceSourceId") REFERENCES "ReferenceSource"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
