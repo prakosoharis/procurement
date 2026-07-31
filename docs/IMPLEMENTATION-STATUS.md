@@ -83,6 +83,13 @@ Do not start M3-C2 without explicit approval of M3-C1 technical decisions. Do
 not change request lifecycle semantics, remove legacy routes, push,
 deploy, alter Neon, or add external integrations without explicit approval.
 
+## Execution cadence
+
+User approval is granted **per checkpoint**. Once a checkpoint is approved, all
+of its tasks proceed automatically through implementation, validation,
+documentation, and commits. Pause only for a genuine blocker or before the next
+checkpoint; do not request confirmation for individual tasks or small changes.
+
 ## Phase acceptance criteria
 
 - [x] M0 architecture hardening is accepted.
