@@ -24,6 +24,7 @@ export async function GET(_, { params }) {
     return json(serial({
       versionId: version.id,
       version: version.versionNo,
+      versionUpdatedAt: version.updatedAt,
       sop: { id: version.sopDocumentId, title: version.sopDocument.title },
       businessUnit: version.sopDocument.businessUnit,
       file: {

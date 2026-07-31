@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const CATEGORIES = [
   'REGULATORY_MISMATCH',
@@ -169,26 +170,34 @@ function Clarification({ item, versionId, finding, capabilities, onDone, setMess
 }
 
 export default function Workspace({ params }) {
+  const router = useRouter();
   const [versionId, setVersionId] = useState('');
   const [data, setData] = useState(null);
   const [refs, setRefs] = useState([]);
   const [findings, setFindings] = useState([]);
   const [history, setHistory] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [readiness, setReadiness] = useState(null);
+  const [completionReason, setCompletionReason] = useState('');
   const [form, setForm] = useState(initialFinding);
   const [message, setMessage] = useState('');
 
   const load = async id => {
     try {
-      const [workspace, references, findingList, activity] = await Promise.all([
+      const [workspace, references, findingList, activity, savedSummary, readinessState] = await Promise.all([
         api(`/api/governance/refinement/${id}`),
         api(`/api/governance/refinement/${id}/references`),
         api(`/api/governance/refinement/${id}/findings`),
-        api(`/api/governance/refinement/${id}/history`)
+        api(`/api/governance/refinement/${id}/history`),
+        api(`/api/governance/refinement/${id}/summary`),
+        api(`/api/governance/refinement/${id}/readiness`)
       ]);
       setData(workspace);
       setRefs(references);
       setFindings(findingList);
       setHistory(activity);
+      setSummary(savedSummary);
+      setReadiness(readinessState);
     } catch (cause) {
       setMessage(cause.message);
     }
@@ -206,6 +215,30 @@ export default function Workspace({ params }) {
     {message && <p role="status">{message}</p>}
     <section className="repository-card"><h2>Document</h2><p>{data.file.name || 'No document attached'}</p>{data.file.key && <a className="button" href={`/api/files/download?key=${encodeURIComponent(data.file.key)}&mode=inline`}>Open document securely</a>}</section>
     <section className="repository-card"><h2>Reference set</h2>{refs.length ? refs.map(reference => <p key={reference.id}>{reference.referenceSource.title}</p>) : <p>No active reference selected yet.</p>}</section>
+    <section className="repository-card">
+      <h2>Completion checklist</h2>
+      {readiness ? <>{readiness.checks.map(check => <p key={check.key}>{check.complete ? '✓' : '○'} {check.label}</p>)}<p>{readiness.unresolvedFindingCount} unresolved finding(s) · {readiness.pendingClarificationCount} clarification(s) awaiting review</p></> : <p>Loading completion checklist…</p>}
+      {capabilities.canEditSummary && summary && <form className="form" onSubmit={async event => {
+        event.preventDefault();
+        try {
+          const saved = await api(`/api/governance/refinement/${versionId}/summary`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary: summary.summary, expectedUpdatedAt: summary.updatedAt }) });
+          setSummary(saved);
+          setMessage('Refinement summary saved.');
+          await load(versionId);
+        } catch (cause) {
+          setMessage(cause.code === 'CONCURRENT_MODIFICATION' ? 'The summary changed elsewhere. Your draft is still here; reload and compare before retrying.' : cause.message);
+        }
+      }}><label>Refinement summary<textarea required value={summary.summary || ''} onChange={event => setSummary({ ...summary, summary: event.target.value })} /></label><button className="button">Save summary</button></form>}
+      {capabilities.canCompleteHumanOnly && readiness?.ready && summary && <form className="form" onSubmit={async event => {
+        event.preventDefault();
+        try {
+          await api(`/api/governance/versions/${versionId}/refinement/complete-human`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ expectedState: 'REFINEMENT', expectedUpdatedAt: data.versionUpdatedAt, reason: completionReason }) });
+          setMessage('Human-only Refinement completed and sent to Validation.');
+          router.push('/sop-governance/refinement');
+        } catch (cause) { setMessage(cause.message); }
+      }}><label>Completion reason<textarea required value={completionReason} onChange={event => setCompletionReason(event.target.value)} /></label><button className="button">Complete Human-Only Refinement</button></form>}
+      {capabilities.canCompleteHumanOnly && readiness && !readiness.ready && <p>Complete each checklist item before sending this SOP to Validation.</p>}
+    </section>
     <section className="repository-card">
       <h2>Human findings</h2>
       {capabilities.canManageFindings && <details open><summary>Create finding</summary><FindingForm value={form} onChange={setForm} submitLabel="Save finding" onSubmit={async event => {

@@ -1,7 +1,7 @@
 # M3 — Refinement Workspace Redesign
 
-Status: **IN_PROGRESS**. M3-C0 product/UX specification and M3-C1 technical
-reconciliation are complete. Product implementation has not started.
+Status: **IN_PROGRESS**. M3-C0 through M3-C4 are complete. M3-C5 remains the
+final planned verification and acceptance checkpoint.
 
 ## Business outcome
 
@@ -25,9 +25,9 @@ governance decision.
 | --- | --- | --- |
 | M3-C0 Product and UX Specification | ACCEPTED | Product, UX, roles, and controls are explicitly defined. |
 | M3-C1 Data Contract and API Reconciliation | DONE | Reconciled repository reality; additive implementation decisions remain pending. |
-| M3-C2 Document and Reference Workspace | PLANNED | Build queue, workspace shell, safe document area, and reference set. |
+| M3-C2 Document and Reference Workspace | DONE | Native queue, session workspace, safe document area, and reference set. |
 | M3-C3 Human Findings, Evidence, and Clarification | DONE | Structured human findings, evidence, clarification, disposition, history, and server-derived capabilities. |
-| M3-C4 Human-Only Completion | PLANNED | Build summary, readiness, server-side completion, and audit trail. |
+| M3-C4 Human-Only Completion | DONE | Server-derived readiness, concurrent-safe summary, controlled transition, and audit trail. |
 | M3-C5 History, Tests, Accessibility, and Acceptance | PLANNED | Complete verification, accessibility, responsive evidence, and milestone acceptance. |
 
 ## Locked product boundaries

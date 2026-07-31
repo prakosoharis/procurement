@@ -1,2 +1,19 @@
-import{actor,body,json,error,serial}from '../../../../../../../lib/api/governance';import{submitForValidation}from '../../../../../../../lib/governance';
-export async function POST(req,{params}){try{const u=await actor(),b=await body(req),{versionId}=await params;if(b.expectedState!=='REFINEMENT')throw Object.assign(new Error('State changed.'),{code:'CONCURRENT_MODIFICATION'});if(!b.reason||!b.summary)throw Object.assign(new Error('Reason and summary are required.'),{code:'MISSING_REQUIRED_METADATA'});return json(serial(await submitForValidation({versionId,actor:u,expectedState:b.expectedState,metadata:{refinementMode:'HUMAN_ONLY',humanOnlyReason:b.reason,preparedBy:b.preparedBy||u.name,completedAt:b.completedAt||new Date().toISOString(),summary:b.summary}})));}catch(e){return error(e);}}
+import { actor, body, error, json, serial } from '../../../../../../../lib/api/governance';
+import { completeHumanRefinement } from '../../../../../../../lib/governance';
+
+export async function POST(request, { params }) {
+  try {
+    const user = await actor();
+    const payload = await body(request);
+    const { versionId } = await params;
+    return json(serial(await completeHumanRefinement({
+      versionId,
+      actor: user,
+      expectedState: payload.expectedState,
+      expectedUpdatedAt: payload.expectedUpdatedAt,
+      reason: payload.reason
+    })));
+  } catch (cause) {
+    return error(cause);
+  }
+}

@@ -4,8 +4,8 @@
 
 **M3 — Refinement Workspace Redesign — IN_PROGRESS**
 
-Most recently completed checkpoint: **M3-C3 Human Findings, Evidence, and Clarification**
-Most recently completed task: **M3-C3-T5 Verify and document Human Findings checkpoint**
+Most recently completed checkpoint: **M3-C4 Human-Only Completion**
+Most recently completed task: **M3-C4-T4 Expose native completion UI and verify checkpoint**
 
 ## Objective
 
@@ -44,9 +44,9 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-M3-C3 is complete: structured Human Findings, evidence, clarification response
-and review, disposition, scoped audit history, concurrency guards, and native
-capability-gated controls are present. M3-C4 remains planned and is not started.
+M3-C4 is complete: server-derived readiness, concurrent-safe summary, and the
+transactional Human-Only completion transition to Validation are present.
+M3-C5 remains planned and is not started.
 
 ## Remaining checklist
 
@@ -64,7 +64,8 @@ capability-gated controls are present. M3-C4 remains planned and is not started.
 - [x] Add session, document/reference workspace, and safe workspace detail.
 - [x] Complete M3-C2 Document and Reference Workspace.
 - [x] Complete M3-C3 Human Findings, Evidence, and Clarification.
-- [ ] Start M3-C4 Human-Only Completion only after explicit approval.
+- [x] Complete M3-C4 Human-Only Completion.
+- [ ] Start M3-C5 History, Tests, Accessibility, and Acceptance only after explicit approval.
 
 ## Accepted known limitations
 
@@ -85,7 +86,7 @@ None.
 
 ## Prohibited scope
 
-Do not start M3-C4 without explicit approval. Do not change request lifecycle
+Do not start M3-C5 without explicit approval. Do not change request lifecycle
 semantics, remove legacy routes, push,
 deploy, alter Neon, or add external integrations without explicit approval.
 
