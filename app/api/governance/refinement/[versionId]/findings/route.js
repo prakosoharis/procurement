@@ -1,3 +1,70 @@
-import{db}from '../../../../../../lib/db';import{actor,json,error,body,serial}from '../../../../../../lib/api/governance';import{scopeWhere}from '../../../../../../lib/authorization/scope';import{can,Permission}from '../../../../../../lib/authorization/permissions';
-export async function GET(_,{params}){try{const u=await actor(),{versionId}=await params,v=await db.sopVersion.findFirst({where:{id:versionId,sopDocument:{...scopeWhere(u,'sopDocument')}},include:{refinementSessions:{orderBy:{cycleNo:'desc'},take:1,include:{humanFindings:true}}}});if(!v?.refinementSessions[0])throw Object.assign(new Error('Refinement session not found.'),{code:'NOT_FOUND'});return json(serial(v.refinementSessions[0].humanFindings))}catch(e){return error(e)}}
-export async function POST(req,{params}){try{const u=await actor();if(!can(u,Permission.REFINEMENT_RUN))throw Object.assign(new Error('Forbidden.'),{code:'FORBIDDEN'});const b=await body(req),{versionId}=await params,v=await db.sopVersion.findFirst({where:{id:versionId,lifecycleState:'REFINEMENT',sopDocument:{...scopeWhere(u,'sopDocument')}},include:{refinementSessions:{orderBy:{cycleNo:'desc'},take:1}}});const s=v?.refinementSessions[0];if(!s)throw Object.assign(new Error('Refinement session not found.'),{code:'NOT_FOUND'});if(!b.title||!b.category||!b.severity||!b.observation)throw Object.assign(new Error('Required finding fields are missing.'),{code:'INVALID_INPUT'});return json(serial(await db.humanRefinementFinding.create({data:{refinementSessionId:s.id,title:b.title,category:b.category,severity:b.severity,observation:b.observation,documentLocation:b.documentLocation||null,blocking:['CRITICAL','HIGH'].includes(b.severity),createdById:u.id}})),201)}catch(e){return error(e)}}
+import { db } from '../../../../../../lib/db';
+import { actor, body, error, json, serial } from '../../../../../../lib/api/governance';
+import { can, Permission } from '../../../../../../lib/authorization/permissions';
+import { fail } from '../../../../../../lib/governance/errors';
+import { recordGovernanceEvent } from '../../../../../../lib/governance/activity/governance-audit-log';
+import {
+  parseFindingInput
+} from '../../../../../../lib/governance/refinement/human-workspace';
+import {
+  findingInclude,
+  scopedRefinementSession
+} from '../../../../../../lib/governance/refinement/human-workspace-data';
+import { findingDto } from '../../../../../../lib/governance/refinement/human-workspace-dto';
+
+export async function GET(_, { params }) {
+  try {
+    const user = await actor();
+    const { versionId } = await params;
+    const { session } = await scopedRefinementSession(db, user, versionId);
+    const findings = await db.humanRefinementFinding.findMany({
+      where: { refinementSessionId: session.id },
+      include: findingInclude,
+      orderBy: [{ blocking: 'desc' }, { createdAt: 'desc' }]
+    });
+    return json(serial(findings.map(findingDto)));
+  } catch (cause) {
+    return error(cause);
+  }
+}
+
+export async function POST(request, { params }) {
+  try {
+    const user = await actor();
+    if (!can(user, Permission.REFINEMENT_RUN)) {
+      fail('FORBIDDEN', 'Tim Procurement authority is required.');
+    }
+    const input = parseFindingInput(await body(request));
+    const { versionId } = await params;
+    const { session, businessUnitId } = await scopedRefinementSession(db, user, versionId);
+
+    const finding = await db.$transaction(async tx => {
+      const created = await tx.humanRefinementFinding.create({
+        data: {
+          refinementSessionId: session.id,
+          ...input,
+          createdById: user.id
+        },
+        include: findingInclude
+      });
+      await recordGovernanceEvent(tx, {
+        actor: user,
+        businessUnitId,
+        entity: 'HumanRefinementFinding',
+        entityId: created.id,
+        action: 'FINDING_CREATED',
+        resultingState: created.status,
+        metadata: {
+          severity: created.severity,
+          blocking: created.blocking,
+          category: created.category
+        }
+      });
+      return created;
+    });
+
+    return json(serial(findingDto(finding)), 201);
+  } catch (cause) {
+    return error(cause);
+  }
+}

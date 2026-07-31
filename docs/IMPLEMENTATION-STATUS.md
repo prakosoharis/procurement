@@ -4,8 +4,8 @@
 
 **M3 — Refinement Workspace Redesign — IN_PROGRESS**
 
-Most recently completed checkpoint: **M3-C1 Data Contract and API Reconciliation**
-Most recently completed task: **M3-C1-T1 Reconcile Refinement data contract and API architecture**
+Most recently completed checkpoint: **M3-C3 Human Findings, Evidence, and Clarification**
+Most recently completed task: **M3-C3-T5 Verify and document Human Findings checkpoint**
 
 ## Objective
 
@@ -22,6 +22,11 @@ without changing its established statuses or legacy source evidence.
 - `6dabd53` — added native request list.
 - `9a142bb` — added native request intake.
 - `2b08e12` — added native request detail.
+- `2bdb3a7` — added Human Refinement finding persistence foundation.
+- `1cd2464` — added Human Refinement finding APIs.
+- `ae61dc1` — added evidence and clarification flows.
+- `62101ab` — added evidence UI and activity history.
+- `5d34edf` — restricted clarification responses to the assigned Business Unit.
 
 ## Completed checklist
 
@@ -39,9 +44,9 @@ without changing its established statuses or legacy source evidence.
 
 ## Current next item
 
-M3-C2 is complete: native queue, Human-Only session foundation, scoped document
-workspace, secure document access, and session-owned Reference Set are present.
-M3-C3 is the next planned checkpoint for findings, evidence, and clarification.
+M3-C3 is complete: structured Human Findings, evidence, clarification response
+and review, disposition, scoped audit history, concurrency guards, and native
+capability-gated controls are present. M3-C4 remains planned and is not started.
 
 ## Remaining checklist
 
@@ -58,7 +63,8 @@ M3-C3 is the next planned checkpoint for findings, evidence, and clarification.
 - [x] Add native scoped Refinement Queue (M3-C2-T1).
 - [x] Add session, document/reference workspace, and safe workspace detail.
 - [x] Complete M3-C2 Document and Reference Workspace.
-- [ ] Start M3-C3 Human Findings, Evidence, and Clarification.
+- [x] Complete M3-C3 Human Findings, Evidence, and Clarification.
+- [ ] Start M3-C4 Human-Only Completion only after explicit approval.
 
 ## Accepted known limitations
 
@@ -79,8 +85,8 @@ None.
 
 ## Prohibited scope
 
-Do not start M3-C2 without explicit approval of M3-C1 technical decisions. Do
-not change request lifecycle semantics, remove legacy routes, push,
+Do not start M3-C4 without explicit approval. Do not change request lifecycle
+semantics, remove legacy routes, push,
 deploy, alter Neon, or add external integrations without explicit approval.
 
 ## Execution cadence

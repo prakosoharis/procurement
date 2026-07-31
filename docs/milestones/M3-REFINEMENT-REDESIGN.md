@@ -26,7 +26,7 @@ governance decision.
 | M3-C0 Product and UX Specification | ACCEPTED | Product, UX, roles, and controls are explicitly defined. |
 | M3-C1 Data Contract and API Reconciliation | DONE | Reconciled repository reality; additive implementation decisions remain pending. |
 | M3-C2 Document and Reference Workspace | PLANNED | Build queue, workspace shell, safe document area, and reference set. |
-| M3-C3 Human Findings, Evidence, and Clarification | PLANNED | Build human finding workflow, evidence, clarification, history, and capabilities. |
+| M3-C3 Human Findings, Evidence, and Clarification | DONE | Structured human findings, evidence, clarification, disposition, history, and server-derived capabilities. |
 | M3-C4 Human-Only Completion | PLANNED | Build summary, readiness, server-side completion, and audit trail. |
 | M3-C5 History, Tests, Accessibility, and Acceptance | PLANNED | Complete verification, accessibility, responsive evidence, and milestone acceptance. |
 

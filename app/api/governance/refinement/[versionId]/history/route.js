@@ -1,2 +1,25 @@
-import{db}from '../../../../../../lib/db';import{actor,json,error,serial}from '../../../../../../lib/api/governance';import{scopeWhere}from '../../../../../../lib/authorization/scope';
-export async function GET(_,{params}){try{const u=await actor(),{versionId}=await params,v=await db.sopVersion.findFirst({where:{id:versionId,sopDocument:{...scopeWhere(u,'sopDocument')}},include:{refinementSessions:{orderBy:{cycleNo:'desc'},take:1,include:{humanFindings:true}}}});if(!v?.refinementSessions[0])throw Object.assign(new Error('Refinement session not found.'),{code:'NOT_FOUND'});const ids=v.refinementSessions[0].humanFindings.map(f=>f.id);return json(serial(await db.auditLog.findMany({where:{entity:'HumanRefinementFinding',entityId:{in:ids}},orderBy:{createdAt:'desc'}})))}catch(e){return error(e)}}
+import { db } from '../../../../../../lib/db';
+import { actor, error, json, serial } from '../../../../../../lib/api/governance';
+import { scopedRefinementSession } from '../../../../../../lib/governance/refinement/human-workspace-data';
+import { historyDto } from '../../../../../../lib/governance/refinement/human-workspace-dto';
+
+export async function GET(_, { params }) {
+  try {
+    const user = await actor();
+    const { versionId } = await params;
+    const { session } = await scopedRefinementSession(db, user, versionId, {
+      humanFindings: { select: { id: true } }
+    });
+    const ids = session.humanFindings.map(finding => finding.id);
+    const history = ids.length
+      ? await db.auditLog.findMany({
+          where: { entity: 'HumanRefinementFinding', entityId: { in: ids } },
+          include: { actor: { select: { id: true, name: true } } },
+          orderBy: { createdAt: 'desc' }
+        })
+      : [];
+    return json(serial(history.map(historyDto)));
+  } catch (cause) {
+    return error(cause);
+  }
+}
