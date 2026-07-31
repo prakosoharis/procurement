@@ -125,6 +125,13 @@ enum RefinementSessionStatus {
   READY_FOR_COMPLETION
   COMPLETED
 }
+enum HumanRefinementFindingStatus {
+  OPEN
+  WAITING_FOR_CLARIFICATION
+  RESOLVED
+  DEFERRED
+  DISMISSED
+}
 
 enum ValidationDecisionType {
   ACCEPTED
@@ -246,6 +253,7 @@ model User {
   submittedSopVersions      SopVersion[]            @relation("SopVersionSubmitter")
   requestedRefinementJobs   RefinementJob[]         @relation("RefinementJobRequester")
   startedRefinementSessions RefinementSession[]
+  createdHumanRefinementFindings HumanRefinementFinding[]
   validationDecisions       ValidationDecision[]
   publishingRecords         PublishingRecord[]      @relation("PublishingRecordPublisher")
   auditReviews              AuditReview[]           @relation("AuditReviewOwner")
@@ -560,9 +568,27 @@ model RefinementSession {
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
   references     RefinementSessionReference[]
+  humanFindings  HumanRefinementFinding[]
 
   @@unique([sopVersionId, cycleNo])
   @@index([businessUnitId, status])
+}
+model HumanRefinementFinding {
+ id String @id @default(cuid())
+ refinementSessionId String
+ title String
+ category String
+ severity String
+ observation String
+ documentLocation String?
+ blocking Boolean @default(false)
+ status HumanRefinementFindingStatus @default(OPEN)
+ createdById String
+ createdAt DateTime @default(now())
+ updatedAt DateTime @updatedAt
+ refinementSession RefinementSession @relation(fields:[refinementSessionId],references:[id],onDelete:Cascade)
+ createdBy User @relation(fields:[createdById],references:[id])
+ @@index([refinementSessionId,status])
 }
 
 model RefinementSessionReference {
