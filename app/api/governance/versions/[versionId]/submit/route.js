@@ -1,0 +1,2 @@
+import { actor,body,json,error,serial } from '../../../../../../lib/api/governance'; import { submitVersion } from '../../../../../../lib/governance';
+export async function POST(req,{params}){try{const u=await actor(),b=await body(req),{versionId}=await params;if(b.expectedState!=='DRAFT')throw Object.assign(new Error('Expected DRAFT state.'),{code:'CONCURRENT_MODIFICATION'});return json(serial(await submitVersion({versionId,actor:u,reason:b.comment,expectedState:b.expectedState})));}catch(e){return error(e);}}

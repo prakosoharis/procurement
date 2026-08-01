@@ -1,0 +1,2 @@
+import{actor,body,json,error,serial}from '../../../../../../../lib/api/governance';import{startRefinement}from '../../../../../../../lib/governance';
+export async function POST(req,{params}){try{const u=await actor(),b=await body(req),{versionId}=await params;if(b.expectedState!=='SUBMITTED')throw Object.assign(new Error('State changed.'),{code:'CONCURRENT_MODIFICATION'});return json(serial(await startRefinement({versionId,actor:u,reason:b.reason,expectedState:b.expectedState})));}catch(e){return error(e);}}

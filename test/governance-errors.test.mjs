@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{GovernanceError}from'../lib/governance/errors.js';import{errorStatus}from'../lib/api/error-contract.js';
+test('governance error mapping covers contract codes',()=>{for(const [code,status]of Object.entries({UNAUTHENTICATED:401,FORBIDDEN:403,OUT_OF_SCOPE:403,NOT_FOUND:404,INVALID_INPUT:400,MISSING_REQUIRED_METADATA:422,INVALID_TRANSITION:409,CONCURRENT_MODIFICATION:409,PUBLISHED_VERSION_IMMUTABLE:409}))assert.equal(errorStatus[code],status)});
+test('domain error preserves intended code',()=>assert.equal(new GovernanceError('NOT_FOUND','x').code,'NOT_FOUND'));
