@@ -11,9 +11,8 @@
 
 The main product interface is delivered as a static application asset inside the
 Next.js application. Route Handlers provide data and mutations to that
-interface. The app also contains governed server-rendered routes for SOP,
-submission, and refinement operations; their authorization remains on the
-server.
+interface. Product screens are served through `/` and `/hub/:page`; backend
+authorization remains on the server through Route Handlers and shared services.
 
 ## Core data
 

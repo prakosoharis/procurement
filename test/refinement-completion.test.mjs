@@ -41,15 +41,12 @@ test('completion readiness accepts final findings with closed clarifications', (
   assert.equal(readiness.ready, true);
 });
 
-test('completion service and native UI enforce server authority and concurrency', () => {
+test('completion service and route enforce server authority and concurrency', () => {
   const service = fs.readFileSync('lib/governance/refinement/completion-service.js', 'utf8');
   const route = fs.readFileSync('app/api/governance/versions/[versionId]/refinement/complete-human/route.js', 'utf8');
-  const page = fs.readFileSync('app/sop-governance/refinement/[versionId]/page.js', 'utf8');
   assert.match(service, /assertGovernanceActor\(actor\)/);
   assert.match(service, /scopeWhere\(actor, 'sopDocument'\)/);
   assert.match(service, /expectedUpdatedAt/);
   assert.match(service, /REFINEMENT_SESSION_COMPLETED_HUMAN_ONLY/);
   assert.match(route, /completeHumanRefinement/);
-  assert.match(page, /capabilities\.canCompleteHumanOnly/);
-  assert.doesNotMatch(page, /role\s*===|role\s*!==/);
 });

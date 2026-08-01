@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import {
   defaultBlocking,
   parseDispositionInput,
@@ -55,12 +54,10 @@ test('inactive lifecycle disables every mutation capability', () => {
   assert.equal(capabilities.canDispositionFinding, false);
 });
 
-test('native workspace consumes server capabilities and mutation routes keep scope and concurrency guards', () => {
-  const page = fs.readFileSync('app/sop-governance/refinement/[versionId]/page.js', 'utf8');
+test('mutation routes keep scope and concurrency guards', async () => {
+  const fs = await import('node:fs');
   const findingRoute = fs.readFileSync('app/api/governance/refinement/[versionId]/findings/[findingId]/route.js', 'utf8');
   const responseRoute = fs.readFileSync('app/api/governance/refinement/clarifications/[clarificationId]/respond/route.js', 'utf8');
-  assert.match(page, /data\.capabilities \|\| \{\}/);
-  assert.doesNotMatch(page, /role\s*===|role\s*!==/);
   assert.match(findingRoute, /scopedFinding/);
   assert.match(findingRoute, /expectedUpdatedAt/);
   assert.match(responseRoute, /scopeWhere\(user, 'businessUnit'\)/);
