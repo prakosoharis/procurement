@@ -128,9 +128,23 @@ tr{cursor:pointer}
 .repo-tabs{display:flex;gap:6px;padding:5px;background:var(--muted);border-radius:10px;width:fit-content}
 .repo-tab{border:0;background:transparent;padding:8px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted-fg)}
 .repo-tab.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.module-tabs{display:flex;gap:5px;border-bottom:1px solid var(--border);overflow:auto}
+.module-tab{border:0;background:transparent;padding:11px 14px 13px;color:var(--muted-fg);font-size:13px;font-weight:700;cursor:pointer;position:relative;white-space:nowrap}
+.module-tab.active{color:var(--primary)}
+.module-tab.active:after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--primary)}
+.repo-module{display:none}.repo-module.active{display:block}
+.repo-source-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.repo-source-card{padding:16px}.repo-source-card h4{font-size:14px;font-weight:700;margin:8px 0 5px}.repo-source-card p{font-size:11px;color:var(--muted-fg);line-height:1.45}
+.relationship-layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+.relationship-list{padding:10px}.relationship-item{border:1px solid transparent;border-radius:10px;padding:12px;cursor:pointer}.relationship-item.active{background:rgba(153,27,27,.06);border-color:rgba(153,27,27,.18)}.relationship-item b{font-size:13px}.relationship-item span{display:block;font-size:11px;color:var(--muted-fg);margin-top:4px}
+.relationship-card{border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;justify-content:space-between;gap:16px;margin-bottom:10px}.relationship-card h4{font-size:14px;font-weight:700;margin-bottom:5px}.relationship-card p{font-size:12px;color:var(--muted-fg);line-height:1.45}
 .repo-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .repo-summary-card{padding:14px 16px}.repo-summary-val{font-size:22px;font-weight:700;margin-top:4px}.repo-summary-label{font-size:11px;color:var(--muted-fg)}
-@media(max-width:768px){.repo-summary{grid-template-columns:repeat(2,1fr)}.repo-tabs{width:100%;overflow:auto}.repo-tab{white-space:nowrap}}
+.refinement-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.refinement-stat{padding:16px;display:flex;align-items:center;justify-content:space-between}.refinement-stat small{font-size:11px;color:var(--muted-fg);font-weight:700}.refinement-stat strong{display:block;font-size:26px;margin-top:4px}.refinement-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:20px;background:rgba(153,27,27,.07);color:var(--primary)}
+.refinement-progress{height:8px;background:var(--muted);border-radius:999px;overflow:hidden}.refinement-progress span{display:block;height:100%;background:var(--primary)}
+.refinement-detail-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px}.refinement-side{padding:18px;position:sticky;top:86px}.mini-row{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 0;font-size:12px}.finding-mini{border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}.finding-mini h4{font-size:14px;font-weight:700;margin:8px 0 5px}.finding-mini p{font-size:12px;color:var(--muted-fg);line-height:1.5}
+@media(max-width:768px){.repo-summary,.refinement-summary{grid-template-columns:repeat(2,1fr)}.repo-tabs{width:100%;overflow:auto}.repo-tab{white-space:nowrap}.repo-source-grid,.relationship-layout,.refinement-detail-grid{grid-template-columns:1fr}}
 
 /* Calendar event */
 .cal-event{display:flex;align-items:center;gap:12px;padding:8px 0}
@@ -414,32 +428,56 @@ tr{cursor:pointer}
 <div class="page gap-20" id="page-repository">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <div><h2 style="font-size:20px;font-weight:700">SOP Repository</h2><p style="font-size:14px;color:var(--muted-fg);margin-top:4px">Kelola seluruh dokumen SOP dari semua Bisnis Unit</p></div>
-    <div style="display:flex;gap:8px"><button class="btn btn-outline btn-sm admin-only" onclick="openMasterDataModal()">⚙ Kelola Master Data</button><button class="btn btn-primary btn-sm compliance-manager-only" onclick="openCreateSopModal()">+ Buat SOP Baru</button></div>
+    <div data-repo-sop-actions style="display:flex;gap:8px"><button class="btn btn-outline btn-sm admin-only" onclick="openMasterDataModal()">⚙ Kelola Master Data</button><button class="btn btn-primary btn-sm compliance-manager-only" onclick="openCreateSopModal()">+ Buat SOP Baru</button></div>
   </div>
-  <div class="repo-summary" id="repositorySummary"></div>
-  <div class="repo-tabs"><button class="repo-tab active" data-repo-view="library" onclick="switchRepositoryView('library')">SOP Library & Versions</button><button class="repo-tab" data-repo-view="compliance" onclick="switchRepositoryView('compliance')">Document Compliance</button></div>
-  <div class="card" style="padding:20px" id="repoSopLibrary">
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div class="search-wrap" style="min-width:220px;flex:1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted-fg)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="repoSearch" type="text" placeholder="Cari nama SOP atau bisnis unit..." style="height:32px;font-size:12px;padding-left:36px"></div>
-      <select id="repoGroupFilter" style="width:150px;height:32px;font-size:12px"><option value="">Semua Group</option><option value="SMM">SMM</option><option value="SMMA">SMMA</option><option value="Non Group">Non Group</option></select>
-      <select id="repoBuFilter" style="width:190px;height:32px;font-size:12px"><option value="">Semua Bisnis Unit</option></select>
-      <select id="repoIndustryFilter" style="width:180px;height:32px;font-size:12px"><option value="">Semua Industry</option><option>Financial Services</option><option>Renewable Energy</option><option>Mining</option></select>
+  <div class="module-tabs">
+    <button class="module-tab active" data-repo-section="sop" onclick="switchRepositorySection('sop')">SOP</button>
+    <button class="module-tab" data-repo-section="sources" onclick="switchRepositorySection('sources')">Sumber Pembanding</button>
+    <button class="module-tab" data-repo-section="links" onclick="switchRepositorySection('links')">Hubungan SOP & Sumber</button>
+  </div>
+  <div class="repo-module active" id="repoSectionSop">
+    <div class="repo-summary" id="repositorySummary"></div>
+    <div class="repo-tabs"><button class="repo-tab active" data-repo-view="library" onclick="switchRepositoryView('library')">SOP Library & Versions</button><button class="repo-tab" data-repo-view="compliance" onclick="switchRepositoryView('compliance')">Document Compliance</button></div>
+    <div class="card" style="padding:20px" id="repoSopLibrary">
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="search-wrap" style="min-width:220px;flex:1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted-fg)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input id="repoSearch" type="text" placeholder="Cari nama SOP atau bisnis unit..." style="height:32px;font-size:12px;padding-left:36px"></div>
+        <select id="repoGroupFilter" style="width:150px;height:32px;font-size:12px"><option value="">Semua Group</option><option value="SMM">SMM</option><option value="SMMA">SMMA</option><option value="Non Group">Non Group</option></select>
+        <select id="repoBuFilter" style="width:190px;height:32px;font-size:12px"><option value="">Semua Bisnis Unit</option></select>
+        <select id="repoIndustryFilter" style="width:180px;height:32px;font-size:12px"><option value="">Semua Industry</option><option>Financial Services</option><option>Renewable Energy</option><option>Mining</option></select>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+        <table><thead><tr><th>ID</th><th>Nama SOP</th><th>Group</th><th>Bisnis Unit</th><th>Industry</th><th>PIC</th><th>Versi</th><th>Status</th><th>Terakhir Diperbarui</th><th>Aksi</th></tr></thead><tbody id="repositoryRows"></tbody></table>
+      </div>
     </div>
-    <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
-      <table><thead><tr><th>ID</th><th>Nama SOP</th><th>Group</th><th>Bisnis Unit</th><th>Industry</th><th>PIC</th><th>Versi</th><th>Status</th><th>Terakhir Diperbarui</th><th>Aksi</th></tr></thead><tbody id="repositoryRows"></tbody></table>
+    <div class="card" style="padding:20px;display:none" id="repoComplianceView">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px"><div><div style="display:flex;gap:8px;align-items:center"><h3 style="font-size:14px">Document Compliance Matrix</h3><span class="badge badge-primary">Document Control</span></div><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Hijau = Approved · kuning = Draft / menunggu approval · merah = belum tersedia. Gunakan filter Group, Business Unit, atau Industry di atas untuk mempersempit hasil.</p></div><span class="badge badge-muted" id="coverageLabel">Semua Business Unit</span></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;padding:12px;background:var(--muted);border-radius:8px">
+        <select id="complianceGroupFilter" style="width:160px;height:32px;font-size:12px"><option value="">Semua Group</option><option value="SMM">SMM</option><option value="SMMA">SMMA</option><option value="Non Group">Non Group</option></select>
+        <select id="complianceBuFilter" style="width:200px;height:32px;font-size:12px"><option value="">Semua Bisnis Unit</option></select>
+        <select id="complianceIndustryFilter" style="width:180px;height:32px;font-size:12px"><option value="">Semua Industry</option><option>Financial Services</option><option>Renewable Energy</option><option>Mining</option></select>
+      </div>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px"><table style="min-width:1320px"><thead id="documentMatrixHead"></thead><tbody id="documentCoverage"></tbody></table></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+        <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="badge badge-red">MANDATORY</span><span style="font-size:11px;color:var(--muted-fg)">Wajib tersedia untuk seluruh BU</span></div><div id="mandatoryDocumentList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div></div>
+        <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="badge badge-blue">ADDITIONAL</span><span style="font-size:11px;color:var(--muted-fg)">Dokumen governance tambahan</span></div><div id="additionalDocumentList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div></div>
+      </div>
     </div>
   </div>
-  <div class="card" style="padding:20px;display:none" id="repoComplianceView">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px"><div><div style="display:flex;gap:8px;align-items:center"><h3 style="font-size:14px">Document Compliance Matrix</h3><span class="badge badge-primary">Document Control</span></div><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Hijau = Approved · kuning = Draft / menunggu approval · merah = belum tersedia. Gunakan filter Group, Business Unit, atau Industry di atas untuk mempersempit hasil.</p></div><span class="badge badge-muted" id="coverageLabel">Semua Business Unit</span></div>
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;padding:12px;background:var(--muted);border-radius:8px">
-      <select id="complianceGroupFilter" style="width:160px;height:32px;font-size:12px"><option value="">Semua Group</option><option value="SMM">SMM</option><option value="SMMA">SMMA</option><option value="Non Group">Non Group</option></select>
-      <select id="complianceBuFilter" style="width:200px;height:32px;font-size:12px"><option value="">Semua Bisnis Unit</option></select>
-      <select id="complianceIndustryFilter" style="width:180px;height:32px;font-size:12px"><option value="">Semua Industry</option><option>Financial Services</option><option>Renewable Energy</option><option>Mining</option></select>
+  <div class="repo-module" id="repoSectionSources">
+    <div class="repo-source-grid">
+      <div class="card repo-source-card"><span class="badge badge-primary">Regulation</span><h4>POJK No. 12/2026</h4><p>Sumber eksternal aktif untuk validasi ketentuan tender, evaluasi vendor, dan pelaporan berkala.</p><button class="btn btn-outline btn-sm">Buka</button></div>
+      <div class="card repo-source-card"><span class="badge badge-blue">Best Practice</span><h4>Best Practice Procurement 2026</h4><p>Katalog praktik pembanding internal untuk standardisasi proses sourcing dan vendor management.</p><button class="btn btn-outline btn-sm">Buka</button></div>
+      <div class="card repo-source-card"><span class="badge badge-amber">Audit Finding</span><h4>Audit Finding Procurement Q2</h4><p>Temuan audit yang bisa dipakai sebagai rujukan refinement SOP lintas Business Unit.</p><button class="btn btn-outline btn-sm">Buka</button></div>
     </div>
-    <div style="overflow-x:auto;border:1px solid var(--border);border-radius:8px"><table style="min-width:1320px"><thead id="documentMatrixHead"></thead><tbody id="documentCoverage"></tbody></table></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
-      <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="badge badge-red">MANDATORY</span><span style="font-size:11px;color:var(--muted-fg)">Wajib tersedia untuk seluruh BU</span></div><div id="mandatoryDocumentList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div></div>
-      <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="badge badge-blue">ADDITIONAL</span><span style="font-size:11px;color:var(--muted-fg)">Dokumen governance tambahan</span></div><div id="additionalDocumentList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h3 style="font-size:15px;font-weight:700">Katalog Sumber Pembanding</h3><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Sumber internal dan eksternal yang menjadi pembanding resmi aplikasi.</p></div><button class="btn btn-primary btn-sm" onclick="openModal('ingestionModal')">+ Tambah Sumber</button></div>
+      <table><thead><tr><th>Judul</th><th>Asal</th><th>Kategori</th><th>Pemilik</th><th>Versi</th><th>Status</th><th>Aksi</th></tr></thead><tbody><tr><td><b>POJK No. 12/2026</b><br><span style="font-size:11px;color:var(--muted-fg)">Pedoman Pengadaan Barang dan Jasa</span></td><td>External Data</td><td>Regulation</td><td>OJK</td><td>2026.05</td><td><span class="badge badge-green">AKTIF</span></td><td><button class="btn btn-outline btn-sm">Buka</button></td></tr><tr><td><b>Best Practice Procurement 2026</b><br><span style="font-size:11px;color:var(--muted-fg)">Control checklist</span></td><td>Internal Data</td><td>Best Practice</td><td>Corporate Procurement</td><td>v2026</td><td><span class="badge badge-green">AKTIF</span></td><td><button class="btn btn-outline btn-sm">Buka</button></td></tr><tr><td><b>Spending Analysis Q2 2026</b></td><td>Internal Data</td><td>Spending Analysis</td><td>Procurement Analytics</td><td>Q2 2026</td><td><span class="badge badge-amber">DRAFT</span></td><td><button class="btn btn-outline btn-sm">Validasi</button></td></tr></tbody></table>
+    </div>
+  </div>
+  <div class="repo-module" id="repoSectionLinks">
+    <div class="relationship-layout">
+      <aside class="card"><div style="padding:16px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700">Pilih SOP</div><div class="relationship-list"><div class="relationship-item active"><b>SOP Pengadaan Barang & Jasa</b><span>BU Logistik A · 4 sumber aktif</span></div><div class="relationship-item"><b>SOP Manajemen Vendor</b><span>Corporate Procurement · 3 sumber aktif</span></div><div class="relationship-item"><b>SOP Anti Fraud</b><span>BU Kepatuhan · 2 sumber aktif</span></div></div></aside>
+      <section class="card" style="padding:18px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px"><div><h3 style="font-size:15px;font-weight:700">SOP Pengadaan Barang & Jasa</h3><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Sumber aktif yang menjadi pembanding resmi untuk refinement SOP ini.</p></div><button class="btn btn-primary btn-sm">+ Hubungkan Sumber</button></div><div class="relationship-card"><div><h4>POJK No. 12/2026</h4><p>Regulation · v2026.05 · Mengatur tender terbuka, evaluasi kualifikasi, dan pelaporan.</p></div><span class="badge badge-green">AKTIF</span></div><div class="relationship-card"><div><h4>Best Practice Procurement 2026</h4><p>Best Practice · v2026 · Menjadi pembanding kontrol proses procurement modern.</p></div><span class="badge badge-green">AKTIF</span></div><div class="relationship-card"><div><h4>Audit Finding Procurement Q2</h4><p>Audit Finding · Q2 2026 · Dipakai untuk validasi area kontrol yang lemah.</p></div><span class="badge badge-green">AKTIF</span></div></section>
     </div>
   </div>
 </div>
@@ -498,86 +536,23 @@ KESIMPULAN
 Skor Kepatuhan BU Logistik A: 78% (Kategori: Sebagian Patuh)</textarea>
   </div>
 </div>
-<div class="page-full" id="page-refinement">
-  <div class="toolbar">
-    <span class="toolbar-label">BU:</span>
-    <select style="width:160px"><option>BU Logistik A</option><option>BU Distribusi B</option><option>BU Keuangan C</option></select>
-    <span class="toolbar-label">SOP:</span>
-    <select style="width:220px"><option>SOP Pengadaan Barang & Jasa</option><option>SOP Manajemen Vendor & Rekanan</option></select>
-    <div class="toolbar-sep"></div>
-    <span class="toolbar-label">Regulator:</span>
-    <select style="width:120px"><option>OJK</option><option>Bank Indonesia</option><option>LKPP</option></select>
-    <button class="btn btn-outline btn-sm" onclick="openModal('ingestionModal')">📤 Tambah Aturan</button>
-    <div style="margin-left:auto;display:flex;gap:8px">
-      <span class="badge badge-green">AI Analysis Complete</span>
-      <span class="badge">3 Gap Terdeteksi</span>
-    </div>
+<div class="page gap-20" id="page-refinement">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+    <div><h2 style="font-size:20px;font-weight:700">Refinement</h2><p style="font-size:14px;color:var(--muted-fg);margin-top:4px">Pemeriksaan SOP terhadap sumber pembanding internal dan eksternal.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline btn-sm" onclick="openModal('ingestionModal')">📤 Tambah Sumber</button><button class="btn btn-primary btn-sm" onclick="showToast('Refinement run dibuat');switchRefinementView('process')">+ Jalankan Refinement</button></div>
   </div>
-  <div class="wb-split" style="flex:1;overflow:hidden">
-    <!-- SOP Doc -->
-    <div class="wb-panel">
-      <div class="wb-panel-header" style="background:rgba(0,0,0,0.02)">📄 Dokumen SOP Bisnis Unit <span class="badge" style="margin-left:auto">SOP Pengadaan v2.1</span></div>
-      <div class="wb-content" style="font-size:13px;line-height:1.8">
-        <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">SOP Pengadaan Barang & Jasa</h3>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:16px">BU Logistik A — Revisi 2.1 — Berlaku sejak 1 Jan 2025</p>
-        <h4 style="font-size:14px;font-weight:600;margin-bottom:4px">BAB 1 — Ruang Lingkup</h4>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:16px">SOP ini mengatur proses pengadaan barang dan jasa yang dilakukan oleh unit Logistik A.</p>
-        <h4 style="font-size:14px;font-weight:600;margin-bottom:4px">BAB 2 — Prosedur Pengadaan</h4>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:8px">2.1 Pengajuan permintaan pengadaan dilakukan oleh unit kerja melalui formulir elektronik.</p>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:8px">2.2 Persetujuan pengadaan dengan nilai di bawah Rp 100 juta cukup oleh Kepala Unit.</p>
-        <div class="gap-box gap-red"><span style="font-weight:600;color:#b91c1c">⚠ GAP:</span> 2.3 Pengadaan di atas Rp 100 juta <span style="background:#fecaca;padding:0 4px;border-radius:2px">tidak memerlukan</span> proses tender terbuka, cukup dengan penunjukan langsung atas persetujuan Direktur.</div>
-        <h4 style="font-size:14px;font-weight:600;margin:16px 0 4px">BAB 3 — Evaluasi Vendor</h4>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:8px">3.1 Evaluasi vendor dilakukan berdasarkan harga penawaran terendah.</p>
-        <div class="gap-box gap-amber"><span style="font-weight:600;color:#b45309">⚠ GAP:</span> 3.2 <span style="background:#fde68a;padding:0 4px;border-radius:2px">Tidak terdapat ketentuan</span> mengenai evaluasi kualifikasi teknis dan due diligence vendor.</div>
-        <h4 style="font-size:14px;font-weight:600;margin:16px 0 4px">BAB 4 — Dokumentasi & Pelaporan</h4>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:8px">4.1 Seluruh dokumen pengadaan disimpan secara digital minimal 3 tahun.</p>
-        <div class="gap-box gap-amber"><span style="font-weight:600;color:#b45309">⚠ GAP:</span> 4.2 Pelaporan ringkasan pengadaan <span style="background:#fde68a;padding:0 4px;border-radius:2px">dilakukan per semester</span>, bukan per kuartal.</div>
-      </div>
-    </div>
-    <!-- Regulation -->
-    <div class="wb-panel">
-      <div class="wb-panel-header" style="background:rgba(153,27,27,0.03)">📄 <span style="color:var(--primary)">Klausul Regulasi OJK</span> <span class="badge badge-primary" style="margin-left:auto">POJK 12/2026</span></div>
-      <div class="wb-content">
-        <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">POJK No. 12/2026</h3>
-        <p style="font-size:12px;color:var(--muted-fg);margin-bottom:16px">Tentang Pedoman Pengadaan Barang dan Jasa pada Lembaga Jasa Keuangan</p>
-        <div class="reg-card"><h4 style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:4px">Pasal 15 — Proses Tender</h4><p style="font-size:12px;color:var(--muted-fg)">Pengadaan dengan nilai di atas Rp 100 juta <strong>wajib</strong> dilakukan melalui proses tender terbuka dengan minimal 3 peserta.</p></div>
-        <div class="reg-card"><h4 style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:4px">Pasal 18 — Evaluasi Kualifikasi</h4><p style="font-size:12px;color:var(--muted-fg)">Evaluasi <strong>wajib</strong> mencakup aspek kualifikasi teknis, kapasitas finansial, dan hasil due diligence.</p></div>
-        <div class="reg-card"><h4 style="font-size:12px;font-weight:600;color:var(--primary);margin-bottom:4px">Pasal 25 — Pelaporan Berkala</h4><p style="font-size:12px;color:var(--muted-fg)">Ringkasan pelaksanaan pengadaan <strong>wajib</strong> dilaporkan secara <strong>triwulanan</strong>.</p></div>
-        <div style="margin-top:12px"><h4 style="font-size:12px;font-weight:600;margin-bottom:4px">Pasal 30 — Dokumentasi</h4><p style="font-size:12px;color:var(--muted-fg)">Seluruh dokumen terkait pengadaan wajib disimpan paling singkat 5 tahun.</p></div>
-        <div style="margin-top:12px"><h4 style="font-size:12px;font-weight:600;margin-bottom:4px">Pasal 32 — Sanksi</h4><p style="font-size:12px;color:var(--muted-fg)">Pelanggaran dikenakan sanksi administratif berupa teguran tertulis, denda, dan/atau pencabutan izin usaha.</p></div>
-      </div>
-    </div>
-    <!-- Findings -->
-    <div class="wb-findings">
-      <div class="wb-findings-header">✨ AI Findings <span class="badge" style="margin-left:auto">3 temuan</span></div>
-      <div class="wb-findings-body">
-        <div class="finding-card open" id="finding-1">
-          <div class="finding-header" onclick="toggleFinding(1)"><div style="flex:1"><div style="display:flex;gap:4px;margin-bottom:4px"><span class="badge badge-red">High</span><span style="font-size:10px;color:var(--muted-fg);font-family:monospace">BAB 2, Pasal 2.3</span></div><div style="font-size:12px;font-weight:600">Tender Terbuka Tidak Diwajibkan</div></div></div>
-          <div class="finding-body">
-            <div class="finding-detail"><div class="finding-detail-label">Klausul Dilanggar</div><div class="finding-detail-text">Pasal 15 POJK 12/2026</div></div>
-            <div class="finding-detail"><div class="finding-detail-label">Deskripsi Gap</div><div class="finding-detail-text">SOP menyatakan pengadaan di atas Rp 100 juta dapat dilakukan melalui penunjukan langsung, sedangkan POJK mewajibkan tender terbuka.</div></div>
-            <div style="display:flex;gap:4px"><button class="btn btn-primary btn-sm" style="flex:1;height:28px;font-size:10px" onclick="showToast('Temuan #1 divalidasi')">✅ Validasi</button><button class="btn btn-outline btn-sm" style="flex:1;height:28px;font-size:10px" onclick="showToast('Temuan diabaikan')">❌ Abaikan</button><button class="btn btn-outline btn-sm" style="height:28px;font-size:10px" onclick="showToast('Tiket dibuat')">🎫</button></div>
-          </div>
-        </div>
-        <div class="finding-card" id="finding-2">
-          <div class="finding-header" onclick="toggleFinding(2)"><div style="flex:1"><div style="display:flex;gap:4px;margin-bottom:4px"><span class="badge badge-amber">Medium</span><span style="font-size:10px;color:var(--muted-fg);font-family:monospace">BAB 3, Pasal 3.2</span></div><div style="font-size:12px;font-weight:600">Evaluasi Kualifikasi Tidak Memadai</div></div></div>
-          <div class="finding-body">
-            <div class="finding-detail"><div class="finding-detail-label">Klausul Dilanggar</div><div class="finding-detail-text">Pasal 18 POJK 12/2026</div></div>
-            <div class="finding-detail"><div class="finding-detail-label">Deskripsi Gap</div><div class="finding-detail-text">SOP hanya menggunakan harga terendah sebagai kriteria evaluasi.</div></div>
-            <div style="display:flex;gap:4px"><button class="btn btn-primary btn-sm" style="flex:1;height:28px;font-size:10px" onclick="showToast('Temuan #2 divalidasi')">✅ Validasi</button><button class="btn btn-outline btn-sm" style="flex:1;height:28px;font-size:10px">❌ Abaikan</button><button class="btn btn-outline btn-sm" style="height:28px;font-size:10px" onclick="showToast('Tiket dibuat')">🎫</button></div>
-          </div>
-        </div>
-        <div class="finding-card" id="finding-3">
-          <div class="finding-header" onclick="toggleFinding(3)"><div style="flex:1"><div style="display:flex;gap:4px;margin-bottom:4px"><span class="badge badge-amber">Medium</span><span style="font-size:10px;color:var(--muted-fg);font-family:monospace">BAB 4, Pasal 4.2</span></div><div style="font-size:12px;font-weight:600">Frekuensi Pelaporan Tidak Sesuai</div></div></div>
-          <div class="finding-body">
-            <div class="finding-detail"><div class="finding-detail-label">Klausul Dilanggar</div><div class="finding-detail-text">Pasal 25 POJK 12/2026</div></div>
-            <div class="finding-detail"><div class="finding-detail-label">Deskripsi Gap</div><div class="finding-detail-text">SOP mengatur pelaporan per semester, sedangkan regulasi mewajibkan triwulanan.</div></div>
-            <div style="display:flex;gap:4px"><button class="btn btn-primary btn-sm" style="flex:1;height:28px;font-size:10px" onclick="showToast('Temuan #3 divalidasi')">✅ Validasi</button><button class="btn btn-outline btn-sm" style="flex:1;height:28px;font-size:10px">❌ Abaikan</button><button class="btn btn-outline btn-sm" style="height:28px;font-size:10px" onclick="showToast('Tiket dibuat')">🎫</button></div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="module-tabs">
+    <button class="module-tab active" data-refinement-view="recheck" onclick="switchRefinementView('recheck')">Perlu Dicek Ulang</button>
+    <button class="module-tab" data-refinement-view="process" onclick="switchRefinementView('process')">Proses Refinement</button>
+    <button class="module-tab" data-refinement-view="validation" onclick="switchRefinementView('validation')">Hasil & Validasi</button>
+    <button class="module-tab" data-refinement-view="revision" onclick="switchRefinementView('revision')">Paket Revisi</button>
   </div>
+  <div class="refinement-summary">
+    <div class="card refinement-stat"><div><small>PERLU DICEK ULANG</small><strong>12</strong></div><div class="refinement-icon">↻</div></div>
+    <div class="card refinement-stat"><div><small>SEDANG DIPROSES</small><strong>5</strong></div><div class="refinement-icon">◌</div></div>
+    <div class="card refinement-stat"><div><small>MENUNGGU VALIDASI</small><strong>7</strong></div><div class="refinement-icon">✓</div></div>
+  </div>
+  <div id="refinementWorkspace"></div>
 </div>
 <div class="page gap-20" id="page-calendar">
   <div><h2 style="font-size:20px;font-weight:700">Audit Calendar</h2><p style="font-size:14px;color:var(--muted-fg);margin-top:4px">Jadwal kunjungan dan kegiatan audit mendatang</p></div>
@@ -849,6 +824,14 @@ function switchRepositoryView(view){
   document.querySelectorAll('.repo-tab').forEach(function(tab){tab.classList.toggle('active',tab.dataset.repoView===view)});
   if(view==='compliance'){var mainGroup=document.getElementById('repoGroupFilter'),mainBu=document.getElementById('repoBuFilter'),mainIndustry=document.getElementById('repoIndustryFilter'),compGroup=document.getElementById('complianceGroupFilter'),compBu=document.getElementById('complianceBuFilter'),compIndustry=document.getElementById('complianceIndustryFilter');if(compGroup){compGroup.value=mainGroup.value;compIndustry.value=mainIndustry.value;populateComplianceBusinessUnitFilter();compBu.value=mainBu.value;renderDocumentCoverage()}}
 }
+function switchRepositorySection(section){
+  document.querySelectorAll('[data-repo-section]').forEach(function(tab){tab.classList.toggle('active',tab.dataset.repoSection===section)});
+  document.querySelectorAll('.repo-module').forEach(function(module){module.classList.remove('active')});
+  document.querySelectorAll('[data-repo-sop-actions]').forEach(function(actions){actions.style.display=section==='sop'?'flex':'none'});
+  var target=document.getElementById('repoSection'+section.charAt(0).toUpperCase()+section.slice(1));
+  if(target)target.classList.add('active');
+  if(section==='sop')switchRepositoryView(document.querySelector('.repo-tab.active')?.dataset.repoView||'library');
+}
 function setupRepositoryFilters(){
   var group=document.getElementById('repoGroupFilter'),bu=document.getElementById('repoBuFilter'),industry=document.getElementById('repoIndustryFilter'),search=document.getElementById('repoSearch');
   if(!group||!bu||!industry||!search)return;
@@ -864,6 +847,32 @@ function setupRepositoryFilters(){
   if(compGroup){compGroup.addEventListener('change',function(){populateComplianceBusinessUnitFilter();renderDocumentCoverage()});compBu.addEventListener('change',renderDocumentCoverage);compIndustry.addEventListener('change',renderDocumentCoverage)}
   var newGroup=document.getElementById('newSopGroup'),newIndustry=document.getElementById('newSopIndustry'),newBu=document.getElementById('newSopBu');if(newGroup){newGroup.addEventListener('change',populateCreateBusinessUnits);newIndustry.addEventListener('change',populateCreateBusinessUnits)}if(newBu)newBu.addEventListener('change',populateCreatePics)
   loadRepositoryData();
+}
+
+function refinementBadge(label){
+  var cls={AKTIF:'badge-green','MENUNGGU_VALIDASI':'badge-amber','BARU':'badge-blue','TERJADWAL':'badge-primary','DITUNDA':'badge-amber','SEDANG_DIPROSES':'badge-blue','SIAP_VALIDASI':'badge-green','REVISI':'badge-amber','DRAFT_TERSEDIA':'badge-blue'}[label]||'';
+  var text={AKTIF:'Aktif',MENUNGGU_VALIDASI:'Menunggu Validasi',BARU:'Baru',TERJADWAL:'Terjadwal',DITUNDA:'Ditunda',SEDANG_DIPROSES:'Sedang Diproses',SIAP_VALIDASI:'Siap Divalidasi',REVISI:'Menunggu Tindak Lanjut',DRAFT_TERSEDIA:'Draft Tersedia'}[label]||label;
+  return '<span class="badge '+cls+'">'+text+'</span>';
+}
+function switchRefinementView(view){
+  document.querySelectorAll('[data-refinement-view]').forEach(function(tab){tab.classList.toggle('active',tab.dataset.refinementView===view)});
+  renderRefinementView(view);
+}
+function renderRefinementView(view){
+  var root=document.getElementById('refinementWorkspace');if(!root)return;
+  if(view==='process'){
+    root.innerHTML='<div class="card" style="padding:0;overflow:hidden"><div style="padding:16px 18px;border-bottom:1px solid var(--border)"><h3 style="font-size:15px;font-weight:700">Proses Refinement</h3><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Pantau satu run untuk kombinasi SOP dan sumber pembanding.</p></div><table><thead><tr><th>SOP</th><th>Run</th><th>Status</th><th>Progress</th><th>Diperbarui</th><th>Aksi</th></tr></thead><tbody><tr><td><b>SOP Pengadaan Barang & Jasa</b><br><span style="font-size:11px;color:var(--muted-fg)">BU Logistik A</span></td><td>2 dari 3 run selesai</td><td>'+refinementBadge('SEDANG_DIPROSES')+'</td><td><div class="refinement-progress"><span style="width:60%"></span></div></td><td>21 Mei 2026 10:30</td><td><button class="btn btn-outline btn-sm" onclick="switchRefinementView(\'validation\')">Buka</button></td></tr><tr><td><b>SOP Manajemen Kontrak</b><br><span style="font-size:11px;color:var(--muted-fg)">Corporate Procurement</span></td><td>3 dari 3 run selesai</td><td>'+refinementBadge('MENUNGGU_VALIDASI')+'</td><td><div class="refinement-progress"><span style="width:100%;background:#15803d"></span></div></td><td>20 Mei 2026 16:45</td><td><button class="btn btn-outline btn-sm" onclick="switchRefinementView(\'validation\')">Buka</button></td></tr></tbody></table></div>';
+    return;
+  }
+  if(view==='validation'){
+    root.innerHTML='<div class="refinement-detail-grid"><section><div class="card" style="padding:0;overflow:hidden"><div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px"><div><h3 style="font-size:15px;font-weight:700">Hasil & Validasi</h3><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Temuan sudah dikonsolidasi per SOP.</p></div><span class="badge badge-green">3 temuan</span></div><div style="padding:14px"><div class="finding-mini"><span class="badge badge-red">HIGH</span><h4>Tender Terbuka Tidak Diwajibkan</h4><p>BAB 2 · Klausul 2.3 · SOP memperbolehkan penunjukan langsung di atas Rp100 juta.</p><button class="btn btn-primary btn-sm" onclick="showToast(\'Temuan divalidasi\')">Validasi</button> <button class="btn btn-outline btn-sm" onclick="showToast(\'Temuan diabaikan\')">Abaikan</button></div><div class="finding-mini"><span class="badge badge-amber">MEDIUM</span><h4>Evaluasi Kualifikasi Tidak Memadai</h4><p>BAB 3 · Klausul 3.2 · Perlu evaluasi teknis dan due diligence vendor.</p><button class="btn btn-outline btn-sm">Buka Temuan</button></div><div class="finding-mini"><span class="badge badge-amber">MEDIUM</span><h4>Frekuensi Pelaporan Tidak Sesuai</h4><p>BAB 4 · Klausul 4.2 · Pelaporan perlu triwulanan.</p><button class="btn btn-outline btn-sm">Buka Temuan</button></div></div></div></section><aside class="card refinement-side"><h3 style="font-size:15px;font-weight:700;margin-bottom:8px">Ringkasan Proses</h3><div class="mini-row"><span>Sumber dipilih</span><b>3</b></div><div class="mini-row"><span>Run selesai</span><b>3 dari 3</b></div><div class="mini-row"><span>Temuan konsolidasi</span><b>3</b></div><div class="mini-row"><span>Coverage</span><b>96%</b></div><div class="mini-row"><span>Konflik sumber</span><b>1</b></div></aside></div>';
+    return;
+  }
+  if(view==='revision'){
+    root.innerHTML='<div class="card" style="padding:0;overflow:hidden"><div style="padding:16px 18px;border-bottom:1px solid var(--border)"><h3 style="font-size:15px;font-weight:700">Paket Revisi</h3><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">Usulan perubahan dari temuan yang diputuskan perlu revisi.</p></div><table><thead><tr><th>SOP</th><th>Jumlah Perubahan</th><th>Status</th><th>Aksi</th></tr></thead><tbody><tr><td><b>SOP Pengadaan Barang & Jasa</b><br><span style="font-size:11px;color:var(--muted-fg)">BU Logistik A</span></td><td>3 perubahan</td><td>'+refinementBadge('REVISI')+'</td><td><button class="btn btn-outline btn-sm">Buka Paket</button></td></tr><tr><td><b>SOP Manajemen Kontrak</b><br><span style="font-size:11px;color:var(--muted-fg)">Corporate Procurement</span></td><td>2 perubahan</td><td>'+refinementBadge('DRAFT_TERSEDIA')+'</td><td><button class="btn btn-outline btn-sm">Buka Paket</button></td></tr></tbody></table></div>';
+    return;
+  }
+  root.innerHTML='<div class="card" style="padding:0;overflow:hidden"><div style="padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h3 style="font-size:15px;font-weight:700">Perlu Dicek Ulang</h3><p style="font-size:11px;color:var(--muted-fg);margin-top:4px">SOP resmi yang memiliki sumber pembanding versi baru.</p></div><div style="display:flex;gap:8px"><select style="height:32px;font-size:12px"><option>Semua BU</option><option>BU Logistik A</option><option>Corporate Procurement</option></select><select style="height:32px;font-size:12px"><option>Semua sumber</option><option>Regulation</option><option>Best Practice</option></select></div></div><table><thead><tr><th>SOP</th><th>Sumber</th><th>Perubahan</th><th>Status</th><th>Terdeteksi</th><th>Aksi</th></tr></thead><tbody><tr><td><b>SOP Pengadaan Barang & Jasa</b><br><span style="font-size:11px;color:var(--muted-fg)">BU Logistik A</span></td><td><b>POJK No. 12/2026</b><br><span style="font-size:11px;color:var(--muted-fg)">Regulation · v2026.05</span></td><td><span class="badge badge-blue">12 pasal berubah</span></td><td>'+refinementBadge('BARU')+'</td><td>20 Mei 2026</td><td><button class="btn btn-primary btn-sm" onclick="showToast(\'Refinement run dibuat\');switchRefinementView(\'process\')">Jalankan</button></td></tr><tr><td><b>SOP Manajemen Kontrak</b><br><span style="font-size:11px;color:var(--muted-fg)">Corporate Procurement</span></td><td><b>Pedoman LKPP 2026</b><br><span style="font-size:11px;color:var(--muted-fg)">Regulation · v2026.04</span></td><td><span class="badge badge-blue">8 pasal berubah</span></td><td>'+refinementBadge('TERJADWAL')+'</td><td>18 Mei 2026</td><td><button class="btn btn-outline btn-sm">Jadwalkan</button></td></tr><tr><td><b>SOP Anti Fraud</b><br><span style="font-size:11px;color:var(--muted-fg)">BU Kepatuhan</span></td><td><b>Fraud Pattern Q1 2026</b><br><span style="font-size:11px;color:var(--muted-fg)">Fraud Detection · Q1 2026</span></td><td><span class="badge badge-blue">15 indikator baru</span></td><td>'+refinementBadge('BARU')+'</td><td>17 Mei 2026</td><td><button class="btn btn-primary btn-sm" onclick="showToast(\'Refinement run dibuat\');switchRefinementView(\'process\')">Jalankan</button></td></tr></tbody></table></div>';
 }
 
 // NAVIGATION
@@ -1133,6 +1142,7 @@ document.addEventListener('DOMContentLoaded',function(){
   setupRepositoryFilters();
   setupChangeRequestPage();
   if(initialPage==='home')setupEngagementDashboard();
+  if(initialPage==='refinement')renderRefinementView('recheck');
   if(initialPage==='engagement')loadEngagementInsights();
   if(initialPage==='calendar')setupAuditCalendarPage();
   loadAuditNotifications();
