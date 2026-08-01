@@ -1,9 +1,19 @@
-# Execution workflow
+# Repository guidance
 
-Read `docs/MASTER-EXECUTION.md`, `docs/PROJECT-PLAN.json`, `docs/IMPLEMENTATION-STATUS.md`, and the active checkpoint before coding. Inspect git status/diff/history. User approval of a checkpoint authorizes every task inside that checkpoint: execute them sequentially, preserve prior work, test and commit coherent slices, then update plan, status, task evidence, and checkpoint progress. Do not request confirmation between tasks in an approved checkpoint.
+Read `README.md` and the documentation in `docs/` before changing the
+application. Those documents describe the supported product and technical
+contracts.
 
-After checkpoint approval, do not send a user-facing response until the checkpoint is complete and committed, except for a proven destructive-data, security, missing-schema, or corrupted-repository blocker. Remaining work, a patch mismatch, or source formatting is never a reason to pause.
+- Inspect `git status`, `git diff`, and relevant source files before editing.
+- Preserve approved user-facing behaviour unless a change is explicitly
+  requested.
+- Keep authentication, authorization, Business Unit scope checks, audit records,
+  and private document access server-side.
+- Make focused changes, add or update relevant tests, run the appropriate
+  validation commands, and commit a coherent change.
+- Never expose credentials, tokens, database URLs, or private storage keys.
+- Do not run destructive database commands, push, deploy, or modify production
+  services unless explicitly authorized.
 
-Use `DECISION_REQUIRED` for unclear business behavior. Never mark milestones ACCEPTED without explicit user approval. Ask for approval only before beginning a new checkpoint, when a checkpoint contains an unresolved material business decision, or for a destructive-data, security, missing-schema, or repository-corruption blocker. Never push, deploy, or modify Neon without authorization. Never send progress-only responses.
-
-Patch failure caused by formatting or changed source structure is not a blocker. The agent must inspect the current file and adapt the implementation using safe full-file editing or refactoring.
+Use the product interface at `/` as the reference for user-facing menus and
+visual behaviour. Do not replace or redesign it without explicit approval.

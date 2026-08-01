@@ -1,1 +1,0 @@
-import fs from'node:fs';const p=JSON.parse(fs.readFileSync('docs/PROJECT-PLAN.json'));const t=p.tasks.find(x=>x.id===p.activeTask);console.log(`Active: ${p.activeMilestone} / ${p.activeCheckpoint} / ${t.id} (${t.status})`);console.log(`Completed ${p.tasks.filter(x=>['DONE','ACCEPTED'].includes(x.status)).length}/${p.tasks.length}`);console.log(`Next: ${t.title}`);

@@ -13,10 +13,7 @@
     "db:migrate:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "db:seed:production": "node prisma/seed-production.js",
-    "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js",
-    "project:validate": "node scripts/project-validate.mjs",
-    "project:status": "node scripts/project-status.mjs",
-    "project:next": "node scripts/project-next.mjs"
+    "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js"
   },
   "engines": {
     "node": "22.x"
