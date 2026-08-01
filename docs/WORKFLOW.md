@@ -3,11 +3,15 @@
 ## SOP document lifecycle
 
 1. An authorized user creates an SOP draft with its Business Unit and metadata.
-2. A draft can be edited while it remains in `DRAFT`.
-3. The draft can be submitted, then moved into Human-Only Refinement.
-4. Refinement is completed only after the server confirms that the required
+2. A draft records the user who uploaded it and must be assigned to a
+   Superuser or Tim Procurement reviewer.
+3. The assigned reviewer can preview or download the draft before approval.
+4. Only the assigned reviewer can approve the draft version; the approver and
+   approval time are recorded.
+5. A draft can be submitted, then moved into Human-Only Refinement.
+6. Refinement is completed only after the server confirms that the required
    human findings, clarifications, and summary are ready.
-5. The version moves from `REFINEMENT` to `VALIDATION`.
+7. The version moves from `REFINEMENT` to `VALIDATION`.
 
 The version lifecycle represented in the database is:
 

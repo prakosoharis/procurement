@@ -48,3 +48,7 @@ present, in draft, or missing.
 Files are stored privately. The application supports PDF/DOCX upload through
 the document API, secure download, and inline access where the file type and
 storage provider support it.
+
+Draft uploads in the Repository store the uploader, assigned reviewer, and
+approval record. A draft can be previewed or downloaded before approval, and
+only the assigned reviewer can approve it.
