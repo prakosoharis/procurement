@@ -177,7 +177,7 @@ This inventory was completed for `REF-S0-T1` and `REF-S0-T2` against branch
 | --- | --- |
 | Trigger.dev packages/config/tasks are installed and initialized with a smoke task. | `REF-S0-T3` |
 | `pdfjs-dist` is installed with a Node/Trigger-safe text extraction helper and a searchable-PDF smoke task. | `REF-S0-T4` |
-| pgvector is not configured in Prisma/schema and no vector field exists. | `REF-S0-T5` |
+| pgvector is enabled by a dedicated migration and verified with a temporary vector insert and `<->` similarity query. No embedding field is added before the source-section model work. | `REF-S0-T5` |
 | Anthropic SDK is not installed. | `REF-S0-T6` |
 | OpenAI SDK is not installed. | `REF-S0-T6` |
 | `.env.example` does not yet document Trigger.dev, AI provider, PDF, or embedding variables. | `REF-S0-T7` |
@@ -186,7 +186,7 @@ This inventory was completed for `REF-S0-T1` and `REF-S0-T2` against branch
 
 | Status | Sprint | Task count | Outcome |
 | --- | --- | ---: | --- |
-| In Progress | `REF-S0` — Repository Reconciliation and Technical Setup | 7 | T1–T4 complete; local Trigger.dev worker and searchable-PDF smoke task are ready. |
+| In Progress | `REF-S0` — Repository Reconciliation and Technical Setup | 7 | T1–T5 complete; local and staging pgvector are enabled and verified through an additive migration. |
 | Pending | `REF-S1` — Source Catalog Foundation | 7 | To be implemented and accepted sprint-by-sprint. |
 | Pending | `REF-S2` — Searchable PDF Upload, Parsing, and Structure Validation | 9 | To be implemented and accepted sprint-by-sprint. |
 | Pending | `REF-S3` — Source Activation, Embeddings, and Version Change Detection | 8 | To be implemented and accepted sprint-by-sprint. |
@@ -214,7 +214,7 @@ evidence are complete for the sprint.
 | Done | `REF-S0-T2` | Create a keep/reuse inventory and map logical entities in this blueprint to existing models; identify additive migrations only. |
 | Done | `REF-S0-T3` | Initialize Trigger.dev in the existing repository, configure project/environment keys, and add a tested hello-world task. |
 | Done | `REF-S0-T4` | Install and smoke-test pdfjs-dist in a Trigger.dev task using one searchable PDF. `refinement-pdf-smoke` extracts page text without a browser worker and rejects files below the configured text threshold. |
-| Pending | `REF-S0-T5` | Enable pgvector in development/staging and verify vector insert and similarity query. |
+| Done | `REF-S0-T5` | Enable pgvector in development/staging and verify vector insert and similarity query. Local Docker uses PostgreSQL 16 with pgvector; staging applied `CREATE EXTENSION IF NOT EXISTS vector` through Prisma migration and passed the same smoke test. |
 | Pending | `REF-S0-T6` | Create provider abstractions and smoke tests for Anthropic structured output and OpenAI embeddings. |
 | Pending | `REF-S0-T7` | Add environment validation, setup documentation, regression build, and coherent commits. |
 

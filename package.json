@@ -11,6 +11,7 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:status": "prisma migrate status",
+    "db:vector:verify": "node scripts/verify-pgvector.js",
     "db:seed": "prisma db seed",
     "db:seed:production": "node prisma/seed-production.js",
     "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js",

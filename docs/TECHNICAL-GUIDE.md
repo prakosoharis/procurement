@@ -23,6 +23,34 @@ for the chosen runtime.
 
 Never commit real values for these variables.
 
+## pgvector
+
+The Refinement foundation uses PostgreSQL's `vector` extension for future
+source-section embeddings. The extension is enabled by migration
+`20260803000000_enable_pgvector`; no embedding column is added until the source
+catalog models are introduced.
+
+Local Docker uses `pgvector/pgvector:pg16`. Start or recreate the local stack
+after pulling this change; the named `postgres_data` volume remains intact:
+
+```bash
+docker compose up -d --build
+docker compose exec app node scripts/verify-pgvector.js
+```
+
+For staging, apply repository migrations through the approved deployment
+workflow, then run the same verification command with the staging
+`DATABASE_URL`:
+
+```bash
+npm run db:migrate:deploy
+npm run db:vector:verify
+```
+
+The verification uses a temporary table, inserts three 3-dimensional vectors,
+and confirms that an exact vector is returned first by the `<->` similarity
+operator. It does not retain test records.
+
 ## Docker local setup
 
 ```bash
