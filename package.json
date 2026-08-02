@@ -13,7 +13,9 @@
     "db:migrate:status": "prisma migrate status",
     "db:seed": "prisma db seed",
     "db:seed:production": "node prisma/seed-production.js",
-    "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js"
+    "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js",
+    "trigger:dev": "trigger dev",
+    "trigger:deploy": "trigger deploy"
   },
   "engines": {
     "node": "22.x"
@@ -25,6 +27,8 @@
     "@aws-sdk/client-s3": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.750.0",
     "@prisma/client": "^6.6.0",
+    "@trigger.dev/build": "^4.5.9",
+    "@trigger.dev/sdk": "^4.5.9",
     "bcryptjs": "^3.0.2",
     "googleapis": "^173.0.0",
     "jose": "^6.0.10",
@@ -33,6 +37,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "prisma": "^6.6.0"
+    "prisma": "^6.6.0",
+    "trigger.dev": "^4.5.9"
   }
 }

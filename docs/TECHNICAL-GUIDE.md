@@ -19,6 +19,7 @@ for the chosen runtime.
 | `STORAGE_PROVIDER` | `s3` or `google-drive`. |
 | `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_FORCE_PATH_STYLE` | S3-compatible storage configuration. |
 | `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REDIRECT_URI`, `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Required only for Google Drive storage. The encryption key must be base64-encoded 32 random bytes. |
+| `TRIGGER_PROJECT_ID`, `TRIGGER_SECRET_KEY` | Required to run Trigger.dev background workers for Refinement processing. Use the DEV secret key locally and environment-specific keys in deployment. |
 
 Never commit real values for these variables.
 
@@ -87,6 +88,18 @@ Focused and regression tests use Node's built-in test runner:
 ```bash
 node --test test/*.test.mjs
 ```
+
+Run Trigger.dev workers locally:
+
+```bash
+npm run trigger:dev
+```
+
+The initial smoke task is `refinement-smoke`. Trigger.dev requires a configured
+project id and environment secret key before the local worker can connect to the
+cloud project. If the CLI reports `Project not found`, login with the Trigger.dev
+account/profile that has access to the configured project, or replace
+`TRIGGER_PROJECT_ID` with the exact project ref from the Trigger.dev dashboard.
 
 The application can be deployed to Vercel with a PostgreSQL provider such as
 Neon. Configure production environment variables in the deployment platform,
