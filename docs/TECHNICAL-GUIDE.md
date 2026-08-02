@@ -20,6 +20,8 @@ for the chosen runtime.
 | `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_FORCE_PATH_STYLE` | S3-compatible storage configuration. |
 | `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REDIRECT_URI`, `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Required only for Google Drive storage. The encryption key must be base64-encoded 32 random bytes. |
 | `TRIGGER_PROJECT_ID`, `TRIGGER_SECRET_KEY` | Required to run Trigger.dev background workers for Refinement processing. Use the DEV secret key locally and environment-specific keys in deployment. |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Server-only credentials and model for structured Refinement analysis. |
+| `OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`, `OPENAI_EMBEDDING_DIMENSIONS` | Server-only credentials and settings for source-section embeddings. |
 
 Never commit real values for these variables.
 
@@ -50,6 +52,31 @@ npm run db:vector:verify
 The verification uses a temporary table, inserts three 3-dimensional vectors,
 and confirms that an exact vector is returned first by the `<->` similarity
 operator. It does not retain test records.
+
+## AI provider foundation
+
+Refinement uses two server-side provider adapters:
+
+- Anthropic returns parsed output constrained by a caller-supplied JSON Schema.
+- OpenAI returns float embeddings in the same order as the submitted text.
+
+No browser, static hub script, client DTO, or database record receives an API
+key. Provider output is not an official finding or SOP change; later Refinement
+work must retain human approval and audit controls.
+
+Check the configured environment without making an AI request:
+
+```bash
+npm run env:check
+```
+
+Run a live provider smoke test only after both AI keys are configured. This
+makes one Anthropic structured-output request and one OpenAI embedding request,
+which may incur provider charges:
+
+```bash
+npm run ai:smoke
+```
 
 ## Docker local setup
 
@@ -123,11 +150,12 @@ Run Trigger.dev workers locally:
 npm run trigger:dev
 ```
 
-The initial smoke task is `refinement-smoke`. Trigger.dev requires a configured
-project id and environment secret key before the local worker can connect to the
-cloud project. If the CLI reports `Project not found`, login with the Trigger.dev
-account/profile that has access to the configured project, or replace
-`TRIGGER_PROJECT_ID` with the exact project ref from the Trigger.dev dashboard.
+The initial tasks are `refinement-smoke` and `refinement-pdf-smoke`. Trigger.dev
+requires a configured project id and environment secret key before the local
+worker can connect to the cloud project. If the CLI reports `Project not found`,
+login with the Trigger.dev account/profile that has access to the configured
+project, then update both `TRIGGER_PROJECT_ID` and `trigger.config.ts` to the
+exact project ref from the Trigger.dev dashboard.
 
 The application can be deployed to Vercel with a PostgreSQL provider such as
 Neon. Configure production environment variables in the deployment platform,
