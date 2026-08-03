@@ -52,6 +52,8 @@ where applicable.
 | POST | `/api/people/structures` | Create one active Business Unit structure and its root position atomically. |
 | POST | `/api/people/positions` | Create a child position in an active structure. |
 | PATCH | `/api/people/positions/:positionId` | Named `update`, `move`, or `archive` position operation with `expectedUpdatedAt`. |
+| GET, POST | `/api/people/profiles` | Scoped profile search and controlled profile creation. |
+| GET, PATCH | `/api/people/profiles/:personId` | Scoped profile detail and named `update` or `archive` operation. |
 | GET, POST | `/api/references` | Reference-source data. |
 | GET, POST | `/api/findings` | Legacy finding data. |
 | GET, PATCH | `/api/findings/:id` | Read or update a legacy finding. |

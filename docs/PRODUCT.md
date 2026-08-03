@@ -61,11 +61,13 @@ not introduce a second Business Unit directory. The module has **Struktur
 Organisasi** and **Profil Personel** views. A structure is made of positions,
 not people: a position may be vacant or have one or more current occupants.
 
-Superuser and Tim Procurement can maintain organization structures and their
-positions. Business Unit users can view only records within their effective
-Business Unit scope. Executive has no People access unless an explicit People
-permission is added in a later product decision. Person profiles and position
-assignment controls are not active in the current interface.
+Superuser and Tim Procurement can maintain organization structures, positions,
+and reusable person profiles. A profile records core identity, formal education,
+and certifications; it can be archived only after its active assignments end.
+Business Unit users can view only records within their effective Business Unit
+scope. Executive has no People access unless an explicit People permission is
+added in a later product decision. Position assignment controls are not active
+in the current interface.
 
 Person profiles are separate from user accounts so employees without an
 application login, or with more than one assignment, can be represented. A

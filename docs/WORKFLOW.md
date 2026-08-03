@@ -61,8 +61,11 @@ Business Unit users see only organization and person data in their effective
 Business Unit scope and have no mutation controls. The current People
 structure builder provides a scoped organization tree, root/child positions,
 search, zoom, expand/collapse, deterministic sibling ordering, and server-side
-move/archive safeguards. Profile maintenance is introduced in a subsequent
-implementation slice.
+move/archive safeguards. Authorized users can now create, search, edit, and
+archive reusable profiles with repeatable education and certification records.
+Profiles are only returned to Business Unit users when they have a current
+assignment within the user's effective Business Unit scope; position assignment
+management is introduced in the following slice.
 
 ## Submissions
 
