@@ -17,6 +17,7 @@
     "db:seed": "prisma db seed",
     "db:seed:production": "node prisma/seed-production.js",
     "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js",
+    "storage:drive:organize-sops": "node --env-file-if-exists=.env scripts/organize-google-drive-sops.js",
     "trigger:dev": "trigger dev",
     "trigger:deploy": "trigger deploy"
   },
@@ -28,8 +29,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
-    "@aws-sdk/client-s3": "^3.750.0",
-    "@aws-sdk/s3-request-presigner": "^3.750.0",
     "@prisma/client": "^6.6.0",
     "@trigger.dev/build": "^4.5.9",
     "@trigger.dev/sdk": "^4.5.9",

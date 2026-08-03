@@ -243,6 +243,7 @@ model BusinessUnit {
   auditReviews                      AuditReview[]
   aiUsages                          AiUsage[]
   aiEvents                          AiEvent[]
+  googleDriveFolderId               String?
   defaultReviewIntervalMonths       Int?
   createdAt                         DateTime                  @default(now())
 }

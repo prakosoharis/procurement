@@ -49,9 +49,10 @@ read-only for governance mutations.
 ## Document storage path
 
 For Google Drive, an administrator authorizes the application through OAuth.
-The application creates a `Procurement Governance Hub` folder, encrypts the
-refresh token before storing it in PostgreSQL, and stores Drive file IDs as
-`gdrive:<id>` keys.
+The application reuses a valid existing `Procurement Governance Hub` root when
+Drive is reconnected; it creates one only when no valid root is stored. The
+refresh token is encrypted before storing it in PostgreSQL, and Drive file IDs
+are stored as `gdrive:<id>` keys.
 
 ### Google Drive directory convention
 
@@ -81,3 +82,8 @@ Folder lookup and creation must be idempotent. Existing application-owned files
 are reorganized by changing their Drive parent only; their `gdrive:<id>`
 database value must remain unchanged. The implementation must audit every move,
 support a dry-run before a bulk migration, and never create public file links.
+
+Each **BusinessUnit** records its resolved SOP folder ID after provisioning.
+Creating a Business Unit through master data provisions `SOP/<Business Unit>/`
+before the new BU is returned as successful. Every new SOP upload and version
+upload resolves the same folder, so new files do not land in the Drive root.

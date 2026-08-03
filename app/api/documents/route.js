@@ -3,7 +3,8 @@ import { randomUUID } from 'crypto';
 import { db } from '../../../lib/db';
 import { currentUser } from '../../../lib/current-user';
 import { allowedDocumentTypes, canManageBusinessUnit, documentDto, writeAudit } from '../../../lib/documents';
-import { assertStorageReady, StorageConfigurationError, uploadObject } from '../../../lib/storage';
+import { assertStorageReady, isGoogleDriveStorage, StorageConfigurationError, uploadObject } from '../../../lib/storage';
+import { ensureSopBusinessUnitFolder, sopDriveFileName } from '../../../lib/google-drive-folders';
 
 export async function GET(request) {
   const user = await currentUser(); if (!user) return NextResponse.json({error:'Authentication required'},{status:401});
@@ -22,15 +23,30 @@ export async function POST(request) {
     if (!businessUnitId || !documentTypeId || !title || !reviewerId || !file?.size) return NextResponse.json({error:'Business unit, document type, title, reviewer, and file are required.'},{status:400});
     if (!canManageBusinessUnit(user,businessUnitId)) return NextResponse.json({error:'You do not have access to this business unit.'},{status:403});
     if (file.size > 25 * 1024 * 1024 || !allowedDocumentTypes.has(file.type)) return NextResponse.json({error:'Only PDF/DOCX files up to 25 MB are allowed.'},{status:400});
-    const [existing,owner,reviewer] = await Promise.all([db.sopDocument.findFirst({where:{businessUnitId,documentTypeId,status:{not:'ARCHIVED'}}}),db.user.findFirst({where:{id:ownerId,role:'BUSINESS_UNIT_PIC',businessUnitId}}),db.user.findFirst({where:{id:reviewerId,role:{in:['SUPER_USER','CORPORATE_GOVERNANCE']}},select:{id:true,name:true,email:true}})]);
+    const [existing, owner, reviewer, businessUnit] = await Promise.all([
+      db.sopDocument.findFirst({ where: { businessUnitId, documentTypeId, status: { not: 'ARCHIVED' } } }),
+      db.user.findFirst({ where: { id: ownerId, role: 'BUSINESS_UNIT_PIC', businessUnitId } }),
+      db.user.findFirst({ where: { id: reviewerId, role: { in: ['SUPER_USER', 'CORPORATE_GOVERNANCE'] } }, select: { id: true, name: true, email: true } }),
+      db.businessUnit.findUnique({ where: { id: businessUnitId } })
+    ]);
     if (existing) return NextResponse.json({error:'Document type already exists for this business unit. Use update version instead.'},{status:409});
     if (!owner) return NextResponse.json({error:'Selected PIC must belong to the selected business unit.'},{status:400});
     if (!reviewer) return NextResponse.json({error:'Assigned reviewer must be Super User or Tim Procurement.'},{status:400});
+    if (!businessUnit) return NextResponse.json({error:'Business unit not found.'},{status:404});
     await assertStorageReady();
     const document = await db.sopDocument.create({data:{businessUnitId,documentTypeId,title,language,ownerId,status:'DRAFT',currentVersion:'v1.0'}});
     createdDocumentId = document.id;
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,'_'), key = `documents/${businessUnitId}/${document.id}/v1.0/${randomUUID()}-${safeName}`;
-    const stored = await uploadObject({key,body:Buffer.from(await file.arrayBuffer()),contentType:file.type});
+    const folder = isGoogleDriveStorage()
+      ? await ensureSopBusinessUnitFolder({ businessUnit })
+      : null;
+    const stored = await uploadObject({
+      key,
+      body: Buffer.from(await file.arrayBuffer()),
+      contentType: file.type,
+      googleDriveParentId: folder?.folderId,
+      googleDriveFileName: folder ? sopDriveFileName({ title, versionNo: 'v1.0', fileName: file.name }) : undefined
+    });
     const version = await db.sopVersion.create({data:{sopDocumentId:document.id,versionNo:'v1.0',fileKey:stored.key,fileName:file.name,fileSize:file.size,contentType:file.type,changeSummary:'Initial upload',approvalStatus:'DRAFT',submittedById:user.id,submittedAt:new Date(),reviewerId}});
     await writeAudit(user.id,'SopDocument',document.id,'CREATE_DRAFT',JSON.stringify({version:version.versionNo,fileName:file.name,submittedById:user.id,reviewerId}));
     return NextResponse.json({id:document.id,versionId:version.id,status:'DRAFT',version:'v1.0',submittedBy:{id:user.id,name:user.name},reviewer},{status:201});

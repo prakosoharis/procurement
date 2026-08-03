@@ -5,7 +5,7 @@
 - Node.js 22
 - Docker Desktop for the recommended local setup
 - PostgreSQL for database storage
-- MinIO or another configured storage provider for document files
+- A connected Google Drive account for document uploads, previews, and downloads
 
 ## Environment
 
@@ -89,12 +89,11 @@ Services:
 | --- | --- |
 | Application | `http://localhost:3000` |
 | PostgreSQL | `localhost:5432` |
-| MinIO API | `http://localhost:9000` |
-| MinIO Console | `http://localhost:9001` |
 
 The Docker application container runs Prisma schema synchronization and the
-local seed before starting the development server. Its PostgreSQL and MinIO
-data use named Docker volumes.
+local seed before starting the development server. Its PostgreSQL data uses a
+named Docker volume. Google Drive remains external and is configured with the
+environment variables above.
 
 ## Database commands
 
@@ -148,6 +147,23 @@ application-owned files can be moved into this convention without changing
 their database references. Bulk organization must run with a dry-run and audit
 record before any parent folders are changed.
 
+To inspect the plan for existing SOP files, run:
+
+```bash
+npm run storage:drive:organize-sops
+```
+
+After reviewing the dry-run output, apply the parent-folder changes without
+re-uploading the files:
+
+```bash
+npm run storage:drive:organize-sops -- --apply
+```
+
+The command only processes SOP versions with `gdrive:<fileId>` storage keys,
+creates missing `SOP/<Business Unit>/` folders idempotently, and writes a
+`GOOGLE_DRIVE_REORGANIZED` audit record for each moved file.
+
 ## Build, test, and deployment
 
 Build the application:
@@ -177,9 +193,9 @@ exact project ref from the Trigger.dev dashboard.
 
 The application can be deployed to Vercel with a PostgreSQL provider such as
 Neon. Configure production environment variables in the deployment platform,
-apply committed Prisma migrations to the production database, and configure a
-production-accessible storage provider. Docker Compose and local MinIO are not
-available to Vercel deployments.
+apply committed Prisma migrations to the production database, and configure the
+same Google Drive OAuth values and connected integration. Docker Compose is
+local-only and is not available to Vercel deployments.
 
 Push/deployment automation is controlled by the connected Git repository and
 deployment platform configuration.
