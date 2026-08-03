@@ -46,7 +46,7 @@ where applicable.
 | GET | `/api/pics` | PIC data for selectors. |
 | GET | `/api/business-units` | Business Unit data. |
 | GET, POST | `/api/document-types` | Document-type data and management. |
-| GET, POST | `/api/master-data` | Repository master data. |
+| GET, POST, PATCH | `/api/master-data` | Repository master data; `PATCH` updates an existing Business Unit's Group and Industry. |
 | GET | `/api/people/options` | Scoped People Business Unit selector and server-derived view/manage capabilities. |
 | GET | `/api/people/structure?businessUnitId=:id` | Scoped compact organization tree, current occupants, vacancy state, and capabilities. |
 | POST | `/api/people/structures` | Create one active Business Unit structure and its root position atomically. |

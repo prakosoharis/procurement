@@ -46,6 +46,10 @@ category, document type, owner, and version. The repository supports mandatory
 and additional document types, so compliance can show documents that are
 present, in draft, or missing.
 
+The mandatory compliance order is M1 Procurement Policy, M2 Procurement SOP,
+M3 Supplier Info & Performance Mgmt SOP, M4 Matrix Level Authorization, M5
+Ethic Policy, and M6 Code of Conduct.
+
 Files are stored privately. The application supports PDF/DOCX upload through
 the document API, secure download, and inline access where the file type and
 storage provider support it.
