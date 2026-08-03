@@ -33,6 +33,7 @@ four roles respectively.
 | Calendar | Online, onsite, or hybrid audit appointments with selected PICs or all Business Units. |
 | Engagement | Business Unit engagement index and indicator detail. |
 | Insights | Reporting and operational insight views. |
+| People | Struktur organisasi per Business Unit serta profil personel dan penempatan jabatan. |
 | Directory | User and PIC directory. User creation and password reset are restricted to Superuser. |
 
 Menu availability and permitted actions are determined by the authenticated
@@ -52,3 +53,21 @@ storage provider support it.
 Draft uploads in the Repository store the uploader, assigned reviewer, and
 approval record. A draft can be previewed or downloaded before approval, and
 only the assigned reviewer can approve it.
+
+## People and organization structure
+
+People uses the existing Business Unit master as its primary boundary; it does
+not introduce a second Business Unit directory. The module has **Struktur
+Organisasi** and **Profil Personel** views. A structure is made of positions,
+not people: a position may be vacant or have one or more current occupants.
+
+Superuser and Tim Procurement can maintain organization structures, person
+profiles, and position assignments. Business Unit users can view only records
+within their effective Business Unit scope. Executive has no People access
+unless an explicit People permission is added in a later product decision.
+
+Person profiles are separate from user accounts so employees without an
+application login, or with more than one assignment, can be represented. A
+profile supports education, certifications, and historical assignments.
+Position tenure is calculated from assignment start and end dates. Historical
+records are archived or end-dated rather than hard-deleted.

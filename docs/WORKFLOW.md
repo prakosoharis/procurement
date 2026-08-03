@@ -41,6 +41,28 @@ application-owned file changes only its Drive parent; it does not replace the
 file, change its ID, or break preview/download records. Bulk moves require a
 dry-run, idempotent folder resolution, and audit evidence.
 
+## People and organization structure
+
+1. An authorized user selects an existing Business Unit in **People**.
+2. The current organization structure contains one active root position and
+   nested child positions in a deterministic sibling order.
+3. A position may remain vacant, or receive one or more dated person
+   assignments. A person may have more than one assignment when explicitly
+   recorded as permanent or acting.
+4. Replacing an occupant ends the previous assignment; it never overwrites the
+   historical record. Tenure is calculated from the recorded dates.
+5. Education and certification entries belong to the reusable person profile,
+   not the position node.
+6. Structural, profile, and assignment mutations write an audit record. A
+   position with active children cannot be archived until its children are
+   moved or archived.
+
+Business Unit users see only organization and person data in their effective
+Business Unit scope and have no mutation controls. The current People
+foundation provides the scoped menu shell, selector, and server-derived action
+capabilities; structure construction and profile maintenance are introduced in
+their subsequent implementation slices.
+
 ## Submissions
 
 Business Units can submit a request to create a new SOP or revise an existing

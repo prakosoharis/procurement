@@ -47,6 +47,7 @@ where applicable.
 | GET | `/api/business-units` | Business Unit data. |
 | GET, POST | `/api/document-types` | Document-type data and management. |
 | GET, POST | `/api/master-data` | Repository master data. |
+| GET | `/api/people/options` | Scoped People Business Unit selector and server-derived view/manage capabilities. |
 | GET, POST | `/api/references` | Reference-source data. |
 | GET, POST | `/api/findings` | Legacy finding data. |
 | GET, PATCH | `/api/findings/:id` | Read or update a legacy finding. |

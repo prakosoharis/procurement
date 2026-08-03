@@ -28,6 +28,11 @@ authorization remains on the server through Route Handlers and shared services.
   human-only refinement.
 - **AuditEvent** and **AuditEventParticipant** represent scheduled audit
   appointments and attendance.
+- **OrganizationStructure** and **OrganizationPosition** represent one current
+  Business Unit hierarchy, including its root/child position relationship.
+- **Person**, **PersonEducation**, **PersonCertification**, and
+  **PositionAssignment** represent reusable personnel profiles, qualifications,
+  and dated placement history separately from application user accounts.
 - **AuditLog** records user and governance activity.
 - **StorageIntegration** stores the connected Google Drive folder and encrypted
   refresh token.
@@ -45,6 +50,13 @@ closed: scoped queries return no cross-Business-Unit data and direct
 out-of-scope access is denied. Superuser, Tim Procurement, and Executive have
 cross-Business-Unit access according to their permissions; Executive is
 read-only for governance mutations.
+
+People applies the same effective Business Unit scope before its database
+queries are built. Its API returns only server-derived capabilities
+(`canEditStructure`, `canManagePeople`, and `canManageAssignments`) and compact
+Business Unit selector data; it does not return role/session data or raw scope
+arrays. The People permission policy permits Superuser, Tim Procurement, and
+Business Unit users to view; only Superuser and Tim Procurement can mutate.
 
 ## Document storage path
 
