@@ -65,7 +65,9 @@ move/archive safeguards. Authorized users can now create, search, edit, and
 archive reusable profiles with repeatable education and certification records.
 Profiles are only returned to Business Unit users when they have a current
 assignment within the user's effective Business Unit scope; position assignment
-management is introduced in the following slice.
+management records a permanent or acting placement with a start date. Ending a
+placement requires its own concurrency check and preserves the historical row;
+the current organization chart derives occupancy and tenure from active rows.
 
 ## Submissions
 

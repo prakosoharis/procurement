@@ -64,10 +64,12 @@ not people: a position may be vacant or have one or more current occupants.
 Superuser and Tim Procurement can maintain organization structures, positions,
 and reusable person profiles. A profile records core identity, formal education,
 and certifications; it can be archived only after its active assignments end.
+One or more active people can occupy a position as permanent or acting staff.
+Ending an assignment preserves its dated history, while an unoccupied position
+remains visible as vacant.
 Business Unit users can view only records within their effective Business Unit
 scope. Executive has no People access unless an explicit People permission is
-added in a later product decision. Position assignment controls are not active
-in the current interface.
+added in a later product decision.
 
 Person profiles are separate from user accounts so employees without an
 application login, or with more than one assignment, can be represented. A

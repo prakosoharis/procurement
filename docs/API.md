@@ -54,6 +54,9 @@ where applicable.
 | PATCH | `/api/people/positions/:positionId` | Named `update`, `move`, or `archive` position operation with `expectedUpdatedAt`. |
 | GET, POST | `/api/people/profiles` | Scoped profile search and controlled profile creation. |
 | GET, PATCH | `/api/people/profiles/:personId` | Scoped profile detail and named `update` or `archive` operation. |
+| POST | `/api/people/assignments` | Create a dated `PERMANENT` or `ACTING` assignment for an active person and position. |
+| POST | `/api/people/assignments/:assignmentId/end` | End-date an assignment with optimistic concurrency, preserving history. |
+| GET | `/api/people/positions/:positionId/history` | Scoped current and historical position assignments. |
 | GET, POST | `/api/references` | Reference-source data. |
 | GET, POST | `/api/findings` | Legacy finding data. |
 | GET, PATCH | `/api/findings/:id` | Read or update a legacy finding. |
