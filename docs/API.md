@@ -47,6 +47,22 @@ where applicable.
 | GET | `/api/business-units` | Business Unit data. |
 | GET, POST | `/api/document-types` | Document-type data and management. |
 | GET, POST | `/api/master-data` | Repository master data. |
+| GET | `/api/people/options` | Scoped People Business Unit selector and server-derived view/manage capabilities. |
+| GET | `/api/people/structure?businessUnitId=:id` | Scoped compact organization tree, current occupants, vacancy state, and capabilities. |
+| POST | `/api/people/structures` | Create one active Business Unit structure and its root position atomically. |
+| POST | `/api/people/positions` | Create a child position in an active structure. |
+| PATCH | `/api/people/positions/:positionId` | Named `update`, `move`, or `archive` position operation with `expectedUpdatedAt`. |
+| GET, POST | `/api/people/profiles` | Scoped profile search and controlled profile creation. |
+| GET, PATCH | `/api/people/profiles/:personId` | Scoped profile detail and named `update` or `archive` operation. |
+| POST | `/api/people/assignments` | Create a dated `PERMANENT` or `ACTING` assignment for an active person and position. |
+| POST | `/api/people/assignments/:assignmentId/end` | End-date an assignment with optimistic concurrency, preserving history. |
+| GET | `/api/people/positions/:positionId/history` | Scoped current and historical position assignments. |
+
+People profile list and detail responses are scoped by the authenticated
+user's effective Business Unit set. For Business Unit viewers, `email`,
+`phone`, `photoUrl`, certification `credentialId`, and certification
+`evidenceUrl` are returned as `null`; mutation routes remain server-restricted
+to Superuser and Tim Procurement.
 | GET, POST | `/api/references` | Reference-source data. |
 | GET, POST | `/api/findings` | Legacy finding data. |
 | GET, PATCH | `/api/findings/:id` | Read or update a legacy finding. |

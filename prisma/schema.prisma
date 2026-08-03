@@ -222,6 +222,26 @@ enum AiEventType {
   REQUEST_CANCELLED
 }
 
+enum OrganizationStructureStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum OrganizationPositionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum PersonStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum PositionAssignmentType {
+  PERMANENT
+  ACTING
+}
+
 model BusinessUnit {
   id                                String                    @id @default(cuid())
   name                              String                    @unique
@@ -244,6 +264,8 @@ model BusinessUnit {
   aiUsages                          AiUsage[]
   aiEvents                          AiEvent[]
   googleDriveFolderId               String?
+  organizationStructures            OrganizationStructure[]
+  organizationPositions             OrganizationPosition[]
   defaultReviewIntervalMonths       Int?
   createdAt                         DateTime                  @default(now())
 }
@@ -312,6 +334,111 @@ model User {
   aiUsages                          AiUsage[]
   aiEvents                          AiEvent[]
   createdAt                         DateTime                  @default(now())
+}
+
+model OrganizationStructure {
+  id            String                      @id @default(cuid())
+  businessUnitId String
+  businessUnit  BusinessUnit                @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  name          String
+  effectiveDate DateTime?
+  status        OrganizationStructureStatus @default(ACTIVE)
+  positions     OrganizationPosition[]
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+
+  @@index([businessUnitId, status])
+}
+
+model OrganizationPosition {
+  id            String                     @id @default(cuid())
+  structureId   String
+  structure     OrganizationStructure      @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  businessUnitId String
+  businessUnit  BusinessUnit               @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  parentId      String?
+  parent        OrganizationPosition?      @relation("OrganizationPositionHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children      OrganizationPosition[]     @relation("OrganizationPositionHierarchy")
+  title         String
+  code          String?
+  description   String?
+  displayOrder  Int                        @default(0)
+  status        OrganizationPositionStatus @default(ACTIVE)
+  assignments   PositionAssignment[]
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  @@unique([businessUnitId, code])
+  @@index([structureId, parentId, status, displayOrder])
+  @@index([businessUnitId, status])
+}
+
+model Person {
+  id                 String                 @id @default(cuid())
+  fullName           String
+  employeeIdentifier String?                @unique
+  email              String?
+  phone              String?
+  photoUrl           String?
+  status             PersonStatus           @default(ACTIVE)
+  educations         PersonEducation[]
+  certifications     PersonCertification[]
+  assignments        PositionAssignment[]
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([fullName])
+  @@index([status])
+}
+
+model PersonEducation {
+  id             String   @id @default(cuid())
+  personId       String
+  person         Person   @relation(fields: [personId], references: [id], onDelete: Restrict)
+  institution    String
+  degreeLevel    String
+  fieldOfStudy   String?
+  startYear      Int?
+  graduationYear Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([personId])
+}
+
+model PersonCertification {
+  id           String   @id @default(cuid())
+  personId     String
+  person       Person   @relation(fields: [personId], references: [id], onDelete: Restrict)
+  name         String
+  issuer       String
+  credentialId String?
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  evidenceUrl  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([personId])
+  @@index([expiryDate])
+}
+
+model PositionAssignment {
+  id         String                 @id @default(cuid())
+  positionId String
+  position   OrganizationPosition   @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  personId   String
+  person     Person                 @relation(fields: [personId], references: [id], onDelete: Restrict)
+  startDate  DateTime
+  endDate    DateTime?
+  type       PositionAssignmentType @default(PERMANENT)
+  note       String?
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+
+  @@unique([personId, positionId, startDate])
+  @@index([positionId, endDate])
+  @@index([personId, endDate])
 }
 
 model UserBusinessUnitScope {
