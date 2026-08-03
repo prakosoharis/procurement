@@ -48,6 +48,9 @@ test('assignment date boundaries and hierarchy checks remain deterministic', () 
 test('People UI exposes keyboard navigation, accessible drawer behavior, and server capability gating', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../procurement-governance-hub (1).html', import.meta.url), 'utf8');
+  const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
+  assert.ok(script, 'the People application script must be present');
+  assert.doesNotThrow(() => new Function(script), 'the complete application script must parse before navigation is used');
   assert.match(html, /role="button" tabindex="0" aria-label=/);
   assert.match(html, /event\.key==='Enter'\|\|event\.key===' '/);
   assert.match(html, /scrollIntoView\(\{behavior:'smooth',block:'center',inline:'center'\}\)/);
