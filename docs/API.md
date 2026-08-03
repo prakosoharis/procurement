@@ -48,6 +48,10 @@ where applicable.
 | GET, POST | `/api/document-types` | Document-type data and management. |
 | GET, POST | `/api/master-data` | Repository master data. |
 | GET | `/api/people/options` | Scoped People Business Unit selector and server-derived view/manage capabilities. |
+| GET | `/api/people/structure?businessUnitId=:id` | Scoped compact organization tree, current occupants, vacancy state, and capabilities. |
+| POST | `/api/people/structures` | Create one active Business Unit structure and its root position atomically. |
+| POST | `/api/people/positions` | Create a child position in an active structure. |
+| PATCH | `/api/people/positions/:positionId` | Named `update`, `move`, or `archive` position operation with `expectedUpdatedAt`. |
 | GET, POST | `/api/references` | Reference-source data. |
 | GET, POST | `/api/findings` | Legacy finding data. |
 | GET, PATCH | `/api/findings/:id` | Read or update a legacy finding. |

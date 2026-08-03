@@ -104,11 +104,13 @@ npx prisma db push
 npm run db:seed
 ```
 
-The additive People foundation migration is
-`20260803020000_add_people_organization_foundation`. It adds organization,
-position, person, qualification, and assignment tables without changing user,
-Business Unit, or SOP records. Apply committed migrations through the normal
-deployment workflow; do not use reset commands against shared databases.
+The additive People migrations are
+`20260803020000_add_people_organization_foundation` and
+`20260803020100_add_people_structure_invariants`. They add organization,
+position, person, qualification, and assignment tables, then protect the active
+structure/root invariants, without changing user, Business Unit, or SOP
+records. Apply committed migrations through the normal deployment workflow; do
+not use reset commands against shared databases.
 
 For a migration-managed deployment, commit the migration with the application
 and apply it deliberately:

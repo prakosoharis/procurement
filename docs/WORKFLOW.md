@@ -59,9 +59,10 @@ dry-run, idempotent folder resolution, and audit evidence.
 
 Business Unit users see only organization and person data in their effective
 Business Unit scope and have no mutation controls. The current People
-foundation provides the scoped menu shell, selector, and server-derived action
-capabilities; structure construction and profile maintenance are introduced in
-their subsequent implementation slices.
+structure builder provides a scoped organization tree, root/child positions,
+search, zoom, expand/collapse, deterministic sibling ordering, and server-side
+move/archive safeguards. Profile maintenance is introduced in a subsequent
+implementation slice.
 
 ## Submissions
 
