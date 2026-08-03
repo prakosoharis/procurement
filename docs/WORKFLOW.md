@@ -24,6 +24,23 @@ separately from the latest working version. Creating a revision uses the
 official published version as its source and creates a new draft; it does not
 alter the published source.
 
+The locked Google Drive convention places SOP files under
+`SOP/<Business Unit name>/`. All SOP files for a Business Unit share its
+folder; the document name and version identify each file.
+
+## Reference-source storage
+
+Reference sources will be stored separately from SOP files under
+`Sumber Pembanding/<Penerbit atau Regulator>/<Nomor regulasi>/`. For example,
+an OJK source will be stored below `Sumber Pembanding/OJK/`. Revisions of a
+source remain together in its regulation-number folder. Internal sources may
+add a further category such as `Best Practice` or `Hasil Audit`.
+
+File IDs are durable database references. Reorganizing an existing
+application-owned file changes only its Drive parent; it does not replace the
+file, change its ID, or break preview/download records. Bulk moves require a
+dry-run, idempotent folder resolution, and audit evidence.
+
 ## Submissions
 
 Business Units can submit a request to create a new SOP or revise an existing

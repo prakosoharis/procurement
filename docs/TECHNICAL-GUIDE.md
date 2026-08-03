@@ -16,9 +16,8 @@ for the chosen runtime.
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string. |
 | `AUTH_SECRET` | Secret used to sign sessions. Use a strong, unique value outside local development. |
-| `STORAGE_PROVIDER` | `s3` or `google-drive`. |
-| `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_FORCE_PATH_STYLE` | S3-compatible storage configuration. |
-| `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REDIRECT_URI`, `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Required only for Google Drive storage. The encryption key must be base64-encoded 32 random bytes. |
+| `STORAGE_PROVIDER` | Set to `google-drive`. |
+| `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REDIRECT_URI`, `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Required for Google Drive storage. The encryption key must be base64-encoded 32 random bytes. |
 | `TRIGGER_PROJECT_ID`, `TRIGGER_SECRET_KEY` | Required to run Trigger.dev background workers for Refinement processing. Use the DEV secret key locally and environment-specific keys in deployment. |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Server-only credentials and model for structured Refinement analysis. |
 | `OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`, `OPENAI_EMBEDDING_DIMENSIONS` | Server-only credentials and settings for source-section embeddings. |
@@ -129,6 +128,25 @@ Do not use `prisma db push` or reset commands against a production database.
 
 The Drive OAuth scope is `drive.file`. Refresh tokens are encrypted with
 AES-256-GCM before they are stored.
+
+The connected root folder is `Procurement Governance Hub`. The locked document
+organization is:
+
+```text
+SOP/<Business Unit name>/
+Sumber Pembanding/<Penerbit atau Regulator>/<Nomor regulasi>/
+```
+
+For example, SOP documents for SMI will be stored in `SOP/SMI/`, while
+revisions of a POJK will be stored under
+`Sumber Pembanding/OJK/<Nomor regulasi>/`. Internal
+sources may add their own category below `Sumber Pembanding/Internal/`, such as
+`Best Practice` or `Hasil Audit`.
+
+The application stores the Drive file ID, not its path. Therefore existing
+application-owned files can be moved into this convention without changing
+their database references. Bulk organization must run with a dry-run and audit
+record before any parent folders are changed.
 
 ## Build, test, and deployment
 
