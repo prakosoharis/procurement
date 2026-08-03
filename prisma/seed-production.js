@@ -9,7 +9,7 @@ const businessUnits = [
   ['ESSENS', 'Non Group', 'Renewable Energy'], ['SUN ENERGY', 'Non Group', 'Renewable Energy'],
   ['EBER', 'Non Group', 'Mining']
 ];
-const mandatory = ['Anti-Bribery Policy', 'Procurement Policy', 'Procurement SOP', 'Supplier Info & Performance Mgmt SOP', 'Matrix Level Authorization', 'Code of Conduct'];
+const mandatory = ['Procurement Policy', 'Procurement SOP', 'Supplier Info & Performance Mgmt SOP', 'Matrix Level Authorization', 'Ethic Policy', 'Code of Conduct'];
 const additional = ['Work Risk-Level Standard', 'Segregation of Duties Standard', 'Whistleblowing / Grievance Policy', 'Vendor Due Diligence Procedure', 'Purchase Order Standard', 'Conflict of Interest Policy', 'Accounts Payable SOP'];
 
 function required(name) {
