@@ -57,6 +57,12 @@ where applicable.
 | POST | `/api/people/assignments` | Create a dated `PERMANENT` or `ACTING` assignment for an active person and position. |
 | POST | `/api/people/assignments/:assignmentId/end` | End-date an assignment with optimistic concurrency, preserving history. |
 | GET | `/api/people/positions/:positionId/history` | Scoped current and historical position assignments. |
+
+People profile list and detail responses are scoped by the authenticated
+user's effective Business Unit set. For Business Unit viewers, `email`,
+`phone`, `photoUrl`, certification `credentialId`, and certification
+`evidenceUrl` are returned as `null`; mutation routes remain server-restricted
+to Superuser and Tim Procurement.
 | GET, POST | `/api/references` | Reference-source data. |
 | GET, POST | `/api/findings` | Legacy finding data. |
 | GET, PATCH | `/api/findings/:id` | Read or update a legacy finding. |

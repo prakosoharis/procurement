@@ -26,6 +26,24 @@ test('person detail DTO is explicit and omits raw relation/session data', () => 
   assert.equal(dto.assignments[0].position.businessUnit.internalScope, undefined);
 });
 
+test('Business Unit profile DTO redacts contact and credential evidence while retaining scoped work context', () => {
+  const date = new Date('2026-08-03T00:00:00.000Z');
+  const person = {
+    id: 'person-1', fullName: 'Nadia', employeeIdentifier: 'EMP-1', email: 'nadia@example.test', phone: '+628123', photoUrl: 'https://example.test/photo', status: 'ACTIVE', updatedAt: date,
+    educations: [],
+    certifications: [{ id: 'cert-1', name: 'CIPS', issuer: 'CIPS', credentialId: 'credential-private', issueDate: date, expiryDate: null, evidenceUrl: 'https://example.test/evidence', updatedAt: date }],
+    assignments: [{ id: 'assignment-1', startDate: date, endDate: null, type: 'ACTING', position: { id: 'position-1', title: 'Manager', code: 'MGR', businessUnit: { id: 'bu-1', name: 'SMI' } } }]
+  };
+  const dto = profileDto(person, { role: 'BUSINESS_UNIT_PIC', businessUnitId: 'bu-1', businessUnitScopes: [] });
+  assert.equal(dto.email, null);
+  assert.equal(dto.phone, null);
+  assert.equal(dto.photoUrl, null);
+  assert.equal(dto.certifications[0].credentialId, null);
+  assert.equal(dto.certifications[0].evidenceUrl, null);
+  assert.equal(dto.certifications[0].name, 'CIPS');
+  assert.equal(dto.assignments[0].position.title, 'Manager');
+});
+
 test('profile qualification input accepts repeatable records and rejects invalid date ranges', () => {
   const data = profileInput({
     fullName: 'Nadia', employeeIdentifier: 'EMP-1', email: 'nadia@example.test', phone: '', photoUrl: '',

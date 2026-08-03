@@ -71,6 +71,14 @@ Business Unit users can view only records within their effective Business Unit
 scope. Executive has no People access unless an explicit People permission is
 added in a later product decision.
 
+People provides a read-only experience for Business Unit users: the interface
+does not expose structure, profile, or assignment mutation controls, and the
+server rejects those operations. Within their permitted scope, they can search
+the chart and open position and profile details. Personal contact details,
+certification credential IDs, and certification evidence links are withheld
+from Business Unit responses; education, certification names, and scoped
+assignment information remain available for operational context.
+
 Person profiles are separate from user accounts so employees without an
 application login, or with more than one assignment, can be represented. A
 profile supports education, certifications, and historical assignments.

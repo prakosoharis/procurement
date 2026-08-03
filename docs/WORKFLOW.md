@@ -69,6 +69,11 @@ management records a permanent or acting placement with a start date. Ending a
 placement requires its own concurrency check and preserves the historical row;
 the current organization chart derives occupancy and tenure from active rows.
 
+The chart can be searched by position, code, or current occupant. Search keeps
+matching branches open and brings the first result into view. Position and
+profile details open in a keyboard-accessible side drawer; Enter or Space opens
+a focused position, and Escape returns focus to the originating control.
+
 ## Submissions
 
 Business Units can submit a request to create a new SOP or revise an existing

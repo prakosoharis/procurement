@@ -58,6 +58,11 @@ Business Unit selector data; it does not return role/session data or raw scope
 arrays. The People permission policy permits Superuser, Tim Procurement, and
 Business Unit users to view; only Superuser and Tim Procurement can mutate.
 
+For a Business Unit viewer, People profile DTOs preserve their stable fields but
+set personal contact data, certification credential IDs, and evidence links to
+`null`. The server applies this DTO sanitization after the scoped query; client
+code never receives an elevated role or an unrestricted profile payload.
+
 ## Document storage path
 
 For Google Drive, an administrator authorizes the application through OAuth.
