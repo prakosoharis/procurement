@@ -102,3 +102,57 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Master data already exists or could not be created.' }, { status: 409 });
   }
 }
+
+export async function PATCH(request) {
+  const user = await currentUser();
+  if (!masterDataRoles.includes(user?.role)) {
+    return NextResponse.json({ error: 'Corporate Governance access required' }, { status: 403 });
+  }
+
+  const { kind, businessUnitId, organizationGroupId, industryId } = await request.json();
+  if (kind !== 'businessUnit' || !businessUnitId || !organizationGroupId || !industryId) {
+    return NextResponse.json({ error: 'Business Unit, group, and industry are required.' }, { status: 400 });
+  }
+
+  try {
+    const updated = await db.$transaction(async (tx) => {
+      const [businessUnit, group, industry] = await Promise.all([
+        tx.businessUnit.findUnique({ where: { id: businessUnitId } }),
+        tx.organizationGroup.findUnique({ where: { id: organizationGroupId } }),
+        tx.industry.findUnique({ where: { id: industryId } })
+      ]);
+      if (!businessUnit || !group || !industry) {
+        throw new Error('INVALID_MASTER_DATA_REFERENCE');
+      }
+      const next = await tx.businessUnit.update({
+        where: { id: businessUnit.id },
+        data: {
+          groupName: group.name,
+          industry: industry.name,
+          organizationGroupId: group.id,
+          industryId: industry.id
+        }
+      });
+      await tx.auditLog.create({
+        data: {
+          actorId: user.id,
+          entity: 'BusinessUnit',
+          entityId: businessUnit.id,
+          action: 'UPDATE_BUSINESS_UNIT_CLASSIFICATION',
+          detail: JSON.stringify({
+            before: { groupName: businessUnit.groupName, industry: businessUnit.industry },
+            after: { groupName: next.groupName, industry: next.industry }
+          })
+        }
+      });
+      return next;
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    if (error.message === 'INVALID_MASTER_DATA_REFERENCE') {
+      return NextResponse.json({ error: 'Business Unit, group, or industry tidak ditemukan.' }, { status: 404 });
+    }
+    console.error('Business Unit master data update failed', error);
+    return NextResponse.json({ error: 'Business Unit tidak dapat diperbarui.' }, { status: 409 });
+  }
+}
