@@ -6,8 +6,7 @@
 | --- | --- | --- |
 | Web application | Next.js App Router and React | User interface, Route Handlers, session-aware server rendering. |
 | Database | PostgreSQL with Prisma | Governance data, users, workflow records, audit logs, and storage integration configuration. |
-| Local object storage | MinIO with S3-compatible API | Private document storage during Docker-based local development. |
-| Optional document storage | Google Drive or S3-compatible storage | Private document upload and download outside the local MinIO setup. |
+| Document storage | Google Drive | Private SOP, source, attachment, and evidence-file storage. |
 
 The main product interface is delivered as a static application asset inside the
 Next.js application. Route Handlers provide data and mutations to that
@@ -49,11 +48,42 @@ read-only for governance mutations.
 
 ## Document storage path
 
-For S3-compatible storage, the application creates a private bucket when
-needed and stores the object key with the SOP version. Downloads use a signed
-URL or a streamed response.
-
 For Google Drive, an administrator authorizes the application through OAuth.
-The application creates a `Procurement Governance Hub` folder, encrypts the
-refresh token before storing it in PostgreSQL, and stores Drive file IDs as
-`gdrive:<id>` keys.
+The application reuses a valid existing `Procurement Governance Hub` root when
+Drive is reconnected; it creates one only when no valid root is stored. The
+refresh token is encrypted before storing it in PostgreSQL, and Drive file IDs
+are stored as `gdrive:<id>` keys.
+
+### Google Drive directory convention
+
+Google Drive is the document-storage authority. File IDs, rather than a Drive
+path, remain the durable database reference so a file can be moved without
+breaking preview or download access.
+
+The connected root folder must follow this structure:
+
+```text
+Procurement Governance Hub/
+├── SOP/
+│   └── <Business Unit name>/
+└── Sumber Pembanding/
+    └── <Penerbit atau Regulator>/
+        └── <Nomor regulasi>/
+```
+
+All SOP versions for one Business Unit must be placed in that Business Unit's
+folder, for example `SOP/SMI/`. Source documents must first be grouped by their
+publisher or regulator, for example `Sumber Pembanding/OJK/`; revisions of one
+regulation are grouped in its regulation-number folder. Internal sources may
+use additional categories below `Internal`, such as `Best Practice` and `Hasil
+Audit`.
+
+Folder lookup and creation must be idempotent. Existing application-owned files
+are reorganized by changing their Drive parent only; their `gdrive:<id>`
+database value must remain unchanged. The implementation must audit every move,
+support a dry-run before a bulk migration, and never create public file links.
+
+Each **BusinessUnit** records its resolved SOP folder ID after provisioning.
+Creating a Business Unit through master data provisions `SOP/<Business Unit>/`
+before the new BU is returned as successful. Every new SOP upload and version
+upload resolves the same folder, so new files do not land in the Drive root.

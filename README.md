@@ -23,9 +23,9 @@ Start all local services:
 docker compose up --build
 ```
 
-This starts the Next.js application on port 3000, PostgreSQL on port 5432, and
-the local MinIO console on port 9001. The development database is initialized
-from the Prisma schema and seed data.
+This starts the Next.js application on port 3000 and PostgreSQL on port 5432.
+The development database is initialized from the Prisma schema and seed data.
+Document files use the connected Google Drive account configured in `.env`.
 
 Stop services without deleting data:
 
