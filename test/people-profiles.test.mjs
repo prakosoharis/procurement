@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { profileDto, profileInput, profileWhere } from '../lib/people/profile-service.js';
+import { profileDto, profileInput, profileWhere, totalWorkExperience } from '../lib/people/profile-service.js';
 
 test('Business Unit profile scope is pushed into the assignment relation query', () => {
   const scoped = profileWhere({ role: 'BUSINESS_UNIT_PIC', businessUnitId: 'bu-a', businessUnitScopes: [{ businessUnitId: 'bu-b' }] });
-  assert.deepEqual(scoped.assignments.some.position.businessUnitId.in, ['bu-a', 'bu-b']);
+  assert.deepEqual(scoped.assignments.some.position.OR[0].businessUnitId.in, ['bu-a', 'bu-b']);
+  assert.deepEqual(scoped.assignments.some.position.OR[1].organizationGroup.businessUnits.some.id.in, ['bu-a', 'bu-b']);
   assert.equal(scoped.assignments.some.OR[0].endDate, null);
   assert.ok(scoped.assignments.some.OR[1].endDate.gt instanceof Date);
   assert.deepEqual(profileWhere({ role: 'BUSINESS_UNIT_PIC', businessUnitId: null, businessUnitScopes: [] }), { id: '__no-people-profile-access__' });
@@ -46,13 +47,20 @@ test('Business Unit profile DTO redacts contact and credential evidence while re
 
 test('profile qualification input accepts repeatable records and rejects invalid date ranges', () => {
   const data = profileInput({
-    fullName: 'Nadia', employeeIdentifier: 'EMP-1', email: 'nadia@example.test', phone: '', photoUrl: '',
+    fullName: 'Nadia', employeeIdentifier: 'EMP-1', email: 'nadia@example.test', phone: '', photoUrl: '', firstWorkStartedAt: '2020-01-15',
     educations: [{ institution: 'Universitas', degreeLevel: 'S1', fieldOfStudy: 'Hukum', startYear: '2018', graduationYear: '2022' }],
     certifications: [{ name: 'CIPS', issuer: 'CIPS', credentialId: '', issueDate: '2024-01-01', expiryDate: '', evidenceUrl: '' }]
   });
   assert.equal(data.educations[0].graduationYear, 2022);
   assert.equal(data.certifications[0].expiryDate, null);
+  assert.equal(data.firstWorkStartedAt.toISOString(), '2020-01-15T00:00:00.000Z');
   assert.throws(() => profileInput({ fullName: 'Nadia', educations: [], certifications: [{ name: 'CIPS', issuer: 'CIPS', issueDate: '2026-01-01', expiryDate: '2025-01-01' }] }), /cannot precede/);
+  assert.throws(() => profileInput({ fullName: 'Nadia', firstWorkStartedAt: '2030-01-01', educations: [], certifications: [] }), /cannot be in the future/);
+});
+
+test('total work experience is derived from the first work date without storing a stale total', () => {
+  assert.deepEqual(totalWorkExperience(new Date('2020-01-15T00:00:00.000Z'), new Date('2026-08-04T00:00:00.000Z')), { totalMonths: 78, years: 6, months: 6 });
+  assert.equal(totalWorkExperience(null), null);
 });
 
 test('profile route surface keeps named mutations and server authority', async () => {

@@ -5,9 +5,11 @@ import { getOrganizationStructure } from '../../../../lib/people/organization-se
 export async function GET(request) {
   try {
     const user = await actor();
-    const businessUnitId = new URL(request.url).searchParams.get('businessUnitId');
-    if (!businessUnitId) fail('INVALID_INPUT', 'businessUnitId is required.');
-    return json(await getOrganizationStructure(user, businessUnitId));
+    const url = new URL(request.url);
+    const scopeType = url.searchParams.get('scopeType') || 'BUSINESS_UNIT';
+    const scopeId = url.searchParams.get('scopeId') || url.searchParams.get('businessUnitId');
+    if (!scopeId) fail('INVALID_INPUT', 'scopeId is required.');
+    return json(await getOrganizationStructure(user, scopeType === 'GROUP' ? { scopeType: 'GROUP', organizationGroupId: scopeId } : { scopeType: 'BUSINESS_UNIT', businessUnitId: scopeId }));
   } catch (exception) {
     return error(exception);
   }

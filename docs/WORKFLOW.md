@@ -43,17 +43,24 @@ dry-run, idempotent folder resolution, and audit evidence.
 
 ## People and organization structure
 
-1. An authorized user selects an existing Business Unit in **People**.
-2. The current organization structure contains one active root position and
+1. An authorized user selects an existing **Business Unit** or **Group** in
+   **People** before creating its structure. The choice is fixed for that
+   structure.
+2. A Business Unit structure is available only in that Business Unit's
+   effective scope. A Group structure is available to each Business Unit user
+   whose Business Unit belongs to the selected Group.
+3. The current organization structure contains one active root position and
    nested child positions in a deterministic sibling order.
-3. A position may remain vacant, or receive one or more dated person
+4. A position may remain vacant, or receive one or more dated person
    assignments. A person may have more than one assignment when explicitly
    recorded as permanent or acting.
-4. Replacing an occupant ends the previous assignment; it never overwrites the
+5. Replacing an occupant ends the previous assignment; it never overwrites the
    historical record. Tenure is calculated from the recorded dates.
-5. Education and certification entries belong to the reusable person profile,
+6. Education and certification entries belong to the reusable person profile,
    not the position node.
-6. Structural, profile, and assignment mutations write an audit record. A
+7. The profile's first-work date determines the automatically calculated total
+   work experience. It is validated as a date that is not in the future.
+8. Structural, profile, and assignment mutations write an audit record. A
    position with active children cannot be archived until its children are
    moved or archived.
 

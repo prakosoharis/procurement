@@ -33,7 +33,7 @@ four roles respectively.
 | Calendar | Online, onsite, or hybrid audit appointments with selected PICs or all Business Units. |
 | Engagement | Business Unit engagement index and indicator detail. |
 | Insights | Reporting and operational insight views. |
-| People | Struktur organisasi per Business Unit serta profil personel dan penempatan jabatan. |
+| People | Struktur organisasi per Business Unit atau Group, serta profil personel dan penempatan jabatan. |
 | Directory | User and PIC directory. User creation and password reset are restricted to Superuser. |
 
 Menu availability and permitted actions are determined by the authenticated
@@ -60,10 +60,14 @@ only the assigned reviewer can approve it.
 
 ## People and organization structure
 
-People uses the existing Business Unit master as its primary boundary; it does
-not introduce a second Business Unit directory. The module has **Struktur
-Organisasi** and **Profil Personel** views. A structure is made of positions,
-not people: a position may be vacant or have one or more current occupants.
+People uses the existing Business Unit and Group master data; it does not
+introduce a second organization directory. A structure is created with one
+scope: **Business Unit** or **Group**. A Business Unit structure is visible
+only within that Business Unit's effective access scope. A Group structure is
+visible to users of every Business Unit that belongs to that Group. The module
+has **Struktur Organisasi** and **Profil Personel** views. A structure is made
+of positions, not people: a position may be vacant or have one or more current
+occupants.
 
 Superuser and Tim Procurement can maintain organization structures, positions,
 and reusable person profiles. A profile records core identity, formal education,
@@ -85,6 +89,9 @@ assignment information remain available for operational context.
 
 Person profiles are separate from user accounts so employees without an
 application login, or with more than one assignment, can be represented. A
-profile supports education, certifications, and historical assignments.
-Position tenure is calculated from assignment start and end dates. Historical
-records are archived or end-dated rather than hard-deleted.
+profile supports education, certifications, historical assignments, and the
+date the person first began working. The application calculates total work
+experience automatically from that date, so the displayed value remains current
+without manually updating a stored total. Position tenure is calculated from
+assignment start and end dates. Historical records are archived or end-dated
+rather than hard-deleted.

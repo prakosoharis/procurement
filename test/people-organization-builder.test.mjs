@@ -41,6 +41,23 @@ test('structure DTO is compact, scoped, and keeps vacancy separate from profiles
   assert.equal(result.capabilities.canEditStructure, false);
 });
 
+test('Group structure is returned only through a member Business Unit scope', async () => {
+  const updatedAt = new Date('2026-08-01T00:00:00.000Z');
+  const actor = { role: 'BUSINESS_UNIT_PIC', businessUnitId: 'bu-smi', businessUnitScopes: [] };
+  const db = {
+    businessUnit: { findFirst: async () => ({ id: 'bu-smi' }) },
+    organizationGroup: { findUnique: async () => ({ id: 'group-smma', name: 'SMMA' }) },
+    organizationStructure: { findFirst: async ({ where }) => {
+      assert.deepEqual(where, { organizationGroupId: 'group-smma', status: 'ACTIVE' });
+      return { id: 'structure-group', scopeType: 'GROUP', name: 'Struktur SMMA', effectiveDate: null, updatedAt, positions: [] };
+    } }
+  };
+  const result = await getOrganizationStructure(actor, { scopeType: 'GROUP', organizationGroupId: 'group-smma' }, { db });
+  assert.deepEqual(result.scope, { type: 'GROUP', id: 'group-smma', name: 'SMMA' });
+  assert.equal(result.businessUnit, null);
+  assert.equal(result.structure.scopeType, 'GROUP');
+});
+
 test('Business Unit access is enforced before a structure query is built', async () => {
   const actor = { role: 'BUSINESS_UNIT_PIC', businessUnitId: 'bu-1', businessUnitScopes: [] };
   const db = {
@@ -62,9 +79,10 @@ test('People routes expose named position operations and concurrency fields', as
   const service = await readFile(new URL('../lib/people/organization-service.js', import.meta.url), 'utf8');
   assert.match(service, /expectedUpdatedAt/);
   assert.match(service, /updateMany\(\{\n    where: \{ id: position\.id, status: 'ACTIVE', updatedAt: position\.updatedAt \}/);
-  assert.match(service, /assertBusinessUnitScope/);
+  assert.match(service, /assertPeopleScope/);
+  assert.match(service, /organizationGroupId/);
   assert.match(service, /MOVE_ORGANIZATION_POSITION/);
   assert.match(service, /hierarchyHasCycle/);
-  assert.match(service, /assertUniqueActiveSiblingTitle\(tx, \{\n      structureId: position\.structureId,\n      parentId: newParent\.id/);
+  assert.match(service, /assertUniqueActiveSiblingTitle\(tx, \{ structureId: position\.structureId, parentId: newParent\.id/);
   assert.match(service, /CONCURRENT_MODIFICATION/);
 });

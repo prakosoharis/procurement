@@ -112,6 +112,12 @@ structure/root invariants, without changing user, Business Unit, or SOP
 records. Apply committed migrations through the normal deployment workflow; do
 not use reset commands against shared databases.
 
+`20260804000000_add_people_group_structures_and_experience` extends People
+additively with Business Unit or Group structure scope and
+`Person.firstWorkStartedAt`. Existing People records remain Business Unit
+scoped. It should be applied through the same migration deployment workflow;
+do not use `db push` against a shared database.
+
 For a migration-managed deployment, commit the migration with the application
 and apply it deliberately:
 

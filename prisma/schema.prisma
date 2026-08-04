@@ -227,6 +227,11 @@ enum OrganizationStructureStatus {
   ARCHIVED
 }
 
+enum OrganizationStructureScope {
+  BUSINESS_UNIT
+  GROUP
+}
+
 enum OrganizationPositionStatus {
   ACTIVE
   ARCHIVED
@@ -281,10 +286,12 @@ model SopCategory {
 }
 
 model OrganizationGroup {
-  id            String         @id @default(cuid())
-  name          String         @unique
-  businessUnits BusinessUnit[]
-  createdAt     DateTime       @default(now())
+  id                     String                  @id @default(cuid())
+  name                   String                  @unique
+  businessUnits          BusinessUnit[]
+  organizationStructures OrganizationStructure[]
+  organizationPositions  OrganizationPosition[]
+  createdAt              DateTime                @default(now())
 }
 
 model Industry {
@@ -337,40 +344,48 @@ model User {
 }
 
 model OrganizationStructure {
-  id            String                      @id @default(cuid())
-  businessUnitId String
-  businessUnit  BusinessUnit                @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
-  name          String
-  effectiveDate DateTime?
-  status        OrganizationStructureStatus @default(ACTIVE)
-  positions     OrganizationPosition[]
-  createdAt     DateTime                    @default(now())
-  updatedAt     DateTime                    @updatedAt
+  id                  String                     @id @default(cuid())
+  scopeType           OrganizationStructureScope @default(BUSINESS_UNIT)
+  businessUnitId      String?
+  businessUnit        BusinessUnit?              @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  organizationGroupId String?
+  organizationGroup   OrganizationGroup?         @relation(fields: [organizationGroupId], references: [id], onDelete: Restrict)
+  name                String
+  effectiveDate       DateTime?
+  status              OrganizationStructureStatus @default(ACTIVE)
+  positions           OrganizationPosition[]
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
 
   @@index([businessUnitId, status])
+  @@index([organizationGroupId, status])
 }
 
 model OrganizationPosition {
-  id            String                     @id @default(cuid())
-  structureId   String
-  structure     OrganizationStructure      @relation(fields: [structureId], references: [id], onDelete: Restrict)
-  businessUnitId String
-  businessUnit  BusinessUnit               @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
-  parentId      String?
-  parent        OrganizationPosition?      @relation("OrganizationPositionHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
-  children      OrganizationPosition[]     @relation("OrganizationPositionHierarchy")
-  title         String
-  code          String?
-  description   String?
-  displayOrder  Int                        @default(0)
-  status        OrganizationPositionStatus @default(ACTIVE)
-  assignments   PositionAssignment[]
-  createdAt     DateTime                   @default(now())
-  updatedAt     DateTime                   @updatedAt
+  id                  String                     @id @default(cuid())
+  structureId         String
+  structure           OrganizationStructure      @relation(fields: [structureId], references: [id], onDelete: Restrict)
+  businessUnitId      String?
+  businessUnit        BusinessUnit?              @relation(fields: [businessUnitId], references: [id], onDelete: Restrict)
+  organizationGroupId String?
+  organizationGroup   OrganizationGroup?         @relation(fields: [organizationGroupId], references: [id], onDelete: Restrict)
+  parentId            String?
+  parent              OrganizationPosition?      @relation("OrganizationPositionHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children            OrganizationPosition[]     @relation("OrganizationPositionHierarchy")
+  title               String
+  code                String?
+  description         String?
+  displayOrder        Int                        @default(0)
+  status              OrganizationPositionStatus @default(ACTIVE)
+  assignments         PositionAssignment[]
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
 
   @@unique([businessUnitId, code])
+  @@unique([organizationGroupId, code])
   @@index([structureId, parentId, status, displayOrder])
   @@index([businessUnitId, status])
+  @@index([organizationGroupId, status])
 }
 
 model Person {
@@ -380,6 +395,7 @@ model Person {
   email              String?
   phone              String?
   photoUrl           String?
+  firstWorkStartedAt DateTime?
   status             PersonStatus           @default(ACTIVE)
   educations         PersonEducation[]
   certifications     PersonCertification[]
