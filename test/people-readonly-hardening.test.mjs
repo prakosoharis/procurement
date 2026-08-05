@@ -59,6 +59,9 @@ test('People UI exposes keyboard navigation, accessible drawer behavior, and ser
   assert.match(html, /event\.key==='Escape'/);
   assert.match(html, /canManageAssignments\?/);
   assert.match(html, /canEditStructure\?/);
+  assert.match(html, /scopeType='\+encodeURIComponent\(peopleState\.scopeType\)/);
+  assert.match(html, /Tanggal mulai bekerja pertama kali/);
+  assert.match(html, /Total pengalaman kerja dihitung otomatis/);
   assert.doesNotMatch(html, /peopleState\.data\.role|currentUser\.role/);
 });
 

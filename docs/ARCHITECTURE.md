@@ -29,7 +29,8 @@ authorization remains on the server through Route Handlers and shared services.
 - **AuditEvent** and **AuditEventParticipant** represent scheduled audit
   appointments and attendance.
 - **OrganizationStructure** and **OrganizationPosition** represent one current
-  Business Unit hierarchy, including its root/child position relationship.
+  hierarchy scoped to either a Business Unit or an Organization Group,
+  including its root/child position relationship.
 - **Person**, **PersonEducation**, **PersonCertification**, and
   **PositionAssignment** represent reusable personnel profiles, qualifications,
   and dated placement history separately from application user accounts.
@@ -52,7 +53,10 @@ cross-Business-Unit access according to their permissions; Executive is
 read-only for governance mutations.
 
 People applies the same effective Business Unit scope before its database
-queries are built. Its API returns only server-derived capabilities
+queries are built. For a Group-scoped structure, a Business Unit user must have
+at least one effective Business Unit belonging to that Group; the server checks
+this with a scoped database query before loading the structure, positions, or
+assignments. Its API returns only server-derived capabilities
 (`canEditStructure`, `canManagePeople`, and `canManageAssignments`) and compact
 Business Unit selector data; it does not return role/session data or raw scope
 arrays. The People permission policy permits Superuser, Tim Procurement, and
@@ -62,6 +66,8 @@ For a Business Unit viewer, People profile DTOs preserve their stable fields but
 set personal contact data, certification credential IDs, and evidence links to
 `null`. The server applies this DTO sanitization after the scoped query; client
 code never receives an elevated role or an unrestricted profile payload.
+The `Person.firstWorkStartedAt` date is the source of truth for total work
+experience; the total is calculated in the DTO rather than persisted.
 
 ## Document storage path
 
