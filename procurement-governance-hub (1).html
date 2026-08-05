@@ -754,36 +754,11 @@ Skor Kepatuhan BU Logistik A: 78% (Kategori: Sebagian Patuh)</textarea>
 <div id="toast-container"></div>
 <script>
 
-// SOP DATA
+// Repository never renders prototype records. It starts empty and is populated
+// only by the authenticated database response.
 var repositoryManagerRoles=['SUPER_USER','CORPORATE_GOVERNANCE'],viewerAccessRole=new URLSearchParams(window.location.search).get('role')||'';
-var sopData=[
-  {id:"SOP-001",name:"SOP Proses Tender Terbuka NANOVEST",group:"SMMA",bu:"NANOVEST",industry:"Financial Services",version:"v2.1",status:"Aktif",pic:{name:"Anita Pramesti",email:"anita.p@nanovest.co.id",phone:"+62 812-1000-1001"},lastUpdated:"12 Jul 2026",history:[{version:"v2.1",date:"12 Jul 2026",author:"Anita Pramesti",notes:"Penyesuaian proses tender digital"}]},
-  {id:"SOP-002",name:"SOP Manajemen Vendor NARINDO",group:"SMMA",bu:"NARINDO",industry:"Financial Services",version:"v1.4",status:"Aktif",pic:{name:"Rizky Hidayat",email:"rizky.h@narindo.co.id",phone:"+62 812-1000-1002"},lastUpdated:"10 Jul 2026",history:[{version:"v1.4",date:"10 Jul 2026",author:"Rizky Hidayat",notes:"Update due diligence vendor"}]},
-  {id:"SOP-003",name:"SOP Pengadaan Barang & Jasa BAHANA",group:"SMMA",bu:"BAHANA",industry:"Financial Services",version:"v1.8",status:"Dalam Revisi",pic:{name:"Maya Lestari",email:"maya.l@bahana.co.id",phone:"+62 812-1000-1003"},lastUpdated:"08 Jul 2026",history:[{version:"v1.8",date:"08 Jul 2026",author:"Maya Lestari",notes:"Revisi batas otorisasi"}]},
-  {id:"SOP-004",name:"SOP Evaluasi Vendor SINARMAS SEKURITAS",group:"SMMA",bu:"SINARMAS SEKURITAS",industry:"Financial Services",version:"v2.0",status:"Aktif",pic:{name:"Dimas Santoso",email:"dimas.s@sinarmassekuritas.co.id",phone:"+62 812-1000-1004"},lastUpdated:"05 Jul 2026",history:[{version:"v2.0",date:"05 Jul 2026",author:"Dimas Santoso",notes:"Pembaruan evaluasi vendor"}]},
-  {id:"SOP-005",name:"SOP Proses Tender Terbuka BKES",group:"SMM",bu:"BKES",industry:"Renewable Energy",version:"v1.3",status:"Aktif",pic:{name:"Budi Santoso",email:"budi.s@bkes.co.id",phone:"+62 812-2000-1001"},lastUpdated:"14 Jul 2026",history:[{version:"v1.3",date:"14 Jul 2026",author:"Budi Santoso",notes:"Penyesuaian tender proyek energi"}]},
-  {id:"SOP-006",name:"SOP Manajemen Vendor GEMS",group:"SMM",bu:"GEMS",industry:"Mining",version:"v3.0",status:"Aktif",pic:{name:"Agus Maulana",email:"agus.m@gems.co.id",phone:"+62 812-2000-1002"},lastUpdated:"11 Jul 2026",history:[{version:"v3.0",date:"11 Jul 2026",author:"Agus Maulana",notes:"Revisi kriteria vendor tambang"}]},
-  {id:"SOP-007",name:"SOP Pengadaan Jasa BCE",group:"SMM",bu:"BCE",industry:"Mining",version:"v1.1",status:"Draft",pic:{name:"Sri Wahyuni",email:"sri.w@bce.co.id",phone:"+62 812-2000-1003"},lastUpdated:"09 Jul 2026",history:[{version:"v1.1",date:"09 Jul 2026",author:"Sri Wahyuni",notes:"Draft awal pengadaan jasa"}]},
-  {id:"SOP-008",name:"SOP Pengadaan Barang ESSENS",group:"Non Group",bu:"ESSENS",industry:"Renewable Energy",version:"v2.2",status:"Aktif",pic:{name:"Nadia Putri",email:"nadia.p@essens.co.id",phone:"+62 812-3000-1001"},lastUpdated:"13 Jul 2026",history:[{version:"v2.2",date:"13 Jul 2026",author:"Nadia Putri",notes:"Update proses sourcing"}]},
-  {id:"SOP-009",name:"SOP Tender Proyek SUN ENERGY",group:"Non Group",bu:"SUN ENERGY",industry:"Renewable Energy",version:"v1.6",status:"Dalam Revisi",pic:{name:"Hadi Lesmana",email:"hadi.l@sunenergy.co.id",phone:"+62 812-3000-1002"},lastUpdated:"07 Jul 2026",history:[{version:"v1.6",date:"07 Jul 2026",author:"Hadi Lesmana",notes:"Penyesuaian tender EPC"}]},
-  {id:"SOP-010",name:"SOP Seleksi Vendor EBER",group:"Non Group",bu:"EBER",industry:"Mining",version:"v2.4",status:"Aktif",pic:{name:"Dian Prasetyo",email:"dian.p@eber.co.id",phone:"+62 812-3000-1003"},lastUpdated:"06 Jul 2026",history:[{version:"v2.4",date:"06 Jul 2026",author:"Dian Prasetyo",notes:"Pembaruan seleksi vendor"}]}
-];
-
-// Existing example records follow the same workflow vocabulary as new uploads.
-sopData.forEach(function(s){if(s.status==='Aktif')s.status='Approved';if(s.status==='Dalam Revisi')s.status='Draft'});
-
-var mandatoryDocuments=['Procurement Policy','Procurement SOP','Supplier Info & Performance Mgmt SOP','Matrix Level Authorization','Ethic Policy','Code of Conduct'];
-var additionalDocuments=['Work Risk-Level Standard','Segregation of Duties Standard','Whistleblowing / Grievance Policy','Vendor Due Diligence Procedure','Purchase Order Standard','Conflict of Interest Policy','Accounts Payable SOP'];
-var additionalCoverage={
-  'NANOVEST':7,'NARINDO':6,'BAHANA':5,'SINARMAS SEKURITAS':7,
-  'BKES':6,'GEMS':5,'BCE':4,'ESSENS':5,'SUN ENERGY':6,'EBER':4
-};
-var repositoryUnits=sopData.map(function(s){return {id:s.bu,name:s.bu,groupName:s.group,industry:s.industry}});
-var liveRepositoryLoaded=false,documentByRequirementKey={},documentTypesByCode={},masterGroups=[],masterIndustries=[],repositoryPics=[],directoryUsers=[],repositoryReviewers=[],repositoryViewer=null;
-var mandatoryMissing={
-  'NANOVEST':[], 'NARINDO':[2], 'BAHANA':[3,4], 'SINARMAS SEKURITAS':[1],
-  'BKES':[], 'GEMS':[5], 'BCE':[0,3], 'ESSENS':[4], 'SUN ENERGY':[2,5], 'EBER':[1,2,4]
-};
+var sopData=[],mandatoryDocuments=[],additionalDocuments=[],repositoryUnits=[];
+var liveRepositoryLoaded=false,repositoryLoadState='loading',repositoryLoadPromise=null,documentByRequirementKey={},documentTypesByCode={},masterGroups=[],masterIndustries=[],repositoryPics=[],directoryUsers=[],repositoryReviewers=[],repositoryViewer=null;
 
 function documentItem(name,required,status){
   var label=status==='Tersedia'?'badge-green':'badge-amber';
@@ -795,16 +770,34 @@ function renderDocumentRequirements(){
   if(additionalEl)additionalEl.innerHTML=additionalDocuments.map(function(name,index){return documentItem('A'+(index+1)+' — '+name,false)}).join('');
 }
 function documentRequirementCode(type,index){return (type==='mandatory'?'M':'A')+(index+1)}
-function documentState(bu,type,index){if(liveRepositoryLoaded){var sopDocument=documentByRequirementKey[bu+'|'+documentRequirementCode(type,index)];return !sopDocument?'MISSING':sopDocument.status==='APPROVED'?'APPROVED':'DRAFT'}return type==='mandatory'?(mandatoryMissing[bu]||[]).indexOf(index)===-1?'APPROVED':'MISSING':index<(additionalCoverage[bu]||0)?'APPROVED':'MISSING'}
+function documentState(bu,type,index){if(!liveRepositoryLoaded)return null;var sopDocument=documentByRequirementKey[bu+'|'+documentRequirementCode(type,index)];return !sopDocument?'MISSING':sopDocument.status==='APPROVED'?'APPROVED':'DRAFT'}
 function documentAvailable(bu,type,index){return documentState(bu,type,index)==='APPROVED'}
+function repositoryLoadingRow(colspan,message){return '<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--muted-fg);padding:28px">'+message+'</td></tr>'}
+function setRepositoryLoading(){
+  var table=document.getElementById('repositoryRows'),summary=document.getElementById('repositorySummary'),coverage=document.getElementById('documentCoverage'),head=document.getElementById('documentMatrixHead');
+  if(table)table.innerHTML=repositoryLoadingRow(10,'Memuat dokumen dari database...');
+  if(summary)summary.innerHTML='<div class="card repo-summary-card" style="grid-column:1/-1"><div class="repo-summary-label">Memuat ringkasan repository...</div></div>';
+  if(head)head.innerHTML='';
+  if(coverage)coverage.innerHTML=repositoryLoadingRow(1,'Memuat document compliance...');
+}
+function setRepositoryLoadError(){
+  var table=document.getElementById('repositoryRows'),summary=document.getElementById('repositorySummary'),coverage=document.getElementById('documentCoverage'),head=document.getElementById('documentMatrixHead');
+  if(table)table.innerHTML=repositoryLoadingRow(10,'Repository belum dapat dimuat. Silakan refresh halaman.');
+  if(summary)summary.innerHTML='<div class="card repo-summary-card" style="grid-column:1/-1"><div class="repo-summary-label">Ringkasan repository belum tersedia.</div></div>';
+  if(head)head.innerHTML='';
+  if(coverage)coverage.innerHTML=repositoryLoadingRow(1,'Document compliance belum dapat dimuat. Silakan refresh halaman.');
+}
 async function loadRepositoryData(){
-  try{
-    var response=await fetch('/api/repository-overview');if(!response.ok)throw new Error('Repository API unavailable');var data=await response.json();
+  if(repositoryLoadPromise)return repositoryLoadPromise;
+  if(!liveRepositoryLoaded){repositoryLoadState='loading';setRepositoryLoading()}
+  repositoryLoadPromise=(async function(){try{
+    var response=await fetch('/api/repository-overview',{cache:'no-store'});if(!response.ok)throw new Error('Repository API unavailable');var data=await response.json();
     repositoryViewer=data.viewer||null;repositoryReviewers=data.reviewers||[];repositoryUnits=data.businessUnits;masterGroups=data.groups;masterIndustries=data.industries;documentTypesByCode={};data.documentTypes.forEach(function(t){documentTypesByCode[t.code]=t});mandatoryDocuments=data.documentTypes.filter(function(t){return t.category==='MANDATORY'}).map(function(t){return t.name});additionalDocuments=data.documentTypes.filter(function(t){return t.category==='ADDITIONAL'}).map(function(t){return t.name});
     documentByRequirementKey={};data.documents.forEach(function(d){if(d.documentType)documentByRequirementKey[d.businessUnit.name+'|'+d.documentType.code]=d});
-    sopData=data.documents.map(function(d){var history=(d.versionHistory||[]).map(function(v){var actor=v.approvalStatus==='APPROVED'?(v.approvedBy?.name||'Corporate Compliance'):(v.submittedBy?.name||'—');return {version:v.versionNo,date:new Date(v.uploadedAt).toLocaleDateString('id-ID'),author:actor,notes:v.changeSummary||'Tidak ada catatan perubahan',status:v.approvalStatus,submittedBy:v.submittedBy,submittedAt:v.submittedAt,reviewer:v.reviewer,approvedBy:v.approvedBy,approvedAt:v.approvedAt,fileKey:v.fileKey,contentType:v.contentType,fileName:v.fileName}});return {id:d.id,name:d.title,group:d.businessUnit.groupName,bu:d.businessUnit.name,industry:d.businessUnit.industry,version:d.currentVersion||'v1.0',status:d.status.charAt(0)+d.status.slice(1).toLowerCase(),pic:d.owner||{name:'—',email:'—',phone:'—'},fileKey:d.fileKey,contentType:d.contentType,fileName:d.fileName,lastUpdated:new Date(d.uploadedAt).toLocaleDateString('id-ID'),submittedBy:d.submittedBy,submittedAt:d.submittedAt,reviewer:d.reviewer,approvedBy:d.approvedBy,approvedAt:d.approvedAt,history:history,versionHistory:d.versionHistory||[]}});liveRepositoryLoaded=true;
+    sopData=data.documents.map(function(d){var history=(d.versionHistory||[]).map(function(v){var actor=v.approvalStatus==='APPROVED'?(v.approvedBy?.name||'Corporate Compliance'):(v.submittedBy?.name||'—');return {version:v.versionNo,date:new Date(v.uploadedAt).toLocaleDateString('id-ID'),author:actor,notes:v.changeSummary||'Tidak ada catatan perubahan',status:v.approvalStatus,submittedBy:v.submittedBy,submittedAt:v.submittedAt,reviewer:v.reviewer,approvedBy:v.approvedBy,approvedAt:v.approvedAt,fileKey:v.fileKey,contentType:v.contentType,fileName:v.fileName}});return {id:d.id,name:d.title,group:d.businessUnit.groupName,bu:d.businessUnit.name,industry:d.businessUnit.industry,version:d.currentVersion||'v1.0',status:d.status.charAt(0)+d.status.slice(1).toLowerCase(),pic:d.owner||{name:'—',email:'—',phone:'—'},fileKey:d.fileKey,contentType:d.contentType,fileName:d.fileName,lastUpdated:new Date(d.uploadedAt).toLocaleDateString('id-ID'),submittedBy:d.submittedBy,submittedAt:d.submittedAt,reviewer:d.reviewer,approvedBy:d.approvedBy,approvedAt:d.approvedAt,history:history,versionHistory:d.versionHistory||[]}});liveRepositoryLoaded=true;repositoryLoadState='ready';
     populateBusinessUnitFilter();populateComplianceBusinessUnitFilter();populateCreateDocumentTypes();populateCreateOrganizationSelectors();renderDocumentRequirements();renderRepository();renderDocumentCoverage();renderRepositorySummary();loadPics();
-  }catch(error){console.warn(error);showToast('Gagal memuat data repository dari database.')}
+  }catch(error){console.warn(error);liveRepositoryLoaded=false;repositoryLoadState='error';setRepositoryLoadError();showToast('Gagal memuat data repository dari database.')}finally{repositoryLoadPromise=null}})();
+  return repositoryLoadPromise;
 }
 async function loadPics(){try{var response=await fetch('/api/pics');if(!response.ok)return;repositoryPics=await response.json();populateCreatePics();if(viewerAccessRole==='SUPER_USER'&&document.getElementById('directoryLiveCards')){var usersResponse=await fetch('/api/users');if(usersResponse.ok)directoryUsers=await usersResponse.json()}renderDirectory()}catch(error){console.warn(error)}}
 function renderDirectory(){var wrap=document.getElementById('directoryLiveCards');if(!wrap)return;var entries=viewerAccessRole==='SUPER_USER'?directoryUsers:repositoryPics,roleLabel={SUPER_USER:'Super User',CORPORATE_GOVERNANCE:'Corporate Governance',BUSINESS_UNIT_PIC:'Business Unit PIC'};wrap.innerHTML=entries.length?entries.map(function(pic){var initials=pic.name.split(/\s+/).map(function(part){return part[0]}).join('').slice(0,2).toUpperCase();return '<div class="card dir-card"><div class="dir-avatar">'+initials+'</div><div style="flex:1;min-width:0"><div class="dir-name">'+pic.name+'</div><div class="dir-role">'+(pic.jobTitle||roleLabel[pic.role]||'User')+'</div><span class="badge" style="margin-top:4px">'+(roleLabel[pic.role]||'Business Unit PIC')+(pic.businessUnit?.name?' · '+pic.businessUnit.name:'')+'</span><div class="dir-contact">📧 '+pic.email+(pic.phone?'<br>📱 '+pic.phone:'')+'</div></div></div>'}).join(''):'<div class="card"><div class="empty-state">Belum ada user.</div></div>'}
@@ -813,6 +806,7 @@ function documentCell(state,bu,type,index,name){var approved=state==='APPROVED',
 function renderDocumentCoverage(){
   var body=document.getElementById('documentCoverage'),head=document.getElementById('documentMatrixHead'),label=document.getElementById('coverageLabel'),buSelect=document.getElementById('complianceBuFilter'),groupSelect=document.getElementById('complianceGroupFilter'),industrySelect=document.getElementById('complianceIndustryFilter');
   if(!body||!head||!buSelect)return;
+  if(!liveRepositoryLoaded){if(repositoryLoadState==='error')setRepositoryLoadError();else setRepositoryLoading();return}
   var selected=buSelect.value,group=groupSelect.value,industry=industrySelect.value;
   var units=repositoryUnits.filter(function(s){return (!selected||s.name===selected)&&(!group||s.groupName===group)&&(!industry||s.industry===industry)});
   if(label)label.textContent=selected||group||industry||'Semua Business Unit';
@@ -837,12 +831,14 @@ function populateComplianceBusinessUnitFilter(){
 }
 function renderRepository(){
   var tbody=document.getElementById('repositoryRows');if(!tbody)return;
+  if(!liveRepositoryLoaded){if(repositoryLoadState==='error')setRepositoryLoadError();else setRepositoryLoading();return}
   var keyword=(document.getElementById('repoSearch').value||'').toLowerCase(),group=document.getElementById('repoGroupFilter').value,bu=document.getElementById('repoBuFilter').value,industry=document.getElementById('repoIndustryFilter').value;
   var rows=sopData.filter(function(s){return (!keyword||(s.name+' '+s.bu+' '+s.group+' '+s.industry).toLowerCase().includes(keyword))&&(!group||s.group===group)&&(!bu||s.bu===bu)&&(!industry||s.industry===industry)});
   tbody.innerHTML=rows.length?rows.map(function(s){var i=sopData.indexOf(s),canManage=repositoryManagerRoles.includes(viewerAccessRole),draft=currentDraft(s),reviewer=draft?.reviewer?.name||s.reviewer?.name||'Belum ditugaskan',reviewHint=s.status==='Draft'?'<div style="font-size:10px;color:var(--muted-fg);margin-top:3px">Reviewer: '+reviewer+'</div>':'',review=s.status==='Draft'?'<button class="btn btn-outline btn-sm" style="height:28px;font-size:10px" onclick="openSopDetail('+i+')">Review Draft</button>':'',actions=canManage?'<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-outline btn-sm" style="height:28px;font-size:10px" onclick="openUpdateSop('+i+')">Update</button>'+review+'</div>':'<span style="color:var(--muted-fg);font-size:11px">View only</span>';return '<tr onclick="openSopDetail('+i+')"><td style="font-family:monospace;color:var(--muted-fg)">'+s.id+'</td><td style="font-weight:500">'+s.name+reviewHint+'</td><td><span class="badge">'+s.group+'</span></td><td style="color:var(--muted-fg)">'+s.bu+'</td><td style="color:var(--muted-fg)">'+s.industry+'</td><td>'+s.pic.name+'</td><td><span class="badge" style="font-family:monospace">'+s.version+'</span></td><td><span class="badge '+statusBadgeClass(s.status)+'">'+s.status+'</span></td><td style="color:var(--muted-fg)">'+s.lastUpdated+'</td><td onclick="event.stopPropagation()">'+actions+'</td></tr>'}).join(''):'<tr><td colspan="10" style="text-align:center;color:var(--muted-fg);padding:24px">Tidak ada SOP yang sesuai dengan filter.</td></tr>';
 }
 function renderRepositorySummary(){
   var el=document.getElementById('repositorySummary');if(!el)return;
+  if(!liveRepositoryLoaded){if(repositoryLoadState==='error')setRepositoryLoadError();else setRepositoryLoading();return}
   var mandatoryGaps=repositoryUnits.reduce(function(total,s){return total+mandatoryDocuments.filter(function(_,i){return !documentAvailable(s.name,'mandatory',i)}).length},0);
   var draft=sopData.filter(function(s){return s.status==='Draft'}).length;
   el.innerHTML='<div class="card repo-summary-card"><div class="repo-summary-label">Total Dokumen</div><div class="repo-summary-val">'+sopData.length+'</div><div class="repo-summary-label">SOP dan policy terunggah</div></div><div class="card repo-summary-card"><div class="repo-summary-label">Versi Draft</div><div class="repo-summary-val" style="color:var(--amber)">'+draft+'</div><div class="repo-summary-label">Menunggu review / approval</div></div><div class="card repo-summary-card"><div class="repo-summary-label">Mandatory Document Gaps</div><div class="repo-summary-val" style="color:var(--primary)">'+mandatoryGaps+'</div><div class="repo-summary-label">Perlu dilengkapi</div></div><div class="card repo-summary-card"><div class="repo-summary-label">Business Units</div><div class="repo-summary-val">'+repositoryUnits.length+'</div><div class="repo-summary-label">Dengan document coverage</div></div>';
@@ -864,12 +860,7 @@ function switchRepositorySection(section){
 function setupRepositoryFilters(){
   var group=document.getElementById('repoGroupFilter'),bu=document.getElementById('repoBuFilter'),industry=document.getElementById('repoIndustryFilter'),search=document.getElementById('repoSearch');
   if(!group||!bu||!industry||!search)return;
-  // Do not render the hard-coded prototype records while the database request
-  // is in flight. The repository must only show persisted database records.
-  var table=document.getElementById('repositoryRows'),summary=document.getElementById('repositorySummary'),coverage=document.getElementById('documentCoverage');
-  if(table)table.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted-fg);padding:28px">Memuat dokumen dari database...</td></tr>';
-  if(summary)summary.innerHTML='<div class="card repo-summary-card" style="grid-column:1/-1"><div class="repo-summary-label">Memuat ringkasan repository...</div></div>';
-  if(coverage)coverage.innerHTML='<tr><td style="text-align:center;color:var(--muted-fg);padding:28px">Memuat document compliance...</td></tr>';
+  setRepositoryLoading();
   group.addEventListener('change',function(){populateBusinessUnitFilter();renderRepository();renderDocumentCoverage()});
   bu.addEventListener('change',function(){renderRepository();renderDocumentCoverage()});industry.addEventListener('change',function(){renderRepository();renderDocumentCoverage()});search.addEventListener('input',renderRepository);
   var compGroup=document.getElementById('complianceGroupFilter'),compBu=document.getElementById('complianceBuFilter'),compIndustry=document.getElementById('complianceIndustryFilter');

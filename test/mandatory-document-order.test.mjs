@@ -10,7 +10,7 @@ const mandatory = [
   'Code of Conduct'
 ];
 
-test('mandatory document wording and order are consistent in seeds and Repository fallback UI', async () => {
+test('mandatory document wording and order are consistent in seeds and Repository database mapping', async () => {
   const { readFile } = await import('node:fs/promises');
   const [seed, productionSeed, ui] = await Promise.all([
     readFile(new URL('../prisma/seed.js', import.meta.url), 'utf8'),
@@ -20,7 +20,8 @@ test('mandatory document wording and order are consistent in seeds and Repositor
   const listPattern = mandatory.map((name) => `'${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`).join('\\s*,\\s*');
   assert.match(seed, new RegExp(`const mandatory\\s*=\\s*\\[${listPattern}\\]`));
   assert.match(productionSeed, new RegExp(`const mandatory\\s*=\\s*\\[${listPattern}\\]`));
-  assert.match(ui, new RegExp(`var mandatoryDocuments\\s*=\\s*\\[${listPattern}\\]`));
+  assert.match(ui, /mandatoryDocuments=data\.documentTypes\.filter\(function\(t\)\{return t\.category==='MANDATORY'\}\)\.map\(function\(t\)\{return t\.name\}\)/);
+  assert.doesNotMatch(ui, /var sopData=\[\{id:"SOP-001"/);
 });
 
 test('data migration preserves existing document type identities while moving M1-M5', async () => {
