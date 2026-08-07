@@ -22,6 +22,19 @@ enum SopStatus {
   ARCHIVED
 }
 
+enum GoogleDriveUploadPurpose {
+  CREATE_DOCUMENT
+  CREATE_VERSION
+}
+
+enum GoogleDriveUploadStatus {
+  PENDING
+  FINALIZING
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
 enum RequestStatus {
   SUBMITTED
   IN_REVIEW
@@ -1046,4 +1059,35 @@ model StorageIntegration {
   refreshTokenEncrypted String
   connectedAt           DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+model GoogleDriveUploadSession {
+  id                  String                   @id @default(cuid())
+  purpose             GoogleDriveUploadPurpose
+  status              GoogleDriveUploadStatus  @default(PENDING)
+  businessUnitId      String
+  sopDocumentId       String?
+  documentTypeId      String?
+  ownerId             String?
+  reviewerId          String
+  title               String?
+  language            String?
+  versionNo           String
+  expectedFileName    String
+  expectedDriveName   String
+  expectedFileSize    Int
+  contentType         String
+  googleDriveParentId String
+  changeSummary       String?
+  createdById         String
+  googleDriveFileId   String?                  @unique
+  sopVersionId        String?                  @unique
+  expiresAt           DateTime
+  completedAt         DateTime?
+  createdAt           DateTime                 @default(now())
+
+  @@index([status, expiresAt])
+  @@index([businessUnitId, status])
+  @@index([sopDocumentId, status])
+  @@index([createdById, status])
 }
