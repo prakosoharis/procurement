@@ -6,7 +6,8 @@ test('Repository SOP forms upload file bytes directly to private Vercel Blob and
   const ui = await readFile(new URL('../procurement-governance-hub (1).html', import.meta.url), 'utf8');
 
   assert.match(ui, /function uploadFileToVercelBlob\(file,session,onProgress\)/);
-  assert.match(ui, /fetch\(session\.uploadUrl,\{method:'PUT',headers:\{'x-vercel-blob-access':'private','x-allow-overwrite':'0','x-content-type':file\.type\},body:file\}\)/);
+  assert.match(ui, /headers:session\.uploadHeaders/);
+  assert.match(ui, /result\.pathname!==session\.transientBlobPath/);
   assert.match(ui, /function waitForGoogleDriveTransfer\(sessionId,onProgress\)/);
   assert.match(ui, /encodeURIComponent\(session\.sessionId\)\+'\/complete'/);
   assert.match(ui, /status\.status==='COMPLETED'/);
