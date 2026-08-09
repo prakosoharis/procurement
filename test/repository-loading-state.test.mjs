@@ -13,12 +13,12 @@ test('Repository begins empty and renders only a loading state until database da
   assert.doesNotMatch(ui, /SOP Proses Tender Terbuka NANOVEST/);
 });
 
-test('Top-level pages use the static asset version containing the direct Google Drive upload flow', async () => {
+test('Top-level pages use the static asset version containing the current Repository master-data flow', async () => {
   const { readFile } = await import('node:fs/promises');
   const [home, hub] = await Promise.all([
     readFile(new URL('../app/page.js', import.meta.url), 'utf8'),
     readFile(new URL('../app/hub/[page]/page.js', import.meta.url), 'utf8')
   ]);
-  assert.match(home, /v=20260807-01/);
-  assert.match(hub, /v=20260807-01/);
+  assert.match(home, /v=20260810-01/);
+  assert.match(hub, /v=20260810-01/);
 });

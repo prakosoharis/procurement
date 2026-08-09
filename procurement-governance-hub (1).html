@@ -811,7 +811,7 @@ function renderDocumentCoverage(){
   var units=repositoryUnits.filter(function(s){return (!selected||s.name===selected)&&(!group||s.groupName===group)&&(!industry||s.industry===industry)});
   if(label)label.textContent=selected||group||industry||'Semua Business Unit';
   head.innerHTML='<tr><th>Group</th><th>Business Unit</th><th>Industry</th>'+mandatoryDocuments.map(function(name,i){return documentHeader('M'+(i+1),name,'mandatory')}).join('')+additionalDocuments.map(function(name,i){return documentHeader('A'+(i+1),name,'additional')}).join('')+'<th style="min-width:110px">Coverage</th></tr>';
-  body.innerHTML=units.length?units.map(function(s){var mandatoryCount=mandatoryDocuments.filter(function(_,i){return documentAvailable(s.name,'mandatory',i)}).length,additionalCount=additionalDocuments.filter(function(_,i){return documentAvailable(s.name,'additional',i)}).length;return '<tr><td><span class="badge">'+s.groupName+'</span></td><td style="font-weight:700">'+s.name+'</td><td style="color:var(--muted-fg)">'+s.industry+'</td>'+mandatoryDocuments.map(function(name,i){return documentCell(documentState(s.name,'mandatory',i),s.name,'mandatory',i,name)}).join('')+additionalDocuments.map(function(name,i){return documentCell(documentState(s.name,'additional',i),s.name,'additional',i,name)}).join('')+'<td><div style="font-size:11px;font-weight:700;color:'+(mandatoryCount===6?'#067647':'#b91c1c')+'">M: '+mandatoryCount+'/6</div><div style="font-size:10px;color:var(--muted-fg);margin-top:3px">A: '+additionalCount+'/7</div></td></tr>'}).join(''):'<tr><td colspan="17" style="text-align:center;color:var(--muted-fg);padding:24px">Tidak ada business unit yang sesuai dengan filter.</td></tr>';
+  body.innerHTML=units.length?units.map(function(s){var mandatoryCount=mandatoryDocuments.filter(function(_,i){return documentAvailable(s.name,'mandatory',i)}).length,additionalCount=additionalDocuments.filter(function(_,i){return documentAvailable(s.name,'additional',i)}).length;return '<tr><td><span class="badge">'+s.groupName+'</span></td><td style="font-weight:700">'+s.name+'</td><td style="color:var(--muted-fg)">'+s.industry+'</td>'+mandatoryDocuments.map(function(name,i){return documentCell(documentState(s.name,'mandatory',i),s.name,'mandatory',i,name)}).join('')+additionalDocuments.map(function(name,i){return documentCell(documentState(s.name,'additional',i),s.name,'additional',i,name)}).join('')+'<td><div style="font-size:11px;font-weight:700;color:'+(mandatoryCount===mandatoryDocuments.length?'#067647':'#b91c1c')+'">M: '+mandatoryCount+'/'+mandatoryDocuments.length+'</div><div style="font-size:10px;color:var(--muted-fg);margin-top:3px">A: '+additionalCount+'/'+additionalDocuments.length+'</div></td></tr>'}).join(''):'<tr><td colspan="17" style="text-align:center;color:var(--muted-fg);padding:24px">Tidak ada business unit yang sesuai dengan filter.</td></tr>';
 }
 
 function statusBadgeClass(status){return status==='Approved'||status==='Aktif'?'badge-green':status==='Draft'||status==='Dalam Revisi'?'badge-amber':'badge-muted'}
@@ -1006,6 +1006,62 @@ async function openPeopleProfile(id){
 async function loadPeople(){var content=document.getElementById('peopleContent');if(!content)return;content.innerHTML='<div style="padding:28px;text-align:center;color:var(--muted-fg)">Memuat akses People...</div>';try{var data=await peopleRequest('/api/people/options'),initial=data.defaultScope||(data.defaultBusinessUnitId?{type:'BUSINESS_UNIT',id:data.defaultBusinessUnitId}:null);peopleState.data=data;peopleState.scopeType=initial?.type||'BUSINESS_UNIT';peopleState.selectedScopeId=initial?.id||null;renderPeople()}catch(error){content.innerHTML='<div class="people-empty"><div class="empty-icon">!</div><h3 style="font-size:15px">People tidak dapat dimuat</h3><p style="font-size:12px;color:var(--muted-fg);margin-top:6px">'+peopleEscape(error.message)+'</p></div>'}}
 document.addEventListener('click',function(event){var tab=event.target.closest('[data-people-tab]');if(!tab)return;peopleState.tab=tab.dataset.peopleTab;renderPeople()});
 document.addEventListener('keydown',function(event){if(event.key==='Escape'&&document.getElementById('peopleModal')?.classList.contains('open')){event.preventDefault();closePeopleModal()}});
+
+// Always rebuild this selector when the create dialog opens. Master data can
+// change without a full page reload, and no document type is limited to the
+// original M1-M6 / A1-A7 catalogue.
+function populateCreateDocumentTypes(selectedId){
+  var select=document.getElementById('newSopDocumentType');
+  if(!select)return;
+  var selected=selectedId||select.value;
+  var types=Object.keys(documentTypesByCode).map(function(code){return documentTypesByCode[code]}).sort(function(a,b){
+    return (a.sortOrder||0)-(b.sortOrder||0)||a.code.localeCompare(b.code);
+  });
+  select.innerHTML='<option value="">Pilih jenis dokumen</option>'+types.map(function(type){
+    return '<option value="'+type.id+'">'+type.code+' — '+type.name+'</option>';
+  }).join('');
+  if(types.some(function(type){return type.id===selected}))select.value=selected;
+}
+function openCreateSopModal(){
+  requirementContext=null;
+  var form=document.querySelector('#createSopModal form');
+  if(form)form.reset();
+  document.getElementById('createSopModalTitle').textContent='Buat SOP Baru';
+  document.getElementById('createSopModalNotice').innerHTML='Dokumen baru selalu dibuat sebagai <b>Draft v1.0</b> dan perlu approval sebelum menjadi resmi.';
+  populateCreateDocumentTypes();
+  populateCreateOrganizationSelectors();
+  populateReviewerSelect('newSopReviewer','');
+  openModal('createSopModal');
+}
+function openRequirementCreateSop(bu,type,index,name,code){
+  requirementContext={bu:bu,type:type,index:index,name:name,mode:'create'};
+  var form=document.querySelector('#createSopModal form');
+  form.reset();
+  document.getElementById('createSopModalTitle').textContent='Buat SOP Baru — '+name;
+  document.getElementById('createSopModalNotice').innerHTML='Dokumen <b>'+name+'</b> untuk <b>'+bu+'</b> belum tersedia. Upload sekarang akan membuat <b>Draft v1.0</b.';
+  form.querySelector('input[type="text"]').value=name+' — '+bu;
+  populateCreateDocumentTypes(documentTypesByCode[code]?.id||'');
+  selectNewSopBusinessUnit(bu);
+  populateReviewerSelect('newSopReviewer','');
+  openModal('createSopModal');
+}
+async function createMasterData(event,kind){
+  event.preventDefault();
+  var form=event.currentTarget,body={kind:kind,name:form.elements.name.value.trim()};
+  if(kind==='businessUnit'){
+    body.organizationGroupId=document.getElementById('masterBuGroup').value;
+    body.industryId=document.getElementById('masterBuIndustry').value;
+  }
+  if(kind==='documentType'){
+    body.code=document.getElementById('masterDocumentCode').value;
+    body.category=document.getElementById('masterDocumentCategory').value;
+  }
+  var response=await fetch('/api/master-data',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),result=await response.json();
+  if(!response.ok){showToast(result.error||'Gagal membuat master data');return;}
+  form.reset();
+  await loadRepositoryData();
+  showToast('Master data berhasil ditambahkan');
+}
 
 // NAVIGATION
 function showPage(page){
