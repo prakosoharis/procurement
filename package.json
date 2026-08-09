@@ -30,8 +30,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@prisma/client": "^6.6.0",
-    "@trigger.dev/build": "^4.5.9",
-    "@trigger.dev/sdk": "^4.5.9",
+    "@trigger.dev/build": "4.5.10",
+    "@trigger.dev/sdk": "4.5.10",
     "@vercel/blob": "^2.7.0",
     "bcryptjs": "^3.0.2",
     "googleapis": "^173.0.0",

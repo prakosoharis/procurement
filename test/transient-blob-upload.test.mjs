@@ -16,12 +16,15 @@ test('Blob-to-Drive service validates the transit object and only creates the SO
   const indexes = await readFile(new URL('../prisma/migrations/20260810000100_expand_active_upload_session_locks/migration.sql', import.meta.url), 'utf8');
 
   assert.match(service, /inspectTransientUpload/);
+  assert.match(service, /BLOB_VISIBILITY_RETRY_DELAYS_MS/);
+  assert.match(service, /inspectUploadedBlob/);
   assert.match(service, /blobMatchesSession/);
   assert.match(service, /status: 'UPLOADED'/);
   assert.match(service, /status: 'TRANSFERRING'/);
   assert.match(service, /Readable\.fromWeb\(blob\.stream\)/);
   assert.match(service, /status: 'COMPLETED'/);
   assert.match(service, /deleteTransientUpload/);
+  assert.match(service, /File upload sementara tidak ditemukan\. Mulai upload kembali\./);
   assert.match(migration, /transientBlobPath/);
   assert.match(migration, /failureReason/);
   assert.match(indexes, /one_active_document_key/);
