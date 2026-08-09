@@ -31,6 +31,19 @@ test('Blob-to-Drive service validates the transit object and only creates the SO
   assert.match(indexes, /'UPLOADED'/);
 });
 
+test('the browser receives the complete SDK-equivalent header set for a presigned private Blob upload', async () => {
+  const storage = await readFile(new URL('../lib/transient-blob-storage.js', import.meta.url), 'utf8');
+  const service = await readFile(new URL('../lib/document-direct-upload-service.js', import.meta.url), 'utf8');
+
+  assert.match(storage, /parseStoreIdFromPresignedUrl/);
+  assert.match(storage, /'x-api-version'/);
+  assert.match(storage, /'x-vercel-blob-store-id'/);
+  assert.match(storage, /'x-vercel-blob-access': 'private'/);
+  assert.match(storage, /'x-content-length'/);
+  assert.match(service, /uploadHeaders: upload\.uploadHeaders/);
+  assert.match(service, /transientBlobPath: session\.transientBlobPath/);
+});
+
 test('the transfer task is registered separately from the browser upload path', async () => {
   const task = await readFile(new URL('../trigger/sop-blob-transfer.ts', import.meta.url), 'utf8');
   const completeRoute = await readFile(new URL('../app/api/documents/direct-upload-sessions/[sessionId]/complete/route.js', import.meta.url), 'utf8');
