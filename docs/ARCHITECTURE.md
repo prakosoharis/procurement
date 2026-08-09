@@ -6,7 +6,8 @@
 | --- | --- | --- |
 | Web application | Next.js App Router and React | User interface, Route Handlers, session-aware server rendering. |
 | Database | PostgreSQL with Prisma | Governance data, users, workflow records, audit logs, and storage integration configuration. |
-| Document storage | Google Drive | Private SOP, source, attachment, and evidence-file storage. |
+| Document storage | Google Drive | Private permanent SOP, source, attachment, and evidence-file storage. |
+| Upload transit | Vercel Blob private + Trigger.dev | Browser upload ingress for large SOP files, followed by controlled transfer to Google Drive. |
 
 The main product interface is delivered as a static application asset inside the
 Next.js application. Route Handlers provide data and mutations to that
@@ -37,7 +38,8 @@ authorization remains on the server through Route Handlers and shared services.
 - **AuditLog** records user and governance activity.
 - **StorageIntegration** stores the connected Google Drive folder and encrypted
   refresh token. **GoogleDriveUploadSession** is a short-lived, server-owned
-  record used to validate direct browser uploads before a SOP draft is created.
+  record used to validate a private browser-to-Blob upload and its controlled
+  transfer to Google Drive before a SOP draft is created.
 
 ## Data access and scope
 
@@ -112,14 +114,20 @@ Creating a Business Unit through master data provisions `SOP/<Business Unit>/`
 before the new BU is returned as successful. Every new SOP upload and version
 upload resolves the same folder, so new files do not land in the Drive root.
 
-### Direct browser-to-Drive uploads
+### Large Repository uploads
 
 Vercel Functions have a request-body limit that is smaller than the supported
-SOP file limit. For Repository uploads, the server therefore never proxies file
-bytes: it creates a resumable Google Drive upload session with the encrypted
-OAuth connection, then the browser transfers file chunks directly to Google
-Drive. Only the short-lived upload URL reaches the browser. Completion is
-server-side and transactional: the Drive file metadata must match the session
-and the draft/version plus its AuditLog entry are created together. This keeps
-authorization, Business Unit placement, reviewer assignment, and durable
-`gdrive:<id>` references under application control.
+SOP file limit, while Google Drive resumable-session URLs cannot be used by the
+browser as a general CORS-enabled upload target. Repository uploads therefore
+use a private, time-bound Vercel Blob upload URL. The browser sends file bytes
+directly to Blob; neither the file nor the Blob read-write token passes through
+the application Route Handler.
+
+After the browser confirms the upload, the application records an `UPLOADED`
+session and queues a Trigger.dev worker. The worker reads the private Blob
+stream, creates the file in the resolved `SOP/<Business Unit>/` Google Drive
+folder, validates the result, creates the draft/version and AuditLog record in
+one database transaction, then deletes the temporary Blob object. A failed
+transfer creates no SOP draft or version and is reported through the upload
+session status. Google Drive remains the permanent document authority and only
+durable `gdrive:<id>` keys are stored on SOP versions.

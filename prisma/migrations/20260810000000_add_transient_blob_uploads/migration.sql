@@ -1,0 +1,7 @@
+ALTER TYPE "GoogleDriveUploadStatus" ADD VALUE IF NOT EXISTS 'UPLOADED';
+ALTER TYPE "GoogleDriveUploadStatus" ADD VALUE IF NOT EXISTS 'TRANSFERRING';
+
+ALTER TABLE "GoogleDriveUploadSession"
+  ADD COLUMN IF NOT EXISTS "transientBlobPath" TEXT,
+  ADD COLUMN IF NOT EXISTS "failureReason" TEXT,
+  ADD COLUMN IF NOT EXISTS "lastTransferAt" TIMESTAMP(3);

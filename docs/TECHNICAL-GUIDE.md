@@ -18,6 +18,7 @@ for the chosen runtime.
 | `AUTH_SECRET` | Secret used to sign sessions. Use a strong, unique value outside local development. |
 | `STORAGE_PROVIDER` | Set to `google-drive`. |
 | `GOOGLE_DRIVE_CLIENT_ID`, `GOOGLE_DRIVE_CLIENT_SECRET`, `GOOGLE_DRIVE_REDIRECT_URI`, `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Required for Google Drive storage. The encryption key must be base64-encoded 32 random bytes. |
+| `BLOB_READ_WRITE_TOKEN` | Required by Vercel Blob private transit uploads. Configure the same value in Vercel and Trigger.dev; never expose it to a browser. |
 | `TRIGGER_PROJECT_ID`, `TRIGGER_SECRET_KEY` | Required to run Trigger.dev background workers for Refinement processing. Use the DEV secret key locally and environment-specific keys in deployment. |
 | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Server-only credentials and model for structured Refinement analysis. |
 | `OPENAI_API_KEY`, `OPENAI_EMBEDDING_MODEL`, `OPENAI_EMBEDDING_DIMENSIONS` | Server-only credentials and settings for source-section embeddings. |
@@ -142,10 +143,33 @@ Do not use `prisma db push` or reset commands against a production database.
 The Drive OAuth scope is `drive.file`. Refresh tokens are encrypted with
 AES-256-GCM before they are stored.
 
-Repository SOP uploads are direct resumable uploads: the application creates a
-short-lived Drive session, while the browser sends PDF/DOCX bytes directly to
-Google Drive in chunks. This avoids the Vercel Function request-body limit. No
-additional browser secret, bucket, or public Drive sharing is required.
+Repository SOP uploads support files up to 25 MB without sending file bytes to
+a Vercel Function. The browser receives a short-lived, single-file upload URL
+for a **private Vercel Blob** object. After the upload, Trigger.dev streams the
+file to Google Drive and deletes the Blob transit object after the SOP draft or
+version is committed. Google Drive remains the permanent private store; no
+public Google Drive links are created.
+
+### Vercel Blob and Trigger.dev setup
+
+1. In the Vercel project, open **Storage**, create a **Blob** store, and choose
+   **Private** access.
+2. Attach it to the Production and Preview environments. Vercel creates
+   `BLOB_READ_WRITE_TOKEN`; do not copy it into source control.
+3. Add the same `BLOB_READ_WRITE_TOKEN` to the corresponding Trigger.dev
+   environment, together with `DATABASE_URL`, the Google Drive variables,
+   `STORAGE_PROVIDER=google-drive`, and `AUTH_SECRET` where required by shared
+   runtime code.
+4. Deploy the Trigger.dev worker with `npm run trigger:deploy` after the web
+   application deployment. The `sop-blob-transfer` task performs the private
+   Blob-to-Drive transfer.
+5. Apply the committed Prisma migrations before accepting uploads. The upload
+   UI waits for `COMPLETED`; a draft/version does not appear while the transfer
+   is pending or failed.
+
+For local work, create a Blob store in the linked Vercel project, add the token
+to `.env`, start `npm run trigger:dev` in one terminal, then start the Docker
+application as usual. Do not use a public Blob store for SOP uploads.
 
 The connected root folder is `Procurement Governance Hub`. The locked document
 organization is:
