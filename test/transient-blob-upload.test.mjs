@@ -24,6 +24,8 @@ test('Blob-to-Drive service validates the transit object and only creates the SO
   assert.match(service, /Readable\.fromWeb\(blob\.stream\)/);
   assert.match(service, /status: 'COMPLETED'/);
   assert.match(service, /deleteTransientUpload/);
+  assert.match(service, /cancelPendingDirectUpload/);
+  assert.match(service, /Upload dibatalkan sebelum file diterima\./);
   assert.match(service, /File upload sementara tidak ditemukan\. Mulai upload kembali\./);
   assert.match(migration, /transientBlobPath/);
   assert.match(migration, /failureReason/);
@@ -55,4 +57,11 @@ test('the transfer task is registered separately from the browser upload path', 
   assert.match(task, /transferBlobUploadToGoogleDrive/);
   assert.match(completeRoute, /sopBlobTransfer\.trigger/);
   assert.match(completeRoute, /status: result\.session\.status/);
+});
+
+test('only the creator may cancel a pending browser upload session', async () => {
+  const route = await readFile(new URL('../app/api/documents/direct-upload-sessions/[sessionId]/route.js', import.meta.url), 'utf8');
+
+  assert.match(route, /export async function DELETE/);
+  assert.match(route, /cancelPendingDirectUpload/);
 });
