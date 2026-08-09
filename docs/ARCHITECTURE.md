@@ -36,7 +36,8 @@ authorization remains on the server through Route Handlers and shared services.
   and dated placement history separately from application user accounts.
 - **AuditLog** records user and governance activity.
 - **StorageIntegration** stores the connected Google Drive folder and encrypted
-  refresh token.
+  refresh token. **GoogleDriveUploadSession** is a short-lived, server-owned
+  record used to validate direct browser uploads before a SOP draft is created.
 
 ## Data access and scope
 
@@ -110,3 +111,15 @@ Each **BusinessUnit** records its resolved SOP folder ID after provisioning.
 Creating a Business Unit through master data provisions `SOP/<Business Unit>/`
 before the new BU is returned as successful. Every new SOP upload and version
 upload resolves the same folder, so new files do not land in the Drive root.
+
+### Direct browser-to-Drive uploads
+
+Vercel Functions have a request-body limit that is smaller than the supported
+SOP file limit. For Repository uploads, the server therefore never proxies file
+bytes: it creates a resumable Google Drive upload session with the encrypted
+OAuth connection, then the browser transfers file chunks directly to Google
+Drive. Only the short-lived upload URL reaches the browser. Completion is
+server-side and transactional: the Drive file metadata must match the session
+and the draft/version plus its AuditLog entry are created together. This keeps
+authorization, Business Unit placement, reviewer assignment, and durable
+`gdrive:<id>` references under application control.

@@ -2,8 +2,8 @@
 
 All API routes are relative to the application origin. With the exception of
 `POST /api/auth/login`, API access requires an authenticated session cookie.
-Most routes return JSON. Document creation and version upload accept
-`multipart/form-data`.
+Most routes return JSON. Repository SOP files use a two-step Google Drive
+resumable-upload session, so file bytes do not pass through a Vercel Function.
 
 Governance routes under `/api/governance/*` use the error shape:
 
@@ -29,8 +29,11 @@ where applicable.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| GET, POST | `/api/documents` | List scoped documents or upload an initial SOP document. |
-| POST | `/api/documents/:id/versions` | Upload an SOP version. |
+| GET, POST | `/api/documents` | List scoped documents or legacy multipart upload of an initial SOP document. |
+| POST | `/api/documents/:id/versions` | Legacy multipart upload of an SOP version. |
+| POST | `/api/documents/direct-upload-sessions` | Validate initial SOP metadata and create a one-hour Google Drive resumable-upload session. |
+| POST | `/api/documents/:id/direct-upload-sessions` | Validate revision metadata and create a one-hour Google Drive resumable-upload session. |
+| POST | `/api/documents/direct-upload-sessions/:sessionId/complete` | Verify the exact uploaded Drive file and atomically create the draft document or version. |
 | POST | `/api/documents/:id/approve` | Approve an SOP document/version. |
 | GET | `/api/repository-overview` | Repository and document-compliance data. |
 | GET | `/api/files/download` | Secure file download or inline file response. |
@@ -111,3 +114,14 @@ never a manually calculated total.
 | --- | --- | --- |
 | GET | `/api/integrations/google-drive/connect` | Start Google Drive OAuth connection. |
 | GET | `/api/integrations/google-drive/callback` | Complete Google OAuth callback and save the encrypted connection. |
+
+### Direct SOP upload
+
+The Repository UI first sends only file metadata to a direct-upload-session
+route. The server checks the actor, Business Unit, PIC, assigned reviewer,
+file type, and 25 MB application limit, then creates a Drive resumable session.
+The browser uploads file chunks directly to Google Drive and calls the
+completion route with the resulting file ID. The server verifies the name,
+size, MIME type, target folder, and session marker before creating the draft
+and AuditLog entry. A session is tied to its creator and completion is
+idempotent.

@@ -142,6 +142,11 @@ Do not use `prisma db push` or reset commands against a production database.
 The Drive OAuth scope is `drive.file`. Refresh tokens are encrypted with
 AES-256-GCM before they are stored.
 
+Repository SOP uploads are direct resumable uploads: the application creates a
+short-lived Drive session, while the browser sends PDF/DOCX bytes directly to
+Google Drive in chunks. This avoids the Vercel Function request-body limit. No
+additional browser secret, bucket, or public Drive sharing is required.
+
 The connected root folder is `Procurement Governance Hub`. The locked document
 organization is:
 
