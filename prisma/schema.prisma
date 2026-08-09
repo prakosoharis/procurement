@@ -29,6 +29,8 @@ enum GoogleDriveUploadPurpose {
 
 enum GoogleDriveUploadStatus {
   PENDING
+  UPLOADED
+  TRANSFERRING
   FINALIZING
   COMPLETED
   FAILED
@@ -1080,6 +1082,9 @@ model GoogleDriveUploadSession {
   googleDriveParentId String
   changeSummary       String?
   createdById         String
+  transientBlobPath   String?
+  failureReason       String?
+  lastTransferAt      DateTime?
   googleDriveFileId   String?                  @unique
   sopVersionId        String?                  @unique
   expiresAt           DateTime
