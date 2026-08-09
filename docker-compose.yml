@@ -4,7 +4,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://procurement:procurement@postgres:5432/procurement?schema=public
+      DATABASE_URL: postgresql://neondb_owner:npg_2Yihmxqoslf0@ep-empty-paper-azv15hvu-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       AUTH_SECRET: ${AUTH_SECRET:-local-development-secret-change-before-staging}
       STORAGE_PROVIDER: ${STORAGE_PROVIDER:-google-drive}
       GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
