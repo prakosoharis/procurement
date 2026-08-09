@@ -31,17 +31,20 @@ test('Blob-to-Drive service validates the transit object and only creates the SO
   assert.match(indexes, /'UPLOADED'/);
 });
 
-test('the browser receives the complete SDK-equivalent header set for a presigned private Blob upload', async () => {
+test('the browser receives a narrowly scoped client token for the private Blob upload', async () => {
   const storage = await readFile(new URL('../lib/transient-blob-storage.js', import.meta.url), 'utf8');
   const service = await readFile(new URL('../lib/document-direct-upload-service.js', import.meta.url), 'utf8');
+  const bridge = await readFile(new URL('../app/components/blob-upload-bridge.js', import.meta.url), 'utf8');
 
-  assert.match(storage, /parseStoreIdFromPresignedUrl/);
-  assert.match(storage, /'x-api-version'/);
-  assert.match(storage, /'x-vercel-blob-store-id'/);
-  assert.match(storage, /'x-vercel-blob-access': 'private'/);
-  assert.match(storage, /'x-content-length'/);
-  assert.match(service, /uploadHeaders: upload\.uploadHeaders/);
+  assert.match(storage, /generateClientTokenFromReadWriteToken/);
+  assert.match(storage, /allowedContentTypes: \[contentType\]/);
+  assert.match(storage, /maximumSizeInBytes: fileSize/);
+  assert.match(storage, /allowOverwrite: false/);
+  assert.match(service, /uploadToken: upload\.clientToken/);
   assert.match(service, /transientBlobPath: session\.transientBlobPath/);
+  assert.match(bridge, /import \{ put \} from '@vercel\/blob\/client'/);
+  assert.match(bridge, /access: 'private'/);
+  assert.match(bridge, /token: request\.uploadToken/);
 });
 
 test('the transfer task is registered separately from the browser upload path', async () => {
