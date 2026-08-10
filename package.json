@@ -19,6 +19,7 @@
     "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js",
     "storage:drive:organize-sops": "node --env-file-if-exists=.env scripts/organize-google-drive-sops.js",
     "trigger:dev": "trigger dev",
+    "trigger:dev:local": "DATABASE_URL=postgresql://procurement:procurement@localhost:5432/procurement?schema=public trigger dev",
     "trigger:deploy": "trigger deploy"
   },
   "engines": {
