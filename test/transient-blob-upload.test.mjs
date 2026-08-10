@@ -25,6 +25,9 @@ test('Blob-to-Drive service validates the transit object and only creates the SO
   assert.match(service, /status: 'COMPLETED'/);
   assert.match(service, /deleteTransientUpload/);
   assert.match(service, /cancelPendingDirectUpload/);
+  assert.match(service, /resumePendingUploadSession/);
+  assert.match(service, /alreadyUploaded: true/);
+  assert.match(service, /short-lived token[\s\S]*same pending session/);
   assert.match(service, /Upload dibatalkan sebelum file diterima\./);
   assert.match(service, /File upload sementara tidak ditemukan\. Mulai upload kembali\./);
   assert.match(migration, /transientBlobPath/);
