@@ -3,6 +3,7 @@ import { transferBlobUploadToGoogleDrive } from '../lib/document-direct-upload-s
 
 export const sopBlobTransfer = task({
   id: 'sop-blob-transfer',
+  machine: 'medium-1x',
   queue: { concurrencyLimit: 3 },
   run: async ({ sessionId }: { sessionId: string }) => transferBlobUploadToGoogleDrive(sessionId)
 });
