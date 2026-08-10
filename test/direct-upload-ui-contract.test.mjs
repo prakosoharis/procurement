@@ -10,6 +10,8 @@ test('Repository SOP forms upload file bytes directly to private Vercel Blob and
   assert.match(ui, /uploadToken:session\.uploadToken/);
   assert.match(ui, /type!=='PROCUREMENT_BLOB_UPLOAD_RESULT'/);
   assert.match(ui, /function waitForGoogleDriveTransfer\(sessionId,onProgress\)/);
+  assert.match(ui, /session\.alreadyUploaded/);
+  assert.match(ui, /Melanjutkan upload sebelumnya/);
   assert.match(ui, /function cancelPendingDirectUpload\(sessionId\)/);
   assert.match(ui, /method:'DELETE'/);
   assert.match(ui, /if\(session&&!completionAccepted\)await cancelPendingDirectUpload\(session\.sessionId\)/);

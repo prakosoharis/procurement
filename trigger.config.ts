@@ -1,4 +1,5 @@
 import { defineConfig } from "@trigger.dev/sdk";
+import { prismaExtension } from "@trigger.dev/build/extensions/prisma";
 
 export default defineConfig({
   project: "proj_ixdmfhoziibhqkwvfqni",
@@ -13,6 +14,9 @@ export default defineConfig({
       maxTimeoutInMs: 10_000,
       randomize: true,
     },
+  },
+  build: {
+    extensions: [prismaExtension({ mode: "legacy", schema: "prisma/schema.prisma" })],
   },
   maxDuration: 300,
 });
