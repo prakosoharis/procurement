@@ -3,5 +3,6 @@ node_modules
 .trigger
 .env
 .env.local
+.env.trigger.local
 uploads
 *.log
