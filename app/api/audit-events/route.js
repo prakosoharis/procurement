@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import { currentUser } from '../../../lib/current-user';
 import { writeAudit } from '../../../lib/documents';
+import { startApiTiming } from '../../../lib/api-performance';
 
 const calendarManagers = new Set(['SUPER_USER', 'CORPORATE_GOVERNANCE']);
 const eventFormats = new Set(['ONSITE', 'REMOTE', 'HYBRID']);
@@ -14,8 +15,9 @@ const eventInclude = {
 };
 
 export async function GET() {
-  const user = await currentUser();
-  if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  const timing = startApiTiming('/api/audit-events');
+  const user = await timing.measure('auth', () => currentUser());
+  if (!user) return timing.apply(NextResponse.json({ error: 'Authentication required' }, { status: 401 }));
 
   const isBusinessUnitUser = user.role === 'BUSINESS_UNIT_PIC';
   // Audit is private to explicitly invited PICs. General events, such as a
@@ -26,17 +28,17 @@ export async function GET() {
       { audience: 'SELECTED_PICS', participants: { some: { userId: user.id } } }
     ]
   } : {};
-  const events = await db.auditEvent.findMany({ where, include: eventInclude, orderBy: { startAt: 'asc' } });
+  const events = await timing.measure('db', () => db.auditEvent.findMany({ where, include: eventInclude, orderBy: { startAt: 'asc' } }));
   const now = new Date();
   const alerts = isBusinessUnitUser
     ? events.filter((event) => event.status !== 'CANCELLED' && (event.endAt || event.startAt) >= now)
     : [];
 
-  return NextResponse.json({
+  return timing.apply(NextResponse.json({
     events,
     alerts,
     viewer: { id: user.id, role: user.role, businessUnitId: user.businessUnitId || null, canManage: calendarManagers.has(user.role) }
-  });
+  }));
 }
 
 export async function POST(request) {
