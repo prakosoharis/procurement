@@ -19,6 +19,6 @@ test('Top-level pages use the static asset version containing the current Reposi
     readFile(new URL('../app/page.js', import.meta.url), 'utf8'),
     readFile(new URL('../app/hub/[page]/page.js', import.meta.url), 'utf8')
   ]);
-  assert.match(home, /v=20260810-01/);
-  assert.match(hub, /v=20260810-01/);
+  assert.match(home, /v=20260810-05/);
+  assert.match(hub, /v=20260810-05/);
 });

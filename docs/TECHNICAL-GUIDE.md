@@ -25,6 +25,20 @@ for the chosen runtime.
 
 Never commit real values for these variables.
 
+## Production performance visibility
+
+The deployed application and Neon database are both in Singapore (`sin1` and
+`ap-southeast-1`). Keep this regional alignment when changing deployment
+settings. Repository list responses load only the latest SOP version; complete
+version history is retrieved when a user opens SOP detail or update actions.
+
+Selected read APIs return a standard `Server-Timing` response header with
+non-sensitive `auth`, `db`, `serialize`, and `total` durations. Inspect it in
+the browser Network panel or with `curl -I`; it never contains SQL, user data,
+or credentials. Set `API_PERFORMANCE_LOGGING=true` only when temporary
+structured server timing logs are required. It logs route names and durations
+only.
+
 ## pgvector
 
 The Refinement foundation uses PostgreSQL's `vector` extension for future
