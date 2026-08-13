@@ -32,7 +32,7 @@ where applicable.
 | --- | --- | --- |
 | GET, POST | `/api/documents` | List scoped documents or legacy multipart upload of an initial SOP document. |
 | POST | `/api/documents/:id/versions` | Legacy multipart upload of an SOP version. |
-| POST | `/api/documents/direct-upload-sessions` | Validate initial SOP metadata and create a one-hour, single-file Vercel Blob upload session. |
+| POST | `/api/documents/direct-upload-sessions` | Validate initial SOP metadata and create a one-hour, single-file Vercel Blob upload session. A Business Unit may create several documents under one type when each uses a distinct title. |
 | POST | `/api/documents/:id/direct-upload-sessions` | Validate revision metadata and create a one-hour, single-file Vercel Blob upload session. |
 | POST | `/api/documents/direct-upload-sessions/:sessionId/complete` | Verify the private Blob object and queue the Google Drive transfer. Returns `202`; it does not create a draft immediately. |
 | GET | `/api/documents/direct-upload-sessions/:sessionId` | Return the creator-scoped transfer status. `COMPLETED` includes the resulting draft/version metadata. |

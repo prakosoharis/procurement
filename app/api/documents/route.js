@@ -24,12 +24,12 @@ export async function POST(request) {
     if (!canManageBusinessUnit(user,businessUnitId)) return NextResponse.json({error:'You do not have access to this business unit.'},{status:403});
     if (file.size > 25 * 1024 * 1024 || !allowedDocumentTypes.has(file.type)) return NextResponse.json({error:'Only PDF/DOCX files up to 25 MB are allowed.'},{status:400});
     const [existing, owner, reviewer, businessUnit] = await Promise.all([
-      db.sopDocument.findFirst({ where: { businessUnitId, documentTypeId, status: { not: 'ARCHIVED' } } }),
+      db.sopDocument.findFirst({ where: { businessUnitId, documentTypeId, title, status: { not: 'ARCHIVED' } } }),
       db.user.findFirst({ where: { id: ownerId, role: 'BUSINESS_UNIT_PIC', businessUnitId } }),
       db.user.findFirst({ where: { id: reviewerId, role: { in: ['SUPER_USER', 'CORPORATE_GOVERNANCE'] } }, select: { id: true, name: true, email: true } }),
       db.businessUnit.findUnique({ where: { id: businessUnitId } })
     ]);
-    if (existing) return NextResponse.json({error:'Document type already exists for this business unit. Use update version instead.'},{status:409});
+    if (existing) return NextResponse.json({error:'Dokumen dengan nama ini sudah ada untuk Business Unit tersebut. Gunakan update versi.'},{status:409});
     if (!owner) return NextResponse.json({error:'Selected PIC must belong to the selected business unit.'},{status:400});
     if (!reviewer) return NextResponse.json({error:'Assigned reviewer must be Super User or Tim Procurement.'},{status:400});
     if (!businessUnit) return NextResponse.json({error:'Business unit not found.'},{status:404});

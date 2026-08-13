@@ -9,8 +9,15 @@ const businessUnits = [
   ['ESSENS', 'Non Group', 'Renewable Energy'], ['SUN ENERGY', 'Non Group', 'Renewable Energy'],
   ['EBER', 'Non Group', 'Mining']
 ];
-const mandatory = ['Procurement Policy', 'Procurement SOP', 'Supplier Info & Performance Mgmt SOP', 'Matrix Level Authorization', 'Ethic Policy', 'Code of Conduct'];
-const additional = ['Work Risk-Level Standard', 'Segregation of Duties Standard', 'Whistleblowing / Grievance Policy', 'Vendor Due Diligence Procedure', 'Purchase Order Standard', 'Conflict of Interest Policy', 'Accounts Payable SOP'];
+const mandatory = [
+  ['M1', 'Procurement Policy', 1],
+  ['M2', 'Procurement SOP', 2],
+  ['M3', 'Supplier Info & Performance Mgmt SOP', 3],
+  ['M4', 'Matrix Level Authorization', 4],
+  ['M5', 'Ethic Policy', 5],
+  ['M6', 'Value Creation', 6]
+];
+const additional = ['Additional'];
 
 function required(name) {
   const value = process.env[name];
@@ -39,11 +46,11 @@ async function main() {
       create: { name: unitName, groupName, industry: industryName, country: 'Indonesia', organizationGroupId: groups[groupName].id, industryId: industries[industryName].id }
     });
   }
-  for (const [index, typeName] of mandatory.entries()) {
-    await prisma.documentType.upsert({ where: { code: `M${index + 1}` }, update: { name: typeName, category: 'MANDATORY', sortOrder: index + 1 }, create: { code: `M${index + 1}`, name: typeName, category: 'MANDATORY', sortOrder: index + 1 } });
+  for (const [code, typeName, sortOrder] of mandatory) {
+    await prisma.documentType.upsert({ where: { code }, update: { name: typeName, category: 'MANDATORY', sortOrder }, create: { code, name: typeName, category: 'MANDATORY', sortOrder } });
   }
-  for (const [index, typeName] of additional.entries()) {
-    await prisma.documentType.upsert({ where: { code: `A${index + 1}` }, update: { name: typeName, category: 'ADDITIONAL', sortOrder: index + 7 }, create: { code: `A${index + 1}`, name: typeName, category: 'ADDITIONAL', sortOrder: index + 7 } });
+  for (const typeName of additional) {
+    await prisma.documentType.upsert({ where: { code: 'OTHER' }, update: { name: typeName, category: 'ADDITIONAL', sortOrder: 100 }, create: { code: 'OTHER', name: typeName, category: 'ADDITIONAL', sortOrder: 100 } });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

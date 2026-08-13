@@ -2,7 +2,9 @@
 
 ## SOP document lifecycle
 
-1. An authorized user creates an SOP draft with its Business Unit and metadata.
+1. An authorized user creates a draft with its Business Unit, document type,
+   distinct document title, and metadata. A type can have multiple separately
+   named documents in the same Business Unit.
 2. A draft records the user who uploaded it and must be assigned to a
    Superuser or Tim Procurement reviewer.
 3. The assigned reviewer can preview or download the draft before approval.

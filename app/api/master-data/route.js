@@ -88,12 +88,11 @@ export async function POST(request) {
     }
     if (kind === 'documentType') {
       const normalizedCode = (code || '').trim().toUpperCase();
-      if (!normalizedCode || !['MANDATORY', 'ADDITIONAL'].includes(category)) {
-        return NextResponse.json({ error: 'Document code and category are required' }, { status: 400 });
+      if (!/^M\d+$/.test(normalizedCode) || category !== 'MANDATORY') {
+        return NextResponse.json({ error: 'Jenis dokumen baru harus Mandatory dengan kode M. Additional dikelola sebagai satu kategori Other.' }, { status: 400 });
       }
-      const last = await db.documentType.aggregate({ _max: { sortOrder: true } });
       return NextResponse.json(await db.documentType.create({
-        data: { code: normalizedCode, name: name.trim(), category, sortOrder: (last._max.sortOrder || 0) + 1 }
+        data: { code: normalizedCode, name: name.trim(), category, sortOrder: Number(normalizedCode.slice(1)) }
       }), { status: 201 });
     }
     return NextResponse.json({ error: 'Invalid master data type' }, { status: 400 });

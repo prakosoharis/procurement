@@ -27,7 +27,6 @@ four roles respectively.
 | Menu | Function |
 | --- | --- |
 | Home | Landing dashboard and links to operational information. |
-| Submissions | Business Unit change submissions, review status, messages, and notifications. |
 | Repository | SOP library, document compliance, filters, document versions, upload, update, approval, and master data. |
 | Refinement | Human-only refinement queue and workspace for SOP versions that require structured review. |
 | Calendar | Online, onsite, or hybrid audit appointments with selected PICs or all Business Units. |
@@ -48,7 +47,14 @@ present, in draft, or missing.
 
 The mandatory compliance order is M1 Procurement Policy, M2 Procurement SOP,
 M3 Supplier Info & Performance Mgmt SOP, M4 Matrix Level Authorization, M5
-Ethic Policy, and M6 Code of Conduct.
+Ethic Policy, and M6 Value Creation.
+
+All non-mandatory requirements are represented by one **OTHER — Additional**
+type. A Business Unit can keep more than one document under the same mandatory
+or Additional type. Each document has its own title, file, version history,
+uploader, reviewer, and approval record; the compliance matrix treats a
+mandatory requirement as covered when at least one document of that type is
+approved.
 
 Files are stored privately. The application supports PDF/DOCX upload through
 the document API, secure download, and inline access where the file type and
