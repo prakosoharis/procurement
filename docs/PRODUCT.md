@@ -48,7 +48,7 @@ present, in draft, or missing.
 
 The mandatory compliance order is M1 Procurement Policy, M2 Procurement SOP,
 M3 Supplier Info & Performance Mgmt SOP, M4 Matrix Level Authorization, M5
-Ethic Policy, and M7 Value Creation. M6 is not used.
+Ethic Policy, and M6 Value Creation.
 
 All non-mandatory requirements are represented by one **OTHER — Additional**
 type. A Business Unit can keep more than one document under the same mandatory

@@ -7,10 +7,10 @@ const mandatory = [
   ['M3', 'Supplier Info & Performance Mgmt SOP'],
   ['M4', 'Matrix Level Authorization'],
   ['M5', 'Ethic Policy'],
-  ['M7', 'Value Creation']
+  ['M6', 'Value Creation']
 ];
 
-test('Repository taxonomy keeps M1-M5 and M7 Value Creation, with one Additional type', async () => {
+test('Repository taxonomy keeps M1-M6 including Value Creation, with one Additional type', async () => {
   const { readFile } = await import('node:fs/promises');
   const [seed, productionSeed, ui] = await Promise.all([
     readFile(new URL('../prisma/seed.js', import.meta.url), 'utf8'),
@@ -50,4 +50,12 @@ test('repository migration consolidates legacy additional documents without dele
   assert.match(migration, /UPDATE "GoogleDriveUploadSession" AS "session"[\s\S]*"documentTypeId"/);
   assert.doesNotMatch(migration, /DELETE FROM "SopDocument"/);
   assert.match(migration, /"businessUnitId", "documentTypeId", "title"/);
+});
+
+test('Value Creation is moved from the transitional M7 code to M6', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const migration = await readFile(new URL('../prisma/migrations/20260813010000_move_value_creation_to_m6/migration.sql', import.meta.url), 'utf8');
+  assert.match(migration, /SET "code" = 'M6'/);
+  assert.match(migration, /WHERE "code" = 'M7'/);
+  assert.match(migration, /lower\("name"\) = 'value creation'/);
 });

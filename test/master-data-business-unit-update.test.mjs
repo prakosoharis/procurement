@@ -23,7 +23,7 @@ test('Repository master data UI allows selecting and updating an existing Busine
   assert.match(html, /syncMasterBusinessUnitSelection/);
 });
 
-test('new SOP dialog refreshes every master document type, including later mandatory codes such as M7', async () => {
+test('new SOP dialog refreshes every master document type, including mandatory Value Creation M6', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../procurement-governance-hub (1).html', import.meta.url), 'utf8');
   assert.match(html, /function populateCreateDocumentTypes\(selectedId\)/);

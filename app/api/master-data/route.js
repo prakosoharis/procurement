@@ -88,8 +88,8 @@ export async function POST(request) {
     }
     if (kind === 'documentType') {
       const normalizedCode = (code || '').trim().toUpperCase();
-      if (!/^M\d+$/.test(normalizedCode) || normalizedCode === 'M6' || category !== 'MANDATORY') {
-        return NextResponse.json({ error: 'Jenis dokumen baru harus Mandatory dengan kode M. M6 tidak digunakan; Additional dikelola sebagai satu kategori Other.' }, { status: 400 });
+      if (!/^M\d+$/.test(normalizedCode) || category !== 'MANDATORY') {
+        return NextResponse.json({ error: 'Jenis dokumen baru harus Mandatory dengan kode M. Additional dikelola sebagai satu kategori Other.' }, { status: 400 });
       }
       return NextResponse.json(await db.documentType.create({
         data: { code: normalizedCode, name: name.trim(), category, sortOrder: Number(normalizedCode.slice(1)) }

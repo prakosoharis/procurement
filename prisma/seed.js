@@ -13,7 +13,7 @@ const mandatory = [
   ['M3','Supplier Info & Performance Mgmt SOP',3],
   ['M4','Matrix Level Authorization',4],
   ['M5','Ethic Policy',5],
-  ['M7','Value Creation',7]
+  ['M6','Value Creation',6]
 ];
 const additional = ['Additional'];
 

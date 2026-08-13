@@ -19,10 +19,10 @@ test('Repository accepts multiple named documents for one Business Unit and type
   assert.match(ui, /type==='additional'\|\|requirementDocuments\(bu,type,index\)\.length/);
 });
 
-test('master data reserves M6 and keeps new mandatory ordering numeric', async () => {
+test('master data permits M6 and keeps new mandatory ordering numeric', async () => {
   const { readFile } = await import('node:fs/promises');
   const route = await readFile(new URL('../app/api/master-data/route.js', import.meta.url), 'utf8');
-  assert.match(route, /normalizedCode === 'M6'/);
+  assert.doesNotMatch(route, /normalizedCode === 'M6'/);
   assert.match(route, /sortOrder: Number\(normalizedCode\.slice\(1\)\)/);
   assert.match(route, /Additional dikelola sebagai satu kategori Other/);
 });
