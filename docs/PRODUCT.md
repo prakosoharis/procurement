@@ -27,7 +27,6 @@ four roles respectively.
 | Menu | Function |
 | --- | --- |
 | Home | Landing dashboard and links to operational information. |
-| Submissions | Business Unit change submissions, review status, messages, and notifications. |
 | Repository | SOP library, document compliance, filters, document versions, upload, update, approval, and master data. |
 | Refinement | Human-only refinement queue and workspace for SOP versions that require structured review. |
 | Calendar | Online, onsite, or hybrid audit appointments with selected PICs or all Business Units. |
