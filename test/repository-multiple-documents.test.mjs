@@ -16,6 +16,7 @@ test('Repository accepts multiple named documents for one Business Unit and type
   assert.match(ui, /requirementDocuments\(bu,type,index\)/);
   assert.match(ui, /\+ Tambah dokumen/);
   assert.match(ui, /Setiap file dapat memiliki nama sendiri/);
+  assert.match(ui, /type==='additional'\|\|requirementDocuments\(bu,type,index\)\.length/);
 });
 
 test('master data reserves M6 and keeps new mandatory ordering numeric', async () => {
