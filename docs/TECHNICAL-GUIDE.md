@@ -160,6 +160,40 @@ The route makes one small structured request and returns provider, model,
 latency, and flag state. It returns `503` when the provider is unreachable or
 unconfigured, and never returns a credential or a raw provider payload.
 
+### Offline analysis before an API budget exists
+
+The deployed application calls a provider itself. Until an API credential is
+funded, a Refinement analysis can instead be produced by a developer with Claude
+Code on their own machine and imported. This is a legitimate use of Claude Code
+— the subscriber generating content at their own machine — and it is not the
+application routing user requests through a subscription credential, which is
+not permitted.
+
+Prepare the brief. The job is created but no worker is enqueued, so no provider
+is called:
+
+```bash
+npm run refinement:offline:prepare -- --actor admin@example.com --version <sopVersionId> --sources <sourceId,sourceId>
+```
+
+The brief contains the same retrieval context the deployed runner would build,
+the analysis instructions, and the required output schema. Produce the JSON with
+Claude Code, then import it:
+
+```bash
+npm run refinement:offline:import -- --job <jobId> --file hasil.json
+```
+
+The import validates the payload before writing anything, records the run with
+`generatedOffline: true` and `generatedWith: "claude-code"`, and leaves every
+finding awaiting human validation. `AiUsage` is not written, so it stays an
+accurate record of what the deployed application itself spent.
+
+Set `AI_REFINEMENT_ENABLED=false` in the deployment while operating this way:
+imported results remain readable, but the interface does not offer to start a
+run that would fail. Any interface rendering a run must show the
+`generatedOffline` distinction rather than presenting it as a live result.
+
 ### Usage and cost accounting
 
 Every call writes an `AiUsage` row with feature, provider, model, prompt

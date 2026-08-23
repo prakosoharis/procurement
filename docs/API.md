@@ -171,6 +171,12 @@ Results are candidate findings written to `RefinementFinding` with
 finding, edit the official SOP, or publish a version. MVP input scope is a
 text-layer PDF; a DOCX or scanned PDF is rejected with a stated reason.
 
+Run responses include `generatedOffline`. When it is `true` the analysis was
+produced with Claude Code by a developer and imported, not produced by the
+deployed application calling a provider. **An interface that renders a run must
+display that distinction visibly.** Presenting an imported run as a live
+application result would misrepresent it.
+
 The decision route accepts `{ "decision", "comment", "metadata" }`. It is a thin
 entry point onto the existing `decideRefinementFinding` service, which enforces
 the reviewer role and Business Unit scope, requires a comment for
