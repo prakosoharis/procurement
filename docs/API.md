@@ -114,7 +114,25 @@ never a manually calculated total.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
+| POST | `/api/ai/chat` | Ask the Procurement Governance Hub assistant a question. Returns `answer`, `dataAvailable`, `references`, `inScope`, and `topics`. |
 | GET | `/api/ai/health` | Superuser-only AI runtime check. Makes one small provider request and returns provider, model, latency, and feature-flag state. Returns `503` when the provider is unconfigured or unreachable. |
+
+`POST /api/ai/chat` accepts `{ "question": string, "history": [{ "role": "user"|"assistant", "content": string }] }`.
+The question is limited to 2,000 characters and history to the six most recent
+turns of 1,000 characters each; a caller-supplied `system` turn is discarded
+rather than forwarded. Requests are rate limited per user.
+
+The route runs authentication, authorization, rate limiting, deterministic scope
+classification, and scoped retrieval **before** any provider call. An
+out-of-scope question is answered deterministically, is recorded as an
+`AiEvent` with `BLOCKED_SCOPE`, and never reaches the model. Retrieved context
+is restricted to the caller's effective Business Unit scope, follows the
+stricter calendar rule for audit appointments, and never contains personal
+contact data, certification credential IDs, or evidence links.
+
+The assembled context states how many records were found, how many were omitted
+for size, and which topics failed to load, so a genuine zero result is reported
+as zero rather than as missing data.
 
 The response never contains a credential, a raw provider payload, or a prompt.
 Provider failures are reported as a fixed code (`AI_NOT_CONFIGURED`,
