@@ -92,6 +92,72 @@ which may incur provider charges:
 npm run ai:smoke
 ```
 
+## AI runtime for Chatbot and Refinement
+
+Chatbot and Refinement call one internal surface, `lib/ai/ai-service.js`. That
+service owns the prompts, output schemas, retry policy, and usage telemetry; a
+provider owns transport only. Neither feature imports an Anthropic client, so
+changing the runtime is a configuration change rather than an application
+rewrite.
+
+```text
+Chatbot ─┐
+         ├─> AIService ─> provider-factory (AI_PROVIDER) ─> AIProvider
+Refinement ┘                                                └── AnthropicApiProvider
+```
+
+### Supported provider
+
+| `AI_PROVIDER` | Status |
+| --- | --- |
+| `anthropic-api` | Supported. Metered Claude Developer Platform access through `ANTHROPIC_API_KEY`. |
+| `claude-max-agent` | Reserved identifier with no deployable implementation. Selecting it fails validation with an explanatory error. |
+
+Anthropic's Legal and compliance policy restricts Free, Pro, and Max OAuth
+credentials to Claude Code and claude.ai, and does not permit routing
+application requests through them on behalf of users. A deployed Procurement
+Governance Hub therefore authenticates with an API key. The provider boundary
+exists so a second runtime can be added later without touching Chatbot,
+Refinement, retrieval, schemas, or the interface.
+
+### Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `AI_PROVIDER` | Runtime selection. Defaults to `anthropic-api`. |
+| `ANTHROPIC_API_KEY` | Server-only credential. Configure in Vercel and in the Trigger.dev environment. |
+| `ANTHROPIC_MODEL` | Defaults to `claude-opus-5`. |
+| `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED` | Kill switches. A feature is enabled unless the value is explicitly `false`. |
+| `AI_MAX_CONTEXT_TOKENS` | Upper bound applied when building retrieval context. |
+| `AI_REQUEST_TIMEOUT_MS` | Provider request timeout. |
+| `AI_CHAT_RATE_LIMIT_PER_MINUTE` | Per-user chat request ceiling. |
+
+No browser, static hub script, client DTO, or database record receives a
+credential. Provider failures are translated into a fixed code set and a safe
+user message; the underlying provider error is logged server-side only.
+
+### Verifying the deployed runtime
+
+`npm run env:check` validates the provider selection without making a request.
+For a live check, sign in as Superuser and request:
+
+```bash
+curl -s -H "Cookie: session=<session>" https://<deployment>/api/ai/health
+```
+
+The route makes one small structured request and returns provider, model,
+latency, and flag state. It returns `503` when the provider is unreachable or
+unconfigured, and never returns a credential or a raw provider payload.
+
+### Usage and cost accounting
+
+Every call writes an `AiUsage` row with feature, provider, model, prompt
+version, latency, token counts, and an estimated cost derived from the rate
+table in `lib/ai/telemetry.js`. Update `PRICING_VERSION` there whenever a rate
+changes so historical rows stay interpretable. Rate limiting, malformed output,
+retries, and scope refusals are recorded as `AiEvent` rows. Telemetry never
+blocks a feature: a failed write is logged and swallowed.
+
 ## Docker local setup
 
 ```bash

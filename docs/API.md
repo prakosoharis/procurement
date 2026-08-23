@@ -110,6 +110,18 @@ never a manually calculated total.
 | POST | `/api/governance/refinement/clarifications/:clarificationId/respond` | Submit an assigned Business Unit clarification response. |
 | POST | `/api/governance/refinement/clarifications/:clarificationId/close` | Close a responded clarification. |
 
+## AI
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET | `/api/ai/health` | Superuser-only AI runtime check. Makes one small provider request and returns provider, model, latency, and feature-flag state. Returns `503` when the provider is unconfigured or unreachable. |
+
+The response never contains a credential, a raw provider payload, or a prompt.
+Provider failures are reported as a fixed code (`AI_NOT_CONFIGURED`,
+`AI_AUTHENTICATION_FAILED`, `AI_RATE_LIMITED`, `AI_TIMEOUT`,
+`AI_INVALID_OUTPUT`, `AI_PROVIDER_UNAVAILABLE`, `AI_DISABLED`) with a safe
+message; the underlying provider error is logged server-side only.
+
 ## Integrations
 
 | Method | Route | Purpose |
