@@ -136,6 +136,17 @@ No browser, static hub script, client DTO, or database record receives a
 credential. Provider failures are translated into a fixed code set and a safe
 user message; the underlying provider error is logged server-side only.
 
+### Deployment checklist
+
+| Where | Variables |
+| --- | --- |
+| Vercel | `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED`, and the optional budget variables |
+| Trigger.dev | the same AI variables, plus `DATABASE_URL`, `STORAGE_PROVIDER`, and the Google Drive variables the analysis task needs to read documents |
+
+Deploy the Trigger.dev worker with `npm run trigger:deploy` after the web
+application deployment, so a queued analysis is not picked up by an older
+worker build.
+
 ### Verifying the deployed runtime
 
 `npm run env:check` validates the provider selection without making a request.
@@ -307,7 +318,12 @@ Run Trigger.dev workers locally:
 npm run trigger:dev
 ```
 
-The initial tasks are `refinement-smoke` and `refinement-pdf-smoke`. Trigger.dev
+The tasks are `refinement-smoke`, `refinement-pdf-smoke`, `sop-blob-transfer`,
+and `refinement-analysis`. `refinement-analysis` runs one AI Refinement job:
+it reads the SOP and source PDFs, builds retrieval context, calls the AI
+service, and writes candidate findings. Its Trigger.dev environment therefore
+needs `ANTHROPIC_API_KEY` and `AI_PROVIDER` in addition to `DATABASE_URL`, the
+Google Drive variables, and `STORAGE_PROVIDER`. Trigger.dev
 requires a configured project id and environment secret key before the local
 worker can connect to the cloud project. If the CLI reports `Project not found`,
 login with the Trigger.dev account/profile that has access to the configured
