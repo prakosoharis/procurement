@@ -140,6 +140,36 @@ Provider failures are reported as a fixed code (`AI_NOT_CONFIGURED`,
 `AI_INVALID_OUTPUT`, `AI_PROVIDER_UNAVAILABLE`, `AI_DISABLED`) with a safe
 message; the underlying provider error is logged server-side only.
 
+## AI-assisted Refinement
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET, POST | `/api/governance/refinement/:versionId/ai-runs` | List analyses for a SOP version, or start one against approved reference sources. |
+| GET | `/api/governance/refinement/:versionId/ai-runs/:runId` | Analysis status and its candidate findings. |
+
+`POST` accepts `{ "sourceIds": [string] }` and is restricted to Superuser and
+Tim Procurement within the SOP's Business Unit scope. Only approved reference
+sources are accepted; an unapproved or unknown source is rejected. It returns
+`202` for newly queued work and `200` when an identical analysis is reused or is
+already running.
+
+One analysis is one SOP version, one set of source versions, and one
+analysis-method version. That combination is hashed into
+`RefinementJob.fingerprint`, so an identical request reuses the completed result
+instead of paying for the same analysis again, and a duplicate request joins the
+run already in flight.
+
+Analysis runs in the `refinement-analysis` Trigger.dev task, not in the request.
+`RefinementJob.status` advances through `QUEUED`, `PREPARING`, `RETRIEVING`,
+`ANALYZING`, and then `COMPLETED` or `FAILED`, so the UI polls real progress.
+The stored provider error message is never returned; only its classified
+`errorType` is.
+
+Results are candidate findings written to `RefinementFinding` with
+`humanStatus: PENDING`. They are input to human validation and never approve a
+finding, edit the official SOP, or publish a version. MVP input scope is a
+text-layer PDF; a DOCX or scanned PDF is rejected with a stated reason.
+
 ## Integrations
 
 | Method | Route | Purpose |
