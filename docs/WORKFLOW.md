@@ -119,6 +119,35 @@ version. The workspace supports:
 Business Unit users can respond only to clarifications assigned to their
 effective Business Unit scope. Executive users are read-only.
 
+## AI-assisted refinement analysis
+
+An AI analysis is started by Tim Procurement or Superuser for one submitted SOP
+version against one or more approved reference sources. It supplements the
+human-only workspace; it does not replace it.
+
+1. The server validates the actor, the Business Unit scope, and that every
+   selected source is approved. An unapproved source cannot back an analysis.
+2. One analysis is one SOP version, one set of source versions, and one
+   analysis-method version. That combination is fingerprinted, so an identical
+   request reuses the completed result and a duplicate joins the run in flight.
+3. Analysis runs as a background job. Retrieval selects candidate material
+   before inference; the model never receives the whole repository, and pages
+   left out are declared so absence is not read as evidence.
+4. Results are recorded as candidate findings awaiting human validation, each
+   traceable to the source it came from.
+5. A reviewer records `VALID`, `REVISI`, or `ABAIKAN` through the existing
+   validation service, which requires a comment for `REVISI` and `ABAIKAN`,
+   writes a `ValidationDecision`, and appends an audit record.
+
+The AI never approves its own finding, edits the official SOP, or publishes a
+version. Input scope is a text-layer PDF; a DOCX or scanned PDF is rejected with
+a stated reason rather than analysed as an empty document.
+
+The source catalog with parsed sections, embeddings, and coverage states is
+`REF-S1`–`REF-S6` and is not yet implemented. Until it lands, source pages are
+selected by deterministic lexical overlap with the SOP. The service interface is
+unchanged when the catalog replaces that scoring step.
+
 ## Calendar and audit appointments
 
 Tim Procurement and Superuser can schedule audit appointments with title,

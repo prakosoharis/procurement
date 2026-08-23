@@ -146,6 +146,7 @@ message; the underlying provider error is logged server-side only.
 | --- | --- | --- |
 | GET, POST | `/api/governance/refinement/:versionId/ai-runs` | List analyses for a SOP version, or start one against approved reference sources. |
 | GET | `/api/governance/refinement/:versionId/ai-runs/:runId` | Analysis status and its candidate findings. |
+| POST | `/api/governance/refinement/ai-findings/:findingId/decision` | Record the human validation decision on one AI candidate finding. |
 
 `POST` accepts `{ "sourceIds": [string] }` and is restricted to Superuser and
 Tim Procurement within the SOP's Business Unit scope. Only approved reference
@@ -169,6 +170,14 @@ Results are candidate findings written to `RefinementFinding` with
 `humanStatus: PENDING`. They are input to human validation and never approve a
 finding, edit the official SOP, or publish a version. MVP input scope is a
 text-layer PDF; a DOCX or scanned PDF is rejected with a stated reason.
+
+The decision route accepts `{ "decision", "comment", "metadata" }`. It is a thin
+entry point onto the existing `decideRefinementFinding` service, which enforces
+the reviewer role and Business Unit scope, requires a comment for
+`REVISI`/`ABAIKAN`, writes the `ValidationDecision` record, and appends the
+audit event. `decision` accepts the product vocabulary `VALID`, `REVISI`, and
+`ABAIKAN`, mapped onto `ACCEPTED`, `ACCEPTED_WITH_MODIFICATION`, and `REJECTED`;
+the raw `ValidationDecisionType` values remain accepted.
 
 ## Integrations
 
