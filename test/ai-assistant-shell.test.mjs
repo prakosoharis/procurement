@@ -24,7 +24,7 @@ test("both shell pages mount the assistant behind the flag and the permission", 
   for (const path of ["../app/page.js", "../app/hub/[page]/page.js"]) {
     const source = await read(path);
     assert.match(source, /import AssistantPanel from/, path);
-    assert.match(source, /isAiFeatureEnabled\(AiFeatureFlag\.CHAT\)\s*&&\s*can\(user, Permission\.COPILOT_USE\)\s*&&\s*<AssistantPanel \/>/, path);
+    assert.match(source, /isAiFeatureEnabled\(AiFeatureFlag\.CHAT\)\s*&&\s*can\(user, Permission\.COPILOT_USE\)\s*&&\s*<AssistantPanel mode=\{aiConfig\(\)\.chatMode\} \/>/, path);
   }
 });
 
@@ -34,6 +34,13 @@ test("the assistant panel never renders a provider credential or provider name",
   // The panel talks to the application endpoint only, never to a provider.
   assert.match(source, /fetch\('\/api\/ai\/chat'/);
   assert.doesNotMatch(source, /anthropic\.com|api\.anthropic/i);
+});
+
+test("a deterministic answer is labelled so it is never read as AI analysis", async () => {
+  const source = await read("../app/components/assistant-panel.js");
+  assert.match(source, /mode !== 'DATA_SUMMARY'/);
+  assert.match(source, /tanpa AI/);
+  assert.match(source, /<ModeBadge mode=\{turn\.mode\} \/>/);
 });
 
 test("the panel surfaces the server's safe message rather than a raw error", async () => {

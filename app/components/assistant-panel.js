@@ -9,6 +9,13 @@ const BORDER = '#e2e5ea';
 const MUTED = '#6b7280';
 
 const GREETING = 'Tanyakan informasi Procurement Governance Hub — misalnya SOP yang menunggu review, kelengkapan dokumen per Business Unit, temuan refinement, atau jadwal audit.';
+const DATA_SUMMARY_GREETING = 'Mode ini menjawab langsung dari data Hub, bukan dengan analisis AI. Cocok untuk pertanyaan daftar dan jumlah: SOP yang menunggu review, Business Unit yang dokumennya belum lengkap, posisi yang lowong, atau jadwal audit mendatang.';
+
+// A deterministic answer must never look like an AI answer.
+function ModeBadge({ mode }) {
+  if (mode !== 'DATA_SUMMARY') return null;
+  return <span style={{ display: 'inline-block', marginBottom: 6, fontSize: 9.5, fontWeight: 700, letterSpacing: .3, padding: '2px 7px', borderRadius: 999, background: '#eef1f5', color: MUTED, textTransform: 'uppercase' }}>Ringkasan data · tanpa AI</span>;
+}
 
 function References({ items }) {
   if (!items?.length) return null;
@@ -17,7 +24,8 @@ function References({ items }) {
   </div>;
 }
 
-export default function AssistantPanel() {
+export default function AssistantPanel({ mode = 'ai' }) {
+  const dataSummary = mode === 'data-summary';
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
@@ -62,7 +70,7 @@ export default function AssistantPanel() {
       if (!response.ok) {
         setTurns((current) => [...current, { question: text, answer: payload.message || 'Layanan AI sedang tidak tersedia. Coba lagi nanti.', error: true }]);
       } else {
-        setTurns((current) => [...current, { question: text, answer: payload.answer, references: payload.references, dataAvailable: payload.dataAvailable }]);
+        setTurns((current) => [...current, { question: text, answer: payload.answer, references: payload.references, dataAvailable: payload.dataAvailable, mode: payload.mode }]);
       }
     } catch {
       setTurns((current) => [...current, { question: text, answer: 'Tidak dapat menghubungi layanan AI. Periksa koneksi Anda.', error: true }]);
@@ -82,16 +90,17 @@ export default function AssistantPanel() {
       <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 8, display: 'grid', placeItems: 'center', background: 'rgba(153,27,27,.1)', color: PRIMARY, fontSize: 14 }}>✦</span>
       <span style={{ flex: 1, lineHeight: 1.25 }}>
         <span style={{ display: 'block', fontWeight: 600, fontSize: 13 }}>Asisten Hub</span>
-        <span style={{ display: 'block', fontSize: 10, color: MUTED }}>Menjawab dari data yang boleh Anda akses</span>
+        <span style={{ display: 'block', fontSize: 10, color: MUTED }}>{dataSummary ? 'Ringkasan data · tanpa AI' : 'Menjawab dari data yang boleh Anda akses'}</span>
       </span>
       <button onClick={() => setOpen(false)} aria-label="Tutup asisten" style={{ border: 0, background: 'transparent', color: MUTED, cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4 }}>×</button>
     </header>
 
     <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {!turns.length && <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.55 }}>{GREETING}</p>}
+      {!turns.length && <p style={{ fontSize: 12, color: MUTED, lineHeight: 1.55 }}>{dataSummary ? DATA_SUMMARY_GREETING : GREETING}</p>}
       {turns.map((turn, index) => <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <p style={{ alignSelf: 'flex-end', maxWidth: '85%', padding: '8px 11px', borderRadius: '10px 10px 2px 10px', background: PRIMARY, color: '#fff', fontSize: 12.5, lineHeight: 1.5 }}>{turn.question}</p>
         <div style={{ alignSelf: 'flex-start', maxWidth: '92%', padding: '9px 11px', borderRadius: '10px 10px 10px 2px', background: turn.error ? '#fef2f2' : '#f4f5f7', border: turn.error ? '1px solid #fecaca' : 0, fontSize: 12.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+          <ModeBadge mode={turn.mode} />
           {turn.answer}
           {turn.dataAvailable === false && !turn.error && <p style={{ marginTop: 6, fontSize: 10.5, color: MUTED }}>Belum tersedia di data Hub.</p>}
           <References items={turn.references} />

@@ -117,6 +117,11 @@ never a manually calculated total.
 | POST | `/api/ai/chat` | Ask the Procurement Governance Hub assistant a question. Returns `answer`, `dataAvailable`, `references`, `inScope`, and `topics`. |
 | GET | `/api/ai/health` | Superuser-only AI runtime check. Makes one small provider request and returns provider, model, latency, and feature-flag state. Returns `503` when the provider is unconfigured or unreachable. |
 
+Responses carry `mode`: `AI` for a provider answer, `DATA_SUMMARY` for a
+deterministic answer built from records without a provider call, and
+`OUT_OF_SCOPE` for a refused question. An interface must label a `DATA_SUMMARY`
+answer as such rather than present it as AI analysis.
+
 `POST /api/ai/chat` accepts `{ "question": string, "history": [{ "role": "user"|"assistant", "content": string }] }`.
 The question is limited to 2,000 characters and history to the six most recent
 turns of 1,000 characters each; a caller-supplied `system` turn is discarded

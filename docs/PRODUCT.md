@@ -50,6 +50,11 @@ to see. Authorization and Business Unit scope are applied in server code before
 any question reaches the model, audit appointments follow the stricter calendar
 rule, and personal contact details are never included.
 
+Where no AI runtime is configured, the assistant can run in a data-summary mode
+that answers factual list and count questions directly from Hub records. Those
+answers are labelled as data summaries rather than AI analysis, and the same
+authorization and Business Unit scope apply.
+
 Questions outside Procurement Governance Hub are declined. When the application
 holds no information for a question, the assistant says so rather than
 producing an answer; a real zero result is reported as zero. Assistant output is

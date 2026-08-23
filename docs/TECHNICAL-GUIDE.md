@@ -128,6 +128,7 @@ Refinement, retrieval, schemas, or the interface.
 | `ANTHROPIC_API_KEY` | Server-only credential. Configure in Vercel and in the Trigger.dev environment. |
 | `ANTHROPIC_MODEL` | Defaults to `claude-opus-5`. |
 | `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED` | Kill switches. A feature is enabled unless the value is explicitly `false`. |
+| `AI_CHAT_MODE` | `ai` (default) answers through the provider; `data-summary` answers deterministically from retrieved records with no provider call. |
 | `AI_MAX_CONTEXT_TOKENS` | Upper bound applied when building retrieval context. |
 | `AI_REQUEST_TIMEOUT_MS` | Provider request timeout. |
 | `AI_CHAT_RATE_LIMIT_PER_MINUTE` | Per-user chat request ceiling. |
@@ -159,6 +160,21 @@ curl -s -H "Cookie: session=<session>" https://<deployment>/api/ai/health
 The route makes one small structured request and returns provider, model,
 latency, and flag state. It returns `503` when the provider is unreachable or
 unconfigured, and never returns a credential or a raw provider payload.
+
+### Chatbot without an API budget
+
+Set `AI_CHAT_MODE=data-summary` to answer from retrieved records without calling
+a provider. It covers factual list and count questions — documents awaiting
+review, mandatory coverage gaps, vacant positions, upcoming audits, open
+findings and submissions — and states plainly when a question needs reasoning it
+cannot do.
+
+Authorization is unchanged: the same scope classifier and the same
+Business-Unit-scoped retrievers run, so an out-of-scope question is still
+refused and no cross-Business-Unit record is ever rendered. Responses carry
+`mode: "DATA_SUMMARY"` and the interface labels them **Ringkasan data · tanpa
+AI**; they must never be presented as AI analysis. Switching back to
+`AI_CHAT_MODE=ai` requires no code change.
 
 ### Offline analysis before an API budget exists
 
