@@ -180,3 +180,72 @@ test("a provider failure surfaces as a typed error rather than a crash", async (
   assert.equal(error.code, "AI_PROVIDER_UNAVAILABLE");
   assert.match(error.userMessage, /tidak tersedia/);
 });
+
+// --- Grounding: fabricated citations must not reach the user ----------------
+
+test("a citation whose recordId matches a retrieved record passes through unchanged", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "SOP Pengadaan SMI berstatus approved.", dataAvailable: true, references: [{ label: "SOP Pengadaan SMI", recordType: "SOP_DOCUMENT", recordId: "sop-smi" }] }) });
+  const telemetry = recordingTelemetry();
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db: stubDb(), aiService, telemetry });
+
+  assert.equal(result.dataAvailable, true);
+  assert.equal(result.references.length, 1);
+  assert.match(result.answer, /SOP Pengadaan SMI berstatus approved/);
+  assert.equal(telemetry.events.length, 0);
+});
+
+test("a claim backed only by a fabricated recordId is downgraded to an honest non-answer", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "SOP X telah disetujui minggu lalu.", dataAvailable: true, references: [{ label: "SOP X", recordType: "SOP_DOCUMENT", recordId: "sop-does-not-exist" }] }) });
+  const telemetry = recordingTelemetry();
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db: stubDb(), aiService, telemetry });
+
+  assert.equal(result.dataAvailable, false);
+  assert.deepEqual(result.references, []);
+  assert.doesNotMatch(result.answer, /SOP X/);
+  assert.match(result.answer, /belum dapat dipastikan/);
+  assert.equal(telemetry.events[0].eventType, "INVALID_OUTPUT");
+  assert.equal(telemetry.events[0].reason, "UNGROUNDED_ANSWER");
+  assert.equal(telemetry.events[0].metadata.fabricatedCount, 1);
+});
+
+test("a claim with dataAvailable true and zero citations, despite records being retrieved, is downgraded", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "Semua dokumen sudah lengkap.", dataAvailable: true, references: [] }) });
+  const telemetry = recordingTelemetry();
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db: stubDb(), aiService, telemetry });
+
+  assert.equal(result.dataAvailable, false);
+  assert.equal(telemetry.events[0].reason, "UNGROUNDED_ANSWER");
+});
+
+test("an honest dataAvailable:false answer is never flagged as ungrounded", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "Informasi ini belum tersedia di Procurement Governance Hub.", dataAvailable: false, references: [] }) });
+  const telemetry = recordingTelemetry();
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db: stubDb(), aiService, telemetry });
+
+  assert.equal(result.dataAvailable, false);
+  assert.match(result.answer, /Informasi ini belum tersedia/);
+  assert.equal(telemetry.events.length, 0);
+});
+
+test("a mix of one real and one fabricated citation keeps the real one and does not downgrade the answer", async () => {
+  const aiService = stubAiService({
+    chat: () => ({
+      answer: "SOP Pengadaan SMI sudah approved.",
+      dataAvailable: true,
+      references: [
+        { label: "SOP Pengadaan SMI", recordType: "SOP_DOCUMENT", recordId: "sop-smi" },
+        { label: "SOP Karangan", recordType: "SOP_DOCUMENT", recordId: "sop-karangan" },
+      ],
+    }),
+  });
+  const telemetry = recordingTelemetry();
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db: stubDb(), aiService, telemetry });
+
+  assert.equal(result.dataAvailable, true);
+  assert.equal(result.references.length, 1);
+  assert.equal(result.references[0].recordId, "sop-smi");
+  // Silently dropping a fabricated reference is still worth a soft signal in
+  // the future, but it must not be treated as a hard failure when a real
+  // citation also backs the claim.
+  assert.equal(telemetry.events.length, 0);
+});

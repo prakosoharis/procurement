@@ -158,7 +158,7 @@ test("a successful chat call records AiUsage with the prompt version", async () 
   assert.equal(result.dataAvailable, true);
   assert.equal(telemetry.usage.length, 1);
   assert.equal(telemetry.usage[0].feature, "CHATBOT");
-  assert.equal(telemetry.usage[0].promptVersion, "chat.v1");
+  assert.equal(telemetry.usage[0].promptVersion, "chat.v2");
   assert.equal(telemetry.usage[0].userId, "user-1");
   assert.equal(telemetry.usage[0].businessUnitId, "bu-1");
   assert.equal(telemetry.usage[0].success, true);

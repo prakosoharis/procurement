@@ -139,6 +139,17 @@ The assembled context states how many records were found, how many were omitted
 for size, and which topics failed to load, so a genuine zero result is reported
 as zero rather than as missing data.
 
+Every citation the model returns is verified against the records that were
+actually retrieved (`lib/ai/chat/grounding.js`) before the response leaves the
+server -- the output schema only constrains a reference's shape, not that it
+points at something real. A reference whose `recordId` (or, failing that,
+`label`) does not match a retrieved record is dropped. If `dataAvailable: true`
+is claimed with zero traceable citations remaining, the whole answer is
+replaced with an honest "cannot be confirmed" response and `dataAvailable` is
+forced to `false`; the event is recorded as `AiEvent.INVALID_OUTPUT` with
+reason `UNGROUNDED_ANSWER`. An honest `dataAvailable: false` answer is never
+altered by this check.
+
 The response never contains a credential, a raw provider payload, or a prompt.
 Provider failures are reported as a fixed code (`AI_NOT_CONFIGURED`,
 `AI_AUTHENTICATION_FAILED`, `AI_RATE_LIMITED`, `AI_TIMEOUT`,
