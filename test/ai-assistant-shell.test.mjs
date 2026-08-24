@@ -20,8 +20,18 @@ test("the approved hub interface asset is unchanged by the assistant", async () 
   }
 });
 
-test("both shell pages mount the assistant behind the flag and the permission", async () => {
-  for (const path of ["../app/page.js", "../app/hub/[page]/page.js"]) {
+test("every hub page mounts the assistant behind the flag and the permission (except Insights, which is the assistant's own full-page form)", async () => {
+  const pages = [
+    "../app/page.js",
+    "../app/hub/calendar/page.js",
+    "../app/hub/engagement/page.js",
+    "../app/hub/directory/page.js",
+    "../app/hub/people/page.js",
+    "../app/hub/repository/page.js",
+    "../app/hub/requests/page.js",
+    "../app/hub/refinement/page.js",
+  ];
+  for (const path of pages) {
     const source = await read(path);
     assert.match(source, /import AssistantPanel from/, path);
     assert.match(source, /isAiFeatureEnabled\(AiFeatureFlag\.CHAT\)\s*&&\s*can\(user, Permission\.COPILOT_USE\)\s*&&\s*<AssistantPanel mode=\{aiConfig\(\)\.chatMode\} \/>/, path);

@@ -39,7 +39,10 @@ test('Blob-to-Drive service validates the transit object and only creates the SO
 test('the browser receives a narrowly scoped client token for the private Blob upload', async () => {
   const storage = await readFile(new URL('../lib/transient-blob-storage.js', import.meta.url), 'utf8');
   const service = await readFile(new URL('../lib/document-direct-upload-service.js', import.meta.url), 'utf8');
-  const bridge = await readFile(new URL('../app/components/blob-upload-bridge.js', import.meta.url), 'utf8');
+  // The Repository React page runs at the top level (no iframe), so it calls
+  // @vercel/blob/client's put() directly instead of bouncing through the old
+  // iframe/postMessage bridge -- see app/hub/repository/repository-api.js.
+  const client = await readFile(new URL('../app/hub/repository/repository-api.js', import.meta.url), 'utf8');
 
   assert.match(storage, /generateClientTokenFromReadWriteToken/);
   assert.match(storage, /allowedContentTypes: \[contentType\]/);
@@ -47,9 +50,9 @@ test('the browser receives a narrowly scoped client token for the private Blob u
   assert.match(storage, /allowOverwrite: false/);
   assert.match(service, /uploadToken: upload\.clientToken/);
   assert.match(service, /transientBlobPath: session\.transientBlobPath/);
-  assert.match(bridge, /import \{ put \} from '@vercel\/blob\/client'/);
-  assert.match(bridge, /access: 'private'/);
-  assert.match(bridge, /token: request\.uploadToken/);
+  assert.match(client, /import \{ put \} from '@vercel\/blob\/client'/);
+  assert.match(client, /access: 'private'/);
+  assert.match(client, /token: session\.uploadToken/);
 });
 
 test('the transfer task is registered separately from the browser upload path', async () => {
