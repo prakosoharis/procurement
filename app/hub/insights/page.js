@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export default async function InsightsRoute() {
   const user = await requirePageAccess(Permission.COPILOT_USE);
   return <>
-    <InsightsPage aiEnabled={isAiFeatureEnabled(AiFeatureFlag.CHAT)} chatMode={aiConfig().chatMode} />
+    <InsightsPage aiEnabled={isAiFeatureEnabled(AiFeatureFlag.CHAT)} chatMode={aiConfig().chatMode} role={user.role} />
     <AccountMenu name={user.name || 'User'} role={user.role || 'USER'} />
   </>;
 }

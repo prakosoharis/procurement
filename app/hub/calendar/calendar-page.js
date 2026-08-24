@@ -195,7 +195,7 @@ export default function CalendarPage({ role }) {
   }
 
   return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="calendar" />
+    <HubHeader active="calendar" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div><h2 style={{ fontSize: 20, fontWeight: 700 }}>Audit Calendar</h2><p style={{ fontSize: 14, color: MUTED, marginTop: 4 }}>Jadwal audit, agenda, dan PIC yang terlibat per Business Unit.</p></div>

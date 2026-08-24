@@ -206,7 +206,7 @@ export default function HomeDashboard({ role }) {
   const visibleActions = useMemo(() => QUICK_ACTIONS.filter((action) => !action.roles || action.roles.includes(role)), [role]);
 
   return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="home" />
+    <HubHeader active="home" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>

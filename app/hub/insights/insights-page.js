@@ -41,7 +41,7 @@ function TurnBubble({ turn }) {
   </div>;
 }
 
-export default function InsightsPage({ aiEnabled, chatMode }) {
+export default function InsightsPage({ aiEnabled, chatMode, role }) {
   const dataSummary = chatMode === 'data-summary';
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
@@ -133,7 +133,7 @@ export default function InsightsPage({ aiEnabled, chatMode }) {
   const displayedTurns = viewing ? historyTurns : turns;
 
   return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="insights" />
+    <HubHeader active="insights" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
 
       <aside style={{ width: 280, flexShrink: 0, background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14 }}>

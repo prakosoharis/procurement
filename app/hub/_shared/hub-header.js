@@ -15,7 +15,11 @@ const NAV_ITEMS = [
   ['directory', 'Directory', '/hub/directory']
 ];
 
-export default function HubHeader({ active }) {
+export default function HubHeader({ active, role }) {
+  // The approved static hub hides Directory's nav link for Business Unit
+  // PICs ([data-directory-menu], applyDashboardRole()) -- the page itself
+  // stays reachable by URL for that role, only the link is hidden.
+  const items = NAV_ITEMS.filter(([key]) => key !== 'directory' || role !== 'BUSINESS_UNIT_PIC');
   return <header style={{ background: CARD, borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50 }}>
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', gap: 16 }}>
       <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
@@ -25,7 +29,7 @@ export default function HubHeader({ active }) {
         <span style={{ fontWeight: 700, fontSize: 15, color: FG }}>Procurement Governance Hub</span>
       </a>
       <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }}>
-        {NAV_ITEMS.map(([key, label, href]) => (
+        {items.map(([key, label, href]) => (
           <a key={key} href={href} style={{
             padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 500,
             color: key === active ? PRIMARY : MUTED, background: key === active ? PRIMARY_SOFT : 'transparent'

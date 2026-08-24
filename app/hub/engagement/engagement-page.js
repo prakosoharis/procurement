@@ -32,7 +32,7 @@ function Card({ children, style }) {
   return <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18, ...style }}>{children}</div>;
 }
 
-export default function EngagementInsightsPage() {
+export default function EngagementInsightsPage({ role }) {
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState(null);
   const [businessUnitId, setBusinessUnitId] = useState('');
@@ -54,14 +54,14 @@ export default function EngagementInsightsPage() {
   useEffect(() => { load(); }, []);
 
   if (error) return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="engagement" />
+    <HubHeader active="engagement" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24 }}>
       <Card style={{ padding: 28, textAlign: 'center', color: '#b91c1c' }}>Engagement Insights belum dapat dimuat. Silakan refresh halaman.</Card>
     </div>
   </div>;
 
   if (!payload?.detail) return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="engagement" />
+    <HubHeader active="engagement" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24 }}>
       <Card style={{ padding: 28, textAlign: 'center', color: MUTED }}>Memuat detail engagement...</Card>
     </div>
@@ -73,7 +73,7 @@ export default function EngagementInsightsPage() {
   const showSelector = viewer.role !== 'BUSINESS_UNIT_PIC';
 
   return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="engagement" />
+    <HubHeader active="engagement" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div><h2 style={{ fontSize: 20, fontWeight: 700 }}>Engagement Insights</h2><p style={{ fontSize: 13, color: MUTED, marginTop: 4 }}>Rincian indikator engagement selama {period.days} hari terakhir.</p></div>

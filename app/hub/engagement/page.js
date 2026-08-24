@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function EngagementPage() {
   const user = await currentUser();
   return <>
-    <EngagementInsightsPage />
+    <EngagementInsightsPage role={user?.role || 'USER'} />
     <AccountMenu name={user?.name || 'User'} role={user?.role || 'USER'} />
     {isAiFeatureEnabled(AiFeatureFlag.CHAT) && can(user, Permission.COPILOT_USE) && <AssistantPanel mode={aiConfig().chatMode} />}
   </>;

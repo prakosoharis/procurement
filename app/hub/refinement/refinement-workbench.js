@@ -245,7 +245,7 @@ export default function RefinementWorkbench({ role }) {
   }
 
   return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader active="refinement" />
+    <HubHeader active="refinement" role={role} />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, display: 'grid', gridTemplateColumns: 'minmax(260px, 340px) 1fr', gap: 20, alignItems: 'start' }}>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
