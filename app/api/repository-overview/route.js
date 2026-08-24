@@ -23,7 +23,7 @@ export async function GET() {
     db.businessUnit.findMany({where:businessUnitWhere,select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true},orderBy:{name:'asc'}}),
     db.documentType.findMany({select:{id:true,code:true,name:true,category:true,sortOrder:true},orderBy:{sortOrder:'asc'}}),
     db.sopDocument.findMany({
-      where:{businessUnit:businessUnitWhere},
+      where:{businessUnit:businessUnitWhere,status:{not:'ARCHIVED'}},
       select:{
         id:true,title:true,status:true,language:true,currentVersion:true,updatedAt:true,
         businessUnit:{select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true}},

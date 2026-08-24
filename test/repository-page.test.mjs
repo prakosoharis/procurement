@@ -45,3 +45,32 @@ test("the Sources and Links tabs are ported as static visuals, matching the stat
   assert.doesNotMatch(sources, /fetch\(/);
   assert.doesNotMatch(links, /fetch\(/);
 });
+
+test("only a repository manager can delete a document, and only while it is still a draft, matching the create-time canManageBusinessUnit gate", async () => {
+  const source = await read("../app/api/documents/[id]/route.js");
+  assert.match(source, /if \(!canManageBusinessUnit\(user\)\) return NextResponse\.json\(\{ error: 'You do not have access to delete this document\.' \}, \{ status: 403 \}\);/);
+  assert.match(source, /if \(document\.status !== 'DRAFT'\) return NextResponse\.json\(\{ error: 'Only draft documents can be deleted\.' \}, \{ status: 409 \}\);/);
+});
+
+test("deleting a draft soft-deletes it (status -> ARCHIVED, same convention the create route already treats as free to re-title) rather than removing the row, so its AuditLog stays valid", async () => {
+  const source = await read("../app/api/documents/[id]/route.js");
+  assert.match(source, /data: \{ status: 'ARCHIVED', isArchived: true, archivedAt: new Date\(\) \}/);
+  assert.match(source, /writeAudit\(user\.id, 'SopDocument', id, 'DELETE_DRAFT'/);
+});
+
+test("deleting a draft also removes its underlying Google Drive file, since an unreviewed draft has no evidentiary value yet", async () => {
+  const source = await read("../app/api/documents/[id]/route.js");
+  assert.match(source, /deleteGoogleDriveFile\(version\.fileKey\.slice\('gdrive:'\.length\)\)/);
+});
+
+test("a soft-deleted (ARCHIVED) document is excluded from the Repository listing", async () => {
+  const source = await read("../app/api/repository-overview/route.js");
+  assert.match(source, /where:\{businessUnit:businessUnitWhere,status:\{not:'ARCHIVED'\}\}/);
+});
+
+test("the delete button in the SOP detail modal is gated the same way as the API (manager + draft-only) and confirms before calling DELETE", async () => {
+  const source = await read("../app/hub/repository/sop-modals.js");
+  assert.match(source, /const canDelete = canManage && document\?\.status === 'DRAFT';/);
+  assert.match(source, /if \(!window\.confirm\(`Hapus draft "\$\{document\.title\}"\? Tindakan ini tidak dapat dibatalkan\.`\)\) return;/);
+  assert.match(source, /fetch\(`\/api\/documents\/\$\{document\.id\}`, \{ method: 'DELETE' \}\)/);
+});
