@@ -9,8 +9,8 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 // insights, people, directory) gets its own React route -- this is the only
 // file that needs touching for that bookkeeping; per-page test files assert
 // their own route's specific behaviour instead of duplicating this check.
-const CONVERTED_TO_REACT = ["refinement", "calendar"];
-const REMAINING_ON_IFRAME = ["requests", "repository", "engagement", "insights", "people", "directory"];
+const CONVERTED_TO_REACT = ["refinement", "calendar", "engagement"];
+const REMAINING_ON_IFRAME = ["requests", "repository", "insights", "people", "directory"];
 
 test("the dynamic hub iframe route no longer claims to serve a page once it has its own React route", async () => {
   const source = await read("../app/hub/[page]/page.js");

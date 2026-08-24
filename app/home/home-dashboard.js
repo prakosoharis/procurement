@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Badge from '../hub/_shared/badge';
 import HubHeader from '../hub/_shared/hub-header';
+import EngagementComponent, { engagementTone } from '../hub/_shared/engagement-component';
 import { BG, BORDER, CARD, FG, MUTED, PRIMARY } from '../hub/_shared/tokens';
 
 // Faithful React port of the static hub's Home page. Content that was
@@ -37,8 +38,6 @@ const BU_LOGOS = [
   ['PYFA Group', 'https://images.fillout.com/orgid-749243/flowpublicid-1b2pundmnc/widgetid-default/bUL99QLm7eJEjAyukVmixo/pasted-image-1784018920572-rf8cn364.jpg'],
   ['Win&Co', 'https://images.fillout.com/orgid-749243/flowpublicid-1b2pundmnc/widgetid-default/8F5YqAjQzvQVRv5GT2VtHz/pasted-image-1784018920590-p5zek7sk.jpg']
 ];
-
-const engagementTone = (score) => (score >= 80 ? '#15803d' : score >= 60 ? '#b45309' : '#b91c1c');
 
 function Card({ children, style }) {
   return <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 4px 12px -1px rgba(0,0,0,0.07)', ...style }}>{children}</div>;
@@ -101,20 +100,6 @@ function RiskDonut() {
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ fontSize: 22, fontWeight: 800, color: FG }}>{total}</span>
       <span style={{ fontSize: 8, color: MUTED, textAlign: 'center', maxWidth: 60 }}>Total High-Risk</span>
-    </div>
-  </div>;
-}
-
-function EngagementComponent({ label, health, description }) {
-  const status = health >= 80 ? 'BAIK' : health >= 60 ? 'PERLU DIPANTAU' : 'PERLU TINDAKAN';
-  return <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, background: CARD }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-      <b style={{ fontSize: 12 }}>{label}</b>
-      <b style={{ fontSize: 10, color: engagementTone(health) }}>{status}</b>
-    </div>
-    <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{description}</div>
-    <div style={{ height: 6, borderRadius: 4, background: '#e5e7eb', overflow: 'hidden', marginTop: 7 }}>
-      <div style={{ height: '100%', width: `${health}%`, background: engagementTone(health) }} />
     </div>
   </div>;
 }
