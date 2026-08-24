@@ -13,12 +13,14 @@ const procurement = { id: "user-cg", role: "CORPORATE_GOVERNANCE", businessUnitI
 // ai-chat-retrieval.test.mjs, so here the stub only needs to honour the
 // Business Unit filter the retrievers build.
 function stubDb({ usageCount = 0, documents } = {}) {
+  const state = { conversations: [], messages: [] };
   const allDocuments = documents ?? [
     { id: "sop-smi", title: "SOP Pengadaan SMI", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-01"), businessUnit: { id: SMI, name: "SMI" }, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [] },
     { id: "sop-sun", title: "SOP RAHASIA SUN", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-02"), businessUnit: { id: SUN, name: "SUN" }, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [] },
   ];
   const allowed = (where) => where?.businessUnit?.id?.in ?? where?.id?.in ?? null;
   return {
+    state,
     aiUsage: { count: async () => usageCount },
     aiEvent: { create: async ({ data }) => data },
     sopDocument: { findMany: async ({ where }) => { const ids = allowed(where); return ids ? allDocuments.filter((d) => ids.includes(d.businessUnit.id)) : allDocuments; } },
@@ -28,6 +30,18 @@ function stubDb({ usageCount = 0, documents } = {}) {
     refinementSession: { findMany: async () => [] },
     auditEvent: { findMany: async () => [] },
     organizationPosition: { findMany: async () => [] },
+    aiChatConversation: {
+      upsert: async ({ where, create, update }) => {
+        const existing = state.conversations.find((c) => c.id === where.id);
+        if (existing) { Object.assign(existing, update); return existing; }
+        const created = { ...create };
+        state.conversations.push(created);
+        return created;
+      },
+    },
+    aiChatMessage: {
+      create: async ({ data }) => { const message = { id: `msg-${state.messages.length + 1}`, ...data }; state.messages.push(message); return message; },
+    },
   };
 }
 
@@ -248,4 +262,76 @@ test("a mix of one real and one fabricated citation keeps the real one and does 
   // the future, but it must not be treated as a hard failure when a real
   // citation also backs the claim.
   assert.equal(telemetry.events.length, 0);
+});
+
+// --- Transcript persistence --------------------------------------------------
+
+test("a conversation is generated when none is supplied and echoed back to the caller", async () => {
+  const aiService = stubAiService();
+  const db = stubDb();
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db, aiService, telemetry: recordingTelemetry() });
+
+  assert.equal(typeof result.conversationId, "string");
+  assert.ok(result.conversationId.length > 0);
+  assert.equal(db.state.conversations.length, 1);
+  assert.equal(db.state.conversations[0].id, result.conversationId);
+  assert.equal(db.state.conversations[0].userId, procurement.id);
+  assert.equal(db.state.messages.length, 1);
+  assert.equal(db.state.messages[0].conversationId, result.conversationId);
+  assert.equal(db.state.messages[0].question, "SOP apa saja yang sudah approved?");
+});
+
+test("a caller-supplied conversationId is reused rather than replaced", async () => {
+  const aiService = stubAiService();
+  const db = stubDb();
+  const result = await answerChatQuestion({ actor: procurement, question: "x", conversationId: "conv-fixed", db, aiService, telemetry: recordingTelemetry() });
+  assert.equal(result.conversationId, "conv-fixed");
+});
+
+test("a second turn in the same conversation appends a message rather than creating a second conversation", async () => {
+  const aiService = stubAiService();
+  const db = stubDb();
+  await answerChatQuestion({ actor: procurement, question: "pertanyaan pertama", conversationId: "conv-a", db, aiService, telemetry: recordingTelemetry() });
+  await answerChatQuestion({ actor: procurement, question: "pertanyaan kedua", conversationId: "conv-a", db, aiService, telemetry: recordingTelemetry() });
+
+  assert.equal(db.state.conversations.length, 1);
+  assert.equal(db.state.messages.length, 2);
+  assert.deepEqual(db.state.messages.map((m) => m.question), ["pertanyaan pertama", "pertanyaan kedua"]);
+});
+
+test("an out-of-scope question is still recorded to the transcript, not silently dropped", async () => {
+  const aiService = stubAiService();
+  const db = stubDb();
+  await answerChatQuestion({ actor: procurement, question: "Siapa juara Piala Dunia berikutnya?", db, aiService, telemetry: recordingTelemetry() });
+
+  assert.equal(db.state.messages.length, 1);
+  assert.equal(db.state.messages[0].mode, "OUT_OF_SCOPE");
+  assert.equal(db.state.messages[0].inScope, false);
+});
+
+test("a downgraded ungrounded answer is transcribed as what the user actually received, not the model's raw claim", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "SOP X telah disetujui.", dataAvailable: true, references: [{ label: "SOP X", recordType: "SOP_DOCUMENT", recordId: "sop-does-not-exist" }] }) });
+  const db = stubDb();
+  await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db, aiService, telemetry: recordingTelemetry() });
+
+  assert.equal(db.state.messages[0].dataAvailable, false);
+  assert.doesNotMatch(db.state.messages[0].answer, /SOP X telah disetujui/);
+});
+
+test("a transcript write failure does not affect the answer returned to the caller", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "SOP Pengadaan SMI approved.", dataAvailable: true, references: [{ label: "SOP Pengadaan SMI", recordType: "SOP_DOCUMENT", recordId: "sop-smi" }] }) });
+  const db = stubDb();
+  db.aiChatConversation = { upsert: async () => { throw new Error("db unavailable"); } };
+  const result = await answerChatQuestion({ actor: procurement, question: "SOP apa saja yang sudah approved?", db, aiService, telemetry: recordingTelemetry() });
+
+  assert.equal(result.inScope, true);
+  assert.equal(result.answer, "SOP Pengadaan SMI approved.");
+});
+
+test("question and answer text are capped before being stored", async () => {
+  const aiService = stubAiService({ chat: () => ({ answer: "a".repeat(5_000), dataAvailable: true, references: [] }) });
+  const db = stubDb();
+  await answerChatQuestion({ actor: procurement, question: "x", db, aiService, telemetry: recordingTelemetry() });
+
+  assert.ok(db.state.messages[0].answer.length <= 4_000);
 });

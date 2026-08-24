@@ -114,7 +114,9 @@ never a manually calculated total.
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| POST | `/api/ai/chat` | Ask the Procurement Governance Hub assistant a question. Returns `answer`, `dataAvailable`, `references`, `inScope`, and `topics`. |
+| POST | `/api/ai/chat` | Ask the Procurement Governance Hub assistant a question. Returns `answer`, `dataAvailable`, `references`, `inScope`, `topics`, and `conversationId`. |
+| GET | `/api/ai/chat/conversations` | List the caller's own chatbot conversation threads. `?userId=` is honoured only for actors with `ACTIVITY_LOG_VIEW`; otherwise it is ignored and the caller's own conversations are returned. |
+| GET | `/api/ai/chat/conversations/:conversationId` | One conversation's transcript with every message. Requires ownership or `ACTIVITY_LOG_VIEW`; otherwise `404`, so a conversation's existence is not disclosed either. |
 | GET | `/api/ai/health` | Superuser-only AI runtime check. Makes one small provider request and returns provider, model, latency, and feature-flag state. Returns `503` when the provider is unconfigured or unreachable. |
 
 Responses carry `mode`: `AI` for a provider answer, `DATA_SUMMARY` for a
@@ -155,6 +157,21 @@ Provider failures are reported as a fixed code (`AI_NOT_CONFIGURED`,
 `AI_AUTHENTICATION_FAILED`, `AI_RATE_LIMITED`, `AI_TIMEOUT`,
 `AI_INVALID_OUTPUT`, `AI_PROVIDER_UNAVAILABLE`, `AI_DISABLED`) with a safe
 message; the underlying provider error is logged server-side only.
+
+Every exchange is written to `AiChatConversation`/`AiChatMessage` -- the
+literal question and answer text, capped at 4,000 characters, plus `mode`,
+`dataAvailable`, `inScope`, `topics`, and `references`. This is a UAT-quality
+and audit log distinct from `AiUsage`, which is the metered-cost record and
+never holds conversation text. Every mode is recorded, including a rejected
+out-of-scope question and an answer downgraded by the grounding check, so the
+transcript reflects exactly what the caller received. The write is
+best-effort: a transcript failure never changes or blocks the answer returned
+to the caller.
+
+The server assigns `conversationId` on a thread's first turn if the caller does
+not supply one; resending the same id on later turns appends to the same
+conversation. Retention is operational, not automatic -- see
+`scripts/purge-chat-transcripts.js` in the Technical Guide.
 
 ## AI-assisted Refinement
 

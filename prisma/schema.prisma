@@ -285,6 +285,7 @@ model BusinessUnit {
   auditReviews                      AuditReview[]
   aiUsages                          AiUsage[]
   aiEvents                          AiEvent[]
+  aiChatConversations               AiChatConversation[]
   googleDriveFolderId               String?
   organizationStructures            OrganizationStructure[]
   organizationPositions             OrganizationPosition[]
@@ -357,6 +358,7 @@ model User {
   auditReviews                      AuditReview[]             @relation("AuditReviewOwner")
   aiUsages                          AiUsage[]
   aiEvents                          AiEvent[]
+  aiChatConversations               AiChatConversation[]
   createdAt                         DateTime                  @default(now())
 }
 
@@ -1042,6 +1044,45 @@ model AiEvent {
   @@index([businessUnitId])
   @@index([feature])
   @@index([eventType])
+  @@index([createdAt])
+}
+
+// A UAT-quality and audit log of chatbot exchanges. This is intentionally
+// separate from AiUsage: AiUsage is the metered-cost record and never holds
+// question/answer text; these two models hold the literal conversation so a
+// reviewer can see what was asked, where an answer came back empty or wrong,
+// and what a decision-maker was told. Retention is operational, not
+// architectural -- see scripts/purge-chat-transcripts.js.
+model AiChatConversation {
+  id             String           @id @default(cuid())
+  userId         String
+  businessUnitId String?
+  startedAt      DateTime         @default(now())
+  lastMessageAt  DateTime         @default(now())
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessUnit   BusinessUnit?    @relation(fields: [businessUnitId], references: [id])
+  messages       AiChatMessage[]
+
+  @@index([userId])
+  @@index([businessUnitId])
+  @@index([lastMessageAt])
+}
+
+model AiChatMessage {
+  id             String             @id @default(cuid())
+  conversationId String
+  question       String
+  answer         String
+  /// AI | DATA_SUMMARY | OUT_OF_SCOPE, mirrors the chat service response mode.
+  mode           String
+  dataAvailable  Boolean
+  inScope        Boolean
+  topicsJson     Json?
+  referencesJson Json?
+  conversation   AiChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime           @default(now())
+
+  @@index([conversationId])
   @@index([createdAt])
 }
 

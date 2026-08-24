@@ -176,6 +176,36 @@ The route makes one small structured request and returns provider, model,
 latency, and flag state. It returns `503` when the provider is unreachable or
 unconfigured, and never returns a credential or a raw provider payload.
 
+### Chatbot transcripts and retention
+
+Every chatbot exchange is written to `AiChatConversation`/`AiChatMessage`: the
+literal question and answer text (capped at 4,000 characters), the response
+mode, and its scope/grounding outcome. This is separate from `AiUsage`, which
+tracks cost and never holds conversation text. It exists as a UAT-quality and
+audit log -- to see the real questions users ask, find where an answer came
+back empty or wrong, and keep a record of what a decision-maker was told --
+not as a permanent chat archive.
+
+Every response mode is recorded, including a rejected out-of-scope question and
+an answer the grounding check downgraded, so the transcript always reflects
+what the caller actually received. Writing a transcript never blocks or
+changes the chatbot's answer; a write failure is logged and swallowed.
+
+Visibility follows the existing audit pattern: any authenticated user can read
+their own conversations; `Permission.ACTIVITY_LOG_VIEW` (Superuser, Tim
+Procurement, Executive) is required to read another user's.
+
+Retention is operational, not automatic. Purge conversations whose last message
+is older than a chosen window with a dry run first:
+
+```bash
+node --env-file-if-exists=.env scripts/purge-chat-transcripts.js --days 30
+node --env-file-if-exists=.env scripts/purge-chat-transcripts.js --days 30 --apply
+```
+
+`--apply` is required to actually delete; without it the script only reports
+what would be removed. Deleting a conversation cascades to its messages.
+
 ### Chatbot without an API budget
 
 Set `AI_CHAT_MODE=data-summary` to answer from retrieved records without calling

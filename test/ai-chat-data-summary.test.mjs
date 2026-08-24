@@ -150,6 +150,8 @@ function stubDb() {
     refinementSession: { findMany: async () => [] },
     auditEvent: { findMany: async () => [] },
     organizationPosition: { findMany: async () => [] },
+    aiChatConversation: { upsert: async ({ create }) => create },
+    aiChatMessage: { create: async ({ data }) => data },
   };
 }
 

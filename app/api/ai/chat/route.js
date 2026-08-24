@@ -27,6 +27,7 @@ export async function POST(request) {
       actor: user,
       question: body?.question,
       history: body?.history,
+      conversationId: body?.conversationId,
       aiService: createAiService()
     });
     return NextResponse.json(result);

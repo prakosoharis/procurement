@@ -55,3 +55,9 @@ test("turning the chat flag off hides the assistant", () => {
   assert.equal(isAiFeatureEnabled(AiFeatureFlag.CHAT, {}), true);
   assert.equal(isAiFeatureEnabled(AiFeatureFlag.REFINEMENT, { AI_REFINEMENT_ENABLED: "0" }), false);
 });
+
+test("the panel threads a server-assigned conversationId across turns rather than starting a fresh conversation each time", async () => {
+  const source = await read("../app/components/assistant-panel.js");
+  assert.match(source, /conversationId: conversationIdRef\.current/);
+  assert.match(source, /conversationIdRef\.current = payload\.conversationId/);
+});

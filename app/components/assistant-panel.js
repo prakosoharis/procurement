@@ -30,6 +30,7 @@ export default function AssistantPanel({ mode = 'ai' }) {
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
   const [turns, setTurns] = useState([]);
+  const conversationIdRef = useRef(null);
   const inputRef = useRef(null);
   const listRef = useRef(null);
 
@@ -64,12 +65,15 @@ export default function AssistantPanel({ mode = 'ai' }) {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text, history })
+        body: JSON.stringify({ question: text, history, conversationId: conversationIdRef.current })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         setTurns((current) => [...current, { question: text, answer: payload.message || 'Layanan AI sedang tidak tersedia. Coba lagi nanti.', error: true }]);
       } else {
+        // The server assigns the conversation id on the first turn; reusing it
+        // threads every later turn into the same transcript.
+        if (payload.conversationId) conversationIdRef.current = payload.conversationId;
         setTurns((current) => [...current, { question: text, answer: payload.answer, references: payload.references, dataAvailable: payload.dataAvailable, mode: payload.mode }]);
       }
     } catch {
