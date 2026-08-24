@@ -51,12 +51,6 @@ label{font-size:12px;font-weight:500;display:block;margin-bottom:4px}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:6px}
 .icon-btn{width:36px;height:36px;border-radius:8px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;color:var(--muted-fg)}
 .icon-btn:hover{background:var(--muted)}
-.notif-badge{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;background:var(--primary);color:var(--primary-fg);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
-.avatar{width:32px;height:32px;border-radius:50%;background:rgba(153,27,27,0.1);color:var(--primary);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center}
-.user-btn{display:flex;align-items:center;gap:10px;padding:6px 8px 6px 12px;border-radius:8px;border:none;background:none;cursor:pointer}
-.user-btn:hover{background:var(--muted)}
-.user-name{font-size:13px;font-weight:600;line-height:1.2;text-align:left}
-.user-role{font-size:10px;color:var(--muted-fg);line-height:1.2;text-align:left}
 
 /* Page container */
 .page{max-width:1440px;margin:0 auto;padding:24px;display:none}
@@ -343,13 +337,12 @@ tr{cursor:pointer}
     <a onclick="nav('directory')" data-page="directory" data-directory-menu>Directory</a>
   </nav>
   <div class="header-right">
-    <button class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="notif-badge">3</span></button>
+    <button class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
     <button class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
-    <button class="user-btn">
-      <div class="avatar">AD</div>
-      <div><div class="user-name">Admin User</div><div class="user-role">IT Division</div></div>
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-    </button>
+    <!-- The account menu (name, role, sign out) is rendered once by the React
+         shell (app/components/account-menu.js), which floats fixed above this
+         header. A second, static user button used to live here with hardcoded
+         placeholder text that never reflected the signed-in user. -->
   </div>
 </div>
 </header>
