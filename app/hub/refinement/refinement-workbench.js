@@ -1,27 +1,8 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-
-// Design tokens lifted from the approved hub asset's :root block, matching the
-// approximation AccountMenu/AssistantPanel already use for --primary so every
-// React-shell element reads as one consistent surface. Not a redesign: same
-// values, same radii, same badge palette as procurement-governance-hub.html.
-const BG = '#f0f2f5';
-const CARD = '#fff';
-const FG = '#1a2236';
-const PRIMARY = '#991b1b';
-const PRIMARY_SOFT = 'rgba(153,27,27,0.08)';
-const MUTED = '#6b7280';
-const MUTED_BG = '#eff1f4';
-const BORDER = '#e2e5ea';
-const RADIUS = 10;
-
-const BADGE = {
-  green: { background: '#dcfce7', color: '#15803d' },
-  amber: { background: '#fef3c7', color: '#b45309' },
-  red: { background: '#fee2e2', color: '#b91c1c' },
-  blue: { background: '#dbeafe', color: '#1d4ed8' },
-  muted: { background: MUTED_BG, color: MUTED }
-};
+import Badge from '../_shared/badge';
+import HubHeader from '../_shared/hub-header';
+import { BADGE, BG, BORDER, CARD, FG, MUTED, PRIMARY, PRIMARY_SOFT, RADIUS } from '../_shared/tokens';
 
 const RUN_STATUS_TONE = {
   QUEUED: 'muted', PREPARING: 'amber', RETRIEVING: 'amber', ANALYZING: 'amber',
@@ -33,11 +14,6 @@ const DECISION_TONE = {
   REJECTED: 'red', RETURNED_FOR_REFINEMENT: 'amber'
 };
 
-function Badge({ tone = 'muted', children }) {
-  const palette = BADGE[tone] || BADGE.muted;
-  return <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 999, fontSize: 10, fontWeight: 700, ...palette }}>{children}</span>;
-}
-
 async function readJson(response) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || payload?.ok === false) {
@@ -47,33 +23,6 @@ async function readJson(response) {
 }
 
 const canManage = (role) => ['SUPER_USER', 'CORPORATE_GOVERNANCE'].includes(role);
-
-const NAV_ITEMS = [
-  ['home', 'Home', '/'], ['repository', 'Repository', '/hub/repository'], ['refinement', 'Refinement', '/hub/refinement'],
-  ['calendar', 'Calendar', '/hub/calendar'], ['engagement', 'Engagement', '/hub/engagement'], ['insights', 'Insights', '/hub/insights'],
-  ['people', 'People', '/hub/people'], ['directory', 'Directory', '/hub/directory']
-];
-
-function HubHeader() {
-  return <header style={{ background: CARD, borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50 }}>
-    <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', gap: 16 }}>
-      <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 8, background: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></svg>
-        </div>
-        <span style={{ fontWeight: 700, fontSize: 15, color: FG }}>Procurement Governance Hub</span>
-      </a>
-      <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }}>
-        {NAV_ITEMS.map(([key, label, href]) => (
-          <a key={key} href={href} style={{
-            padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 500,
-            color: key === 'refinement' ? PRIMARY : MUTED, background: key === 'refinement' ? PRIMARY_SOFT : 'transparent'
-          }}>{label}</a>
-        ))}
-      </nav>
-    </div>
-  </header>;
-}
 
 function EvidenceRow({ label, value }) {
   if (!value) return null;
@@ -296,7 +245,7 @@ export default function RefinementWorkbench({ role }) {
   }
 
   return <div style={{ minHeight: '100vh', background: BG }}>
-    <HubHeader />
+    <HubHeader active="refinement" />
     <div style={{ maxWidth: 1440, margin: '0 auto', padding: 24, display: 'grid', gridTemplateColumns: 'minmax(260px, 340px) 1fr', gap: 20, alignItems: 'start' }}>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
