@@ -4,10 +4,10 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("the directory route requires no extra permission beyond authentication, matching every role's read access", async () => {
+test("the directory route requires no extra permission beyond authentication, matching every role's read access, but still redirects to /login when there is no valid session", async () => {
   const source = await read("../app/hub/directory/page.js");
   assert.doesNotMatch(source, /requirePageAccess/);
-  assert.match(source, /currentUser\(\)/);
+  assert.match(source, /requireUser\(\)/);
 });
 
 test("only a Super User sees the create-user and manage-access controls", async () => {
