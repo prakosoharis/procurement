@@ -103,30 +103,45 @@ rewrite.
 ```text
 Chatbot ─┐
          ├─> AIService ─> provider-factory (AI_PROVIDER) ─> AIProvider
-Refinement ┘                                                └── AnthropicApiProvider
+Refinement ┘                                                ├── AnthropicApiProvider
+                                                              └── ZaiProvider
 ```
 
-### Supported provider
+### Supported providers
 
 | `AI_PROVIDER` | Status |
 | --- | --- |
 | `anthropic-api` | Supported. Metered Claude Developer Platform access through `ANTHROPIC_API_KEY`. |
+| `zai` | Supported. z.ai's pay-per-token GLM API, OpenAI-compatible, through `ZAI_API_KEY`. |
 | `claude-max-agent` | Reserved identifier with no deployable implementation. Selecting it fails validation with an explanatory error. |
 
 Anthropic's Legal and compliance policy restricts Free, Pro, and Max OAuth
 credentials to Claude Code and claude.ai, and does not permit routing
-application requests through them on behalf of users. A deployed Procurement
-Governance Hub therefore authenticates with an API key. The provider boundary
-exists so a second runtime can be added later without touching Chatbot,
-Refinement, retrieval, schemas, or the interface.
+application requests through them on behalf of users. The z.ai GLM Coding Plan
+is under the same constraint: it is sold for use inside a coding tool
+(Claude Code, Cline, OpenCode), not as a general application API. A deployed
+Procurement Governance Hub therefore authenticates with a pay-per-token API
+key -- Anthropic's or z.ai's -- never a coding-tool subscription credential.
+The provider boundary exists so a runtime can be swapped without touching
+Chatbot, Refinement, retrieval, schemas, or the interface.
+
+z.ai's API offers JSON mode only, with no server-side schema enforcement. Its
+provider (`lib/ai/providers/zai-provider.js`) sends the JSON Schema as an
+instruction and validates the parsed response against it
+(`lib/ai/schema-validator.js`) before returning; a mismatch is treated as a
+retryable `AI_INVALID_OUTPUT`. The Anthropic provider does not need this step:
+`messages.parse()` enforces the schema server-side.
 
 ### Configuration
 
 | Variable | Purpose |
 | --- | --- |
-| `AI_PROVIDER` | Runtime selection. Defaults to `anthropic-api`. |
-| `ANTHROPIC_API_KEY` | Server-only credential. Configure in Vercel and in the Trigger.dev environment. |
+| `AI_PROVIDER` | Runtime selection: `anthropic-api` or `zai`. Defaults to `anthropic-api`. |
+| `ANTHROPIC_API_KEY` | Server-only credential for `anthropic-api`. Configure in Vercel and in the Trigger.dev environment. |
 | `ANTHROPIC_MODEL` | Defaults to `claude-opus-5`. |
+| `ZAI_API_KEY` | Server-only credential for `zai`. Must be a pay-per-token API key, not a GLM Coding Plan credential. |
+| `ZAI_MODEL` | Defaults to `glm-4.7`. |
+| `ZAI_BASE_URL` | Defaults to `https://api.z.ai/api/paas/v4`. |
 | `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED` | Kill switches. A feature is enabled unless the value is explicitly `false`. |
 | `AI_CHAT_MODE` | `ai` (default) answers through the provider; `data-summary` answers deterministically from retrieved records with no provider call. |
 | `AI_MAX_CONTEXT_TOKENS` | Upper bound applied when building retrieval context. |
@@ -141,7 +156,7 @@ user message; the underlying provider error is logged server-side only.
 
 | Where | Variables |
 | --- | --- |
-| Vercel | `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED`, and the optional budget variables |
+| Vercel | `AI_PROVIDER`, the credential for the selected provider (`ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL` or `ZAI_API_KEY`/`ZAI_MODEL`), `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED`, and the optional budget variables |
 | Trigger.dev | the same AI variables, plus `DATABASE_URL`, `STORAGE_PROVIDER`, and the Google Drive variables the analysis task needs to read documents |
 
 Deploy the Trigger.dev worker with `npm run trigger:deploy` after the web

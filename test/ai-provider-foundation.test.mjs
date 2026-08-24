@@ -50,6 +50,18 @@ test("the factory rejects an unknown provider identifier", () => {
   assert.throws(() => getAiProvider({ environment, config: aiConfig(environment) }), { code: "AI_UNSUPPORTED_PROVIDER" });
 });
 
+test("the factory selects the zai provider when AI_PROVIDER=zai", () => {
+  const environment = { AI_PROVIDER: "zai", ZAI_API_KEY: "test-zai-key" };
+  const provider = getAiProvider({ environment, config: aiConfig(environment) });
+  assert.equal(provider.id, "zai");
+  assert.equal(provider.productionReady, true);
+  assert.equal(provider.telemetryProvider, "ZAI");
+});
+
+test("zai is included in the list of supported providers", () => {
+  assert.ok(supportedAiProviders().includes("zai"));
+});
+
 test("claude-max-agent is a reserved identifier without a deployable runtime", () => {
   const environment = { ...baseEnvironment, AI_PROVIDER: "claude-max-agent" };
   assert.ok(supportedAiProviders().includes("claude-max-agent"));

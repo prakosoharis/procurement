@@ -226,6 +226,7 @@ enum AiFeature {
 enum AiProvider {
   ANTHROPIC
   OPENAI
+  ZAI
 }
 
 enum AiEventType {
