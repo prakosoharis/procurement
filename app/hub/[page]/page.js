@@ -12,7 +12,7 @@ import { can, Permission } from '../../../lib/authorization/permissions';
 // static route at the same path and Next.js gives it priority over this
 // dynamic [page] route, so it is never reached for that value. Listing it
 // here too would be misleading about which file actually serves it.
-const pages = new Set(['requests', 'repository', 'people', 'directory']);
+const pages = new Set(['requests', 'repository', 'people']);
 export const dynamic = 'force-dynamic';
 
 export default async function HubPage({ params }) {
