@@ -20,6 +20,8 @@ test("every converted hub page threads its viewer's role into HubHeader", async 
     "../app/hub/engagement/engagement-page.js",
     "../app/hub/insights/insights-page.js",
     "../app/hub/refinement/refinement-workbench.js",
+    "../app/hub/directory/directory-page.js",
+    "../app/hub/people/people-page.js",
   ];
   for (const file of files) {
     const source = await read(file);
