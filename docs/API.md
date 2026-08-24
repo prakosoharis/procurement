@@ -175,14 +175,20 @@ conversation. Retention is operational, not automatic -- see
 
 ## AI-assisted Refinement
 
-`/hub/refinement` is a dedicated React page, not the static hub asset. Every
-other hub page keeps rendering `procurement-governance-hub.html` in an iframe;
-this is the one screen with genuinely new functionality -- starting an AI
+`/hub/refinement` is a dedicated React page. It was the first hub page moved
+off the static asset, added for genuinely new functionality -- starting an AI
 analysis, reviewing candidate findings, recording a human decision -- that the
-static asset has no equivalent for. Its Refinement tab remains demo markup and
-was left untouched. `app/hub/[page]/page.js` no longer lists `'refinement'`:
-Next.js gives a static route priority over a dynamic one at the same path, so
-`app/hub/refinement/page.js` intercepts it regardless.
+static asset had no equivalent for. Every other hub page (`/`, `/hub/repository`,
+`/hub/calendar`, `/hub/engagement`, `/hub/insights`, `/hub/directory`,
+`/hub/people`, `/hub/requests`) has since migrated the same way: each is its
+own React route under `app/hub/<page>/`, faithfully reproducing the approved
+static asset's layout and, where the source markup was itself already
+non-functional demo content (Repository's "Sumber Pembanding"/"Hubungan SOP &
+Sumber" tabs, Requests's "Tiket Perbaikan SOP" and "Auto-Draft LHA" widgets),
+porting it as a static visual rather than wiring it up. The static asset
+(`procurement-governance-hub (1).html` / `public/procurement-governance-hub.html`)
+and the dynamic iframe route that used to serve it no longer exist in the
+runtime path; the asset file is kept only as the approved visual reference.
 
 | Method | Route | Purpose |
 | --- | --- | --- |

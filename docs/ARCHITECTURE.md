@@ -9,21 +9,34 @@
 | Document storage | Google Drive | Private permanent SOP, source, attachment, and evidence-file storage. |
 | Upload transit | Vercel Blob private + Trigger.dev | Browser upload ingress for large SOP files, followed by controlled transfer to Google Drive. |
 
-The main product interface is delivered as a static application asset inside the
-Next.js application. Route Handlers provide data and mutations to that
-interface. Product screens are served through `/` and `/hub/:page`; backend
+The main product interface is delivered as dedicated React pages inside the
+Next.js application, one per hub screen under `app/hub/<page>/` (plus `app/page.js`
+for Home). Route Handlers provide data and mutations to those pages; backend
 authorization remains on the server through Route Handlers and shared services.
 
 An earlier full React rewrite of this interface (parallel routes under
 `app/sop-governance/*`, `app/refinement/*`, and others) was built and then
-deliberately removed on 2026-08-01 in favor of the single static asset above --
-see commit `chore: remove revamp interface`. `/hub/refinement` is a narrow,
+deliberately removed on 2026-08-01 in favor of a single static application
+asset rendered through `/` and `/hub/:page` -- see commit
+`chore: remove revamp interface`. `/hub/refinement` was the first narrow,
 deliberate exception to that decision: a dedicated React page for AI-assisted
-Refinement, added because the static asset's Refinement tab is demo markup with
-no equivalent functionality to extend, not because the single-asset decision
-was reconsidered. Every other hub page continues to render the static asset in
-an iframe. Do not use `/hub/refinement` as precedent for converting another hub
-page to React without the same kind of explicit approval.
+Refinement, added because the static asset's Refinement tab was demo markup
+with no equivalent functionality to extend. On 2026-08-24 the user explicitly
+authorized converting every remaining hub page the same way, and by
+2026-08-25 the migration was complete: Home, Repository, Calendar, Engagement,
+Insights, People, Directory, and Requests are each their own React route,
+faithfully reproducing the approved static asset's layout and visual
+behaviour page by page (including porting pre-existing non-functional demo
+content, such as Repository's "Sumber Pembanding"/"Hubungan SOP & Sumber" tabs
+and Requests's "Tiket Perbaikan SOP"/"Auto-Draft LHA" widgets, as static
+visuals rather than silently dropping or wiring them up). The static asset
+(`procurement-governance-hub (1).html` / `public/procurement-governance-hub.html`)
+and the dynamic `/hub/[page]` iframe route that used to serve it are no longer
+part of the runtime; the asset file is kept on disk only as the approved
+visual reference each page was ported against. The discipline behind the
+original single-asset decision still applies going forward: any further UI
+change should preserve the approved visual behaviour rather than redesign it,
+even though the delivery mechanism is now React throughout.
 
 ## Core data
 
