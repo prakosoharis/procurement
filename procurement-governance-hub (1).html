@@ -238,28 +238,6 @@ tr{cursor:pointer}
 .finding-detail-label{font-size:10px;color:var(--muted-fg);font-weight:600;margin-bottom:2px}
 .finding-detail-text{font-size:11px}
 
-/* Copilot Chat */
-.chat-welcome{text-align:center;padding-top:48px}
-.chat-avatar-lg{width:64px;height:64px;border-radius:16px;background:rgba(153,27,27,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
-.chat-suggestions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px;max-width:600px;margin-left:auto;margin-right:auto}
-.chat-sug-card{padding:16px;text-align:left;cursor:pointer;transition:background .15s}
-.chat-sug-card:hover{background:var(--muted)}
-.chat-sug-icon{width:36px;height:36px;border-radius:8px;background:rgba(153,27,27,0.1);display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--primary)}
-.chat-sug-title{font-size:12px;font-weight:600;margin-bottom:4px}
-.chat-sug-desc{font-size:10px;color:var(--muted-fg);line-height:1.5}
-.chat-messages{max-width:720px;margin:0 auto;padding:24px}
-.chat-msg{display:flex;gap:12px;margin-bottom:20px}
-.chat-msg.user{justify-content:flex-end}
-.chat-msg-avatar{width:28px;height:28px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--primary-fg)}
-.chat-bubble{max-width:75%;border-radius:16px;padding:12px 16px;font-size:12px;line-height:1.7;white-space:pre-wrap}
-.chat-bubble.assistant{background:var(--muted);border-bottom-left-radius:4px}
-.chat-bubble.user{background:var(--primary);color:var(--primary-fg);border-bottom-right-radius:4px}
-.chat-input-bar{border-top:1px solid var(--border);background:var(--card);padding:16px 24px;flex-shrink:0}
-.chat-input-inner{max-width:720px;margin:0 auto;display:flex;gap:12px}
-.chat-input{flex:1;background:var(--muted);border:none;border-radius:12px;padding:0 16px;height:44px;font-size:14px}
-.chat-input:focus{box-shadow:0 0 0 2px rgba(153,27,27,0.15)}
-.chat-send{height:44px;padding:0 20px;border-radius:12px}
-
 /* Calendar page */
 .cal-row{display:flex;align-items:center;gap:16px;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px}
 .cal-row:hover{background:rgba(0,0,0,0.02)}
@@ -585,32 +563,16 @@ Skor Kepatuhan BU Logistik A: 78% (Kategori: Sebagian Patuh)</textarea>
 <div class="page gap-20" id="page-engagement">
   <div id="engagementInsightsContent"><div class="card" style="padding:28px;text-align:center;color:var(--muted-fg)">Memuat Engagement Insights...</div></div>
 </div>
-<div class="page-full" id="page-insights">
-  <div style="border-bottom:1px solid var(--border);background:var(--card);padding:16px 24px;flex-shrink:0">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:40px;height:40px;border-radius:12px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:var(--primary-fg)">✨</div>
-      <div><h2 style="font-size:18px;font-weight:700">AI Compliance Copilot</h2><p style="font-size:12px;color:var(--muted-fg)">Asisten AI untuk kepatuhan regulasi, pembuatan SOP, dan rekomendasi tindakan</p></div>
-    </div>
-  </div>
-  <div style="flex:1;overflow-y:auto" id="chatMessages">
-    <div id="chatWelcome" class="chat-welcome">
-      <div class="chat-avatar-lg">🤖</div>
-      <h3 style="font-size:16px;font-weight:600;margin-bottom:4px">Halo! Saya AI Compliance Copilot</h3>
-      <p style="font-size:14px;color:var(--muted-fg);max-width:420px;margin:0 auto">Saya bisa membantu Anda membuat template SOP, memeriksa status kepatuhan, dan memberikan rekomendasi tindakan strategis.</p>
-      <div class="chat-suggestions">
-        <div class="card chat-sug-card" onclick="sendSuggestion('Tolong buatkan draf template SOP pengadaan logistik')"><div class="chat-sug-icon">📄</div><div class="chat-sug-title">Buat Template SOP</div><div class="chat-sug-desc">Generate draf SOP yang comply dengan regulasi terbaru</div></div>
-        <div class="card chat-sug-card" onclick="sendSuggestion('Bagaimana status revisi SOP untuk BU Logistik A?')"><div class="chat-sug-icon">📋</div><div class="chat-sug-title">Cek Status Kepatuhan</div><div class="chat-sug-desc">Lihat rangkuman status remediasi per Bisnis Unit</div></div>
-        <div class="card chat-sug-card" onclick="sendSuggestion('Apa rekomendasi tindakan untuk perubahan regulasi terbaru?')"><div class="chat-sug-icon">💡</div><div class="chat-sug-title">Rekomendasi Tindakan</div><div class="chat-sug-desc">Dapatkan langkah mitigasi untuk perubahan regulasi</div></div>
-      </div>
-    </div>
-  </div>
-  <div class="chat-input-bar">
-    <div class="chat-input-inner">
-      <input class="chat-input" id="chatInput" type="text" placeholder="Tanyakan seputar kepatuhan, SOP, atau regulasi..." onkeydown="if(event.key==='Enter')sendChat()">
-      <button class="btn btn-primary chat-send" onclick="sendChat()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg> Kirim</button>
-    </div>
-  </div>
-</div>
+<!-- The "AI Compliance Copilot" that lived here was a fully scripted chat widget
+     (getAIResponse() pattern-matched keywords and returned hardcoded regulatory
+     text such as invented POJK citations and ticket numbers) with no backend,
+     no data grounding, and no authorization. It was removed rather than kept as
+     a demo, since it actively fabricated compliance content. The real assistant
+     is app/components/assistant-panel.js, wired to lib/ai/chat/chat-service.js,
+     which only answers from retrieved, scope-checked application data. This
+     page container is kept as an empty placeholder pending its own React
+     screen at /hub/insights. -->
+<div class="page-full" id="page-insights"></div>
 <div class="page gap-20" id="page-people">
   <div class="people-header"><div><h2 style="font-size:20px;font-weight:700">People</h2><p style="font-size:14px;color:var(--muted-fg);margin-top:4px">Struktur organisasi dan profil personel berdasarkan Business Unit.</p></div></div>
   <div class="people-tabs" role="tablist" aria-label="People">
@@ -1369,50 +1331,9 @@ function switchTab(tab){
   document.getElementById('tabUpload').style.color=tab==='upload'?'var(--primary-fg)':'var(--fg)';
 }
 
-// COPILOT CHAT
-var chatMsgs=[];
-function sendChat(){
-  var input=document.getElementById('chatInput');
-  var text=input.value.trim();if(!text)return;
-  chatMsgs.push({role:'user',content:text});
-  input.value='';
-  renderChat();
-  setTimeout(function(){
-    chatMsgs.push({role:'assistant',content:getAIResponse(text)});
-    renderChat();
-  },1000);
-}
-function sendSuggestion(text){
-  document.getElementById('chatInput').value=text;
-  sendChat();
-}
-function renderChat(){
-  var container=document.getElementById('chatMessages');
-  var html='';
-  chatMsgs.forEach(function(m){
-    if(m.role==='user'){
-      html+='<div class="chat-msg user"><div class="chat-bubble user">'+escHtml(m.content)+'</div></div>';
-    } else {
-      html+='<div class="chat-msg"><div class="chat-msg-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div class="chat-bubble assistant">'+escHtml(m.content)+'</div></div>';
-    }
-  });
-  container.innerHTML=html;
-  container.scrollTop=container.scrollHeight;
-  // hide welcome
-  var w=document.getElementById('chatWelcome');
-  if(w) w.style.display=chatMsgs.length>0?'none':'block';
-}
-function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function getAIResponse(msg){
-  var l=msg.toLowerCase();
-  if(l.includes('template')||l.includes('draf')||l.includes('buatkan'))
-    return 'Berikut draf template SOP Pengadaan Logistik yang sesuai dengan POJK No. 12/2026:\n\nBAB 1 — TUJUAN & RUANG LINGKUP\n1.1 SOP ini bertujuan mengatur proses pengadaan barang dan jasa.\n1.2 Berlaku untuk seluruh pengadaan dengan nilai di atas Rp 10.000.000.\n\nBAB 2 — PROSES PENGADAAN\n2.1 Pengajuan melalui sistem e-Procurement.\n2.2 Pengadaan > Rp 100 juta: wajib tender terbuka minimal 3 peserta.\n\nBAB 3 — EVALUASI VENDOR\n3.1 Evaluasi wajib mencakup: kualifikasi teknis, kapasitas finansial, dan due diligence.\n\nBAB 4 — PELAPORAN\n4.1 Laporan triwulanan kepada Dewan Komisaris dan OJK.';
-  if(l.includes('status')||l.includes('revisi')||l.includes('remediasi'))
-    return 'Status Remediasi — BU Logistik A:\n\nTKT-001: Revisi klausul tender terbuka — In Progress (60%)\nTKT-002: Tambah evaluasi kualifikasi teknis — To Do\nTKT-003: Ubah frekuensi pelaporan — To Do\n\nRekomendasi: Prioritaskan TKT-001 (risiko tinggi).';
-  if(l.includes('rekomendasi')||l.includes('tindakan')||l.includes('mitigasi'))
-    return 'Langkah Mitigasi — Perubahan POJK No. 12/2026:\n\n1. Identifikasi Dampak (Minggu 1) — Gap analysis SOP vs regulasi baru\n2. Revisi SOP (Minggu 2-3) — Update proses tender & evaluasi vendor\n3. Sosialisasi & Pelatihan (Minggu 4)\n4. Monitoring & Evaluasi (Ongoing)\n\nBatas waktu kepatuhan: 90 hari sejak POJK diterbitkan.';
-  return 'Saya adalah AI Compliance Copilot. Saya bisa membantu:\n\n1. Membuat Template SOP\n2. Cek Status Kepatuhan\n3. Rekomendasi Tindakan\n\nSilakan ajukan pertanyaan spesifik!';
-}
+// The scripted "Copilot Chat" that lived here (getAIResponse pattern-matching
+// keywords to hardcoded, fabricated regulatory text) was removed. See the
+// page-insights container above for why.
 
 function applyDashboardRole(role){var isSuper=role==='SUPER_USER',isCorporate=role==='CORPORATE_GOVERNANCE',isAdmin=isCorporate||isSuper,isBU=role==='BUSINESS_UNIT_PIC',isComplianceManager=isAdmin,quickActions=document.getElementById('quickActions'),exception=document.querySelector('[data-quick-action="exception"]'),upload=document.querySelector('[data-quick-action="upload"]'),copilot=document.querySelector('[data-quick-action="copilot"]');document.querySelectorAll('.admin-only').forEach(function(el){el.style.display=isAdmin?'':'none'});document.querySelectorAll('.super-user-only').forEach(function(el){el.style.display=isSuper?'':'none'});document.querySelectorAll('.compliance-manager-only').forEach(function(el){el.style.display=isComplianceManager?'':'none'});document.querySelectorAll('[data-request-menu],[data-request-quick-action]').forEach(function(el){el.style.display=''});document.querySelectorAll('[data-directory-menu]').forEach(function(el){el.style.display=isBU?'none':''});document.querySelectorAll('[data-people-menu]').forEach(function(el){el.style.display=(isAdmin||isBU)?'':'none'});if(exception)exception.style.display=(isBU||isSuper)?'':'none';if(upload)upload.style.display=isComplianceManager?'':'none';if(quickActions&&copilot&&(isAdmin||isBU))quickActions.prepend(copilot)}
 
