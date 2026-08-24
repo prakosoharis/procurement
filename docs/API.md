@@ -175,6 +175,15 @@ conversation. Retention is operational, not automatic -- see
 
 ## AI-assisted Refinement
 
+`/hub/refinement` is a dedicated React page, not the static hub asset. Every
+other hub page keeps rendering `procurement-governance-hub.html` in an iframe;
+this is the one screen with genuinely new functionality -- starting an AI
+analysis, reviewing candidate findings, recording a human decision -- that the
+static asset has no equivalent for. Its Refinement tab remains demo markup and
+was left untouched. `app/hub/[page]/page.js` no longer lists `'refinement'`:
+Next.js gives a static route priority over a dynamic one at the same path, so
+`app/hub/refinement/page.js` intercepts it regardless.
+
 | Method | Route | Purpose |
 | --- | --- | --- |
 | GET, POST | `/api/governance/refinement/:versionId/ai-runs` | List analyses for a SOP version, or start one against approved reference sources. |

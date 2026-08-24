@@ -14,6 +14,17 @@ Next.js application. Route Handlers provide data and mutations to that
 interface. Product screens are served through `/` and `/hub/:page`; backend
 authorization remains on the server through Route Handlers and shared services.
 
+An earlier full React rewrite of this interface (parallel routes under
+`app/sop-governance/*`, `app/refinement/*`, and others) was built and then
+deliberately removed on 2026-08-01 in favor of the single static asset above --
+see commit `chore: remove revamp interface`. `/hub/refinement` is a narrow,
+deliberate exception to that decision: a dedicated React page for AI-assisted
+Refinement, added because the static asset's Refinement tab is demo markup with
+no equivalent functionality to extend, not because the single-asset decision
+was reconsidered. Every other hub page continues to render the static asset in
+an iframe. Do not use `/hub/refinement` as precedent for converting another hub
+page to React without the same kind of explicit approval.
+
 ## Core data
 
 - **BusinessUnit**, **OrganizationGroup**, **Industry**, and **SopCategory**

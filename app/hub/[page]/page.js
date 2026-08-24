@@ -8,7 +8,11 @@ import { AiFeatureFlag, isAiFeatureEnabled } from '../../../lib/ai/feature-flags
 import { requirePageAccess } from '../../../lib/authorization/require-user';
 import { can, Permission } from '../../../lib/authorization/permissions';
 
-const pages = new Set(['requests', 'repository', 'refinement', 'calendar', 'engagement', 'insights', 'people', 'directory']);
+// 'refinement' is intentionally absent: app/hub/refinement/page.js is a
+// static route at the same path and Next.js gives it priority over this
+// dynamic [page] route, so it is never reached for that value. Listing it
+// here too would be misleading about which file actually serves it.
+const pages = new Set(['requests', 'repository', 'calendar', 'engagement', 'insights', 'people', 'directory']);
 export const dynamic = 'force-dynamic';
 
 export default async function HubPage({ params }) {
