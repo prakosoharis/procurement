@@ -49,3 +49,16 @@ test("the profile search is debounced client-side before hitting the real API", 
   assert.match(source, /timerRef\.current = setTimeout\(\(\) => load\(value\), 220\);/);
   assert.match(source, /peopleRequest\(`\/api\/people\/profiles\?q=\$\{encodeURIComponent\(q\)\}`\)/);
 });
+
+test("the org chart renders the approved hub's classic top-down connector-line layout (CSS pseudo-elements), not a plain indented list", async () => {
+  const source = await read("../app/hub/people/org-chart.js");
+  assert.match(source, /\.people-tree li:before, \.people-tree li:after \{ content: ''; position: absolute;/);
+  assert.match(source, /\.people-tree li:last-child:before \{ border-right: 1px solid #cbd5e1;/);
+});
+
+test("a filtered-out node stays in the DOM (hidden via className) rather than being removed, since the connector CSS depends on :first-child/:last-child seeing every sibling", async () => {
+  const source = await read("../app/hub/people/org-chart.js");
+  assert.doesNotMatch(source, /if \(visibleIds && !visibleIds\.has\(node\.id\)\) return null;/);
+  assert.match(source, /const isHidden = visibleIds && !visibleIds\.has\(node\.id\);/);
+  assert.match(source, /<li className=\{isHidden \? 'people-hidden' : ''\}>/);
+});

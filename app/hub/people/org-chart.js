@@ -39,31 +39,82 @@ function matchesQuery(node, query) {
   return haystack.includes(query);
 }
 
+// Faithful port of the static hub's classic top-down org chart: rows of
+// sibling boxes centered under a shared parent, connected by CSS
+// pseudo-element lines (peopleNode()/lines 266-280 of the approved asset).
+// React inline styles can't express :before/:after, so the connector rules
+// live in the <style> block TreeStyles renders once per OrgChart mount.
+// Non-matching nodes stay in the DOM with a hidden class (not removed via
+// early return) because the connector CSS depends on :first-child/
+// :last-child/:only-child selectors seeing every sibling.
+function TreeStyles() {
+  return <style>{`
+    .people-tree, .people-tree ul { list-style: none; margin: 0; padding: 0; position: relative; }
+    .people-tree { display: flex; justify-content: center; align-items: flex-start; min-width: max-content; }
+    .people-tree ul { display: flex; justify-content: center; align-items: flex-start; width: max-content; padding-top: 30px; }
+    .people-tree li { position: relative; display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; width: max-content; text-align: center; padding: 30px 10px 0; }
+    .people-tree > li { padding-top: 0; margin: 0; }
+    .people-tree > li:before, .people-tree > li:after { display: none; }
+    .people-tree li:before, .people-tree li:after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 30px; border-top: 1px solid #cbd5e1; }
+    .people-tree li:after { right: auto; left: 50%; border-left: 1px solid #cbd5e1; }
+    .people-tree li:only-child:after, .people-tree li:only-child:before { display: none; }
+    .people-tree li:only-child { padding-top: 0; }
+    .people-tree li:first-child:before, .people-tree li:last-child:after { border: 0 none; }
+    .people-tree li:last-child:before { border-right: 1px solid #cbd5e1; border-radius: 0 7px 0 0; }
+    .people-tree li:first-child:after { border-radius: 7px 0 0 0; }
+    .people-tree > li > ul:before, .people-tree ul ul:before { content: ''; position: absolute; top: 0; left: 50%; height: 30px; border-left: 1px solid #cbd5e1; }
+    .people-tree li.people-hidden { display: none; }
+    .people-node { width: 238px; text-align: left; background: #fff; border: 1px solid #e2e5ea; border-radius: 10px; box-shadow: 0 2px 7px rgba(15,23,42,.06); overflow: hidden; cursor: pointer; }
+    .people-node:hover { border-color: #f0aaaa; box-shadow: 0 5px 14px rgba(153,27,27,.12); }
+    .people-node.is-match { border: 2px solid #991b1b; }
+    .people-node.is-vacant .people-node-occupants { color: #a16207; }
+    .people-node-head { padding: 11px 12px 8px; border-bottom: 1px solid #e2e5ea; }
+    .people-node-title { font-size: 12px; font-weight: 700; line-height: 1.35; }
+    .people-node-code { font-size: 10px; font-family: monospace; color: #6b7280; margin-top: 3px; }
+    .people-node-occupants { padding: 10px 12px; font-size: 11px; line-height: 1.55; min-height: 43px; }
+    .people-node-occupant { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .people-node-foot { padding: 7px 12px; background: #eff1f4; font-size: 10px; color: #6b7280; display: flex; justify-content: space-between; gap: 6px; }
+    .people-collapse { border: 0; background: transparent; color: #991b1b; cursor: pointer; font-size: 11px; padding: 0; }
+    .people-chart-viewport { min-height: 360px; max-height: 680px; overflow: auto; background-image: linear-gradient(90deg,rgba(148,163,184,.07) 1px,transparent 1px),linear-gradient(rgba(148,163,184,.07) 1px,transparent 1px); background-size: 20px 20px; padding: 26px; }
+    .people-tree-stage { min-width: max-content; transform-origin: top left; padding: 8px 16px 30px; }
+  `}</style>;
+}
+
 function PositionNode({ node, index, collapsed, forceExpanded, visibleIds, matchIds, onToggle, onOpen }) {
-  if (visibleIds && !visibleIds.has(node.id)) return null;
   const children = index.byParent[node.id] || [];
   const isCollapsed = collapsed.has(node.id) && !forceExpanded.has(node.id);
   const isMatch = matchIds?.has(node.id);
+  const isHidden = visibleIds && !visibleIds.has(node.id);
   const vacant = !node.occupants.length;
   const shown = node.occupants.slice(0, 3);
   const extra = node.occupants.length - shown.length;
 
-  return <li style={{ listStyle: 'none' }}>
-    <div onClick={() => onOpen(node)} style={{
-      cursor: 'pointer', display: 'inline-block', minWidth: 190, padding: 10, borderRadius: 10,
-      border: `1px solid ${isMatch ? PRIMARY : BORDER}`, background: vacant ? '#fef9f4' : CARD, marginBottom: 10
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
-        <b style={{ fontSize: 12.5, color: FG }}>{node.title}</b>
-        {children.length > 0 && <button onClick={(event) => { event.stopPropagation(); onToggle(node.id); }} aria-label={isCollapsed ? 'Perluas' : 'Ciutkan'} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 11, color: MUTED, flexShrink: 0 }}>{isCollapsed ? '▸' : '▾'}</button>}
+  return <li className={isHidden ? 'people-hidden' : ''}>
+    <article
+      className={`people-node${vacant ? ' is-vacant' : ''}${isMatch ? ' is-match' : ''}`}
+      role="button" tabIndex={0}
+      onClick={() => onOpen(node)}
+      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(node); } }}
+      aria-label={`Buka detail posisi ${node.title}${vacant ? ', posisi kosong' : ''}; ${node.occupants.length} personel aktif`}
+    >
+      <div className="people-node-head">
+        <div className="people-node-title">{node.title}</div>
+        <div className="people-node-code">{node.code || 'Tanpa kode'}</div>
       </div>
-      {node.code && <div style={{ fontSize: 10.5, color: MUTED, marginTop: 1 }}>{node.code}</div>}
-      {vacant
-        ? <div style={{ fontSize: 11, color: '#b45309', marginTop: 5, fontWeight: 600 }}>Vakan</div>
-        : shown.map((o) => <div key={o.assignmentId} style={{ fontSize: 11, marginTop: 5 }}>{o.fullName} <span style={{ color: MUTED }}>· {tenureLabel(o.startDate)}</span></div>)}
-      {extra > 0 && <div style={{ fontSize: 10.5, color: MUTED, marginTop: 3 }}>+{extra} lainnya</div>}
-    </div>
-    {children.length > 0 && !isCollapsed && <ul style={{ paddingLeft: 26, marginTop: -4, borderLeft: `1px solid ${BORDER}` }}>
+      <div className="people-node-occupants">
+        {vacant ? <span>＋ Posisi kosong</span> : <>
+          {shown.map((o) => <span key={o.assignmentId} className="people-node-occupant">● {o.fullName} · {tenureLabel(o.startDate)}</span>)}
+          {extra > 0 && <span className="people-node-occupant">+ {extra} personel lainnya</span>}
+        </>}
+      </div>
+      <div className="people-node-foot">
+        {children.length
+          ? <button type="button" className="people-collapse" onClick={(event) => { event.stopPropagation(); onToggle(node.id); }}>{isCollapsed ? `Tampilkan ${children.length} anak` : `Sembunyikan ${children.length} anak`}</button>
+          : <span>0 anak</span>}
+        <span>Detail ›</span>
+      </div>
+    </article>
+    {children.length > 0 && !isCollapsed && <ul>
       {children.map((child) => <PositionNode key={child.id} node={child} index={index} collapsed={collapsed} forceExpanded={forceExpanded} visibleIds={visibleIds} matchIds={matchIds} onToggle={onToggle} onOpen={onOpen} />)}
     </ul>}
   </li>;
@@ -286,18 +337,34 @@ export default function OrgChart({ scopeType, scopeId, capabilities }) {
     </div>;
   }
 
-  return <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 18 }}>
-    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
-      <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari jabatan atau nama personel…" style={{ ...fieldStyle, maxWidth: 280 }} />
-      <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+  const occupied = structure.nodes.filter((n) => !n.vacancy).length;
+
+  return <div style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
+    <TreeStyles />
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 12, padding: '14px 16px 0' }}>
+      {[['Total Posisi', structure.nodes.length], ['Posisi Terisi', occupied], ['Posisi Kosong', structure.nodes.length - occupied], ['Struktur Berlaku', structure.structure.name]].map(([label, value]) => (
+        <div key={label} style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12 }}>
+          <div style={{ fontSize: 10, color: MUTED }}>{label}</div>
+          <div style={{ fontSize: typeof value === 'number' ? 22 : 14, fontWeight: 700, marginTop: 4 }}>{value}</div>
+        </div>
+      ))}
+    </div>
+
+    <div style={{ padding: '14px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div><h3 style={{ fontSize: 15, fontWeight: 700 }}>Struktur Organisasi</h3><p style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>Klik posisi untuk melihat detail dan tindakan yang tersedia.</p></div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari jabatan atau nama personel…" style={{ ...fieldStyle, maxWidth: 220 }} />
         <button onClick={() => setZoom((z) => Math.max(.55, Math.round((z - .1) * 100) / 100))} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, cursor: 'pointer' }}>−</button>
-        <button onClick={() => setZoom(1)} style={{ padding: '0 10px', height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, cursor: 'pointer', fontSize: 12 }}>{Math.round(zoom * 100)}%</button>
+        <span style={{ fontSize: 11, minWidth: 36, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
         <button onClick={() => setZoom((z) => Math.min(1.45, Math.round((z + .1) * 100) / 100))} style={{ width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, cursor: 'pointer' }}>+</button>
+        <button onClick={() => setZoom(1)} style={{ padding: '0 12px', height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, cursor: 'pointer', fontSize: 12 }}>Pusatkan</button>
+        {capabilities.canEditStructure && <button disabled title="Struktur aktif sudah memiliki root" style={{ padding: '0 12px', height: 32, borderRadius: 8, border: 'none', background: PRIMARY, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'default', opacity: .5 }}>＋ Tambah Posisi</button>}
       </div>
     </div>
-    <div style={{ overflow: 'auto', padding: 8 }}>
-      <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left', width: 'fit-content' }}>
-        <ul style={{ padding: 0, margin: 0 }}>
+
+    <div className="people-chart-viewport">
+      <div className="people-tree-stage" style={{ transform: `scale(${zoom})` }}>
+        <ul className="people-tree">
           <PositionNode node={root} index={index} collapsed={collapsed} forceExpanded={forceExpanded} visibleIds={visibleIds} matchIds={matchIds}
             onToggle={(id) => setCollapsed((current) => { const next = new Set(current); next.has(id) ? next.delete(id) : next.add(id); return next; })}
             onOpen={(node) => setOpenNodeId(node.id)} />
