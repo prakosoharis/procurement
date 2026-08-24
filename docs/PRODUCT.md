@@ -38,6 +38,28 @@ four roles respectively.
 Menu availability and permitted actions are determined by the authenticated
 user's role and Business Unit scope.
 
+## Assistant
+
+An in-application assistant answers questions about Procurement Governance Hub
+data: SOP and document compliance, submissions, refinement findings, audit
+appointments, and organization positions. It is available from every page as a
+panel in the application shell; the approved hub interface is not modified.
+
+The assistant answers only from records the signed-in user is already permitted
+to see. Authorization and Business Unit scope are applied in server code before
+any question reaches the model, audit appointments follow the stricter calendar
+rule, and personal contact details are never included.
+
+Where no AI runtime is configured, the assistant can run in a data-summary mode
+that answers factual list and count questions directly from Hub records. Those
+answers are labelled as data summaries rather than AI analysis, and the same
+authorization and Business Unit scope apply.
+
+Questions outside Procurement Governance Hub are declined. When the application
+holds no information for a question, the assistant says so rather than
+producing an answer; a real zero result is reported as zero. Assistant output is
+informational and never changes a document, decision, or approval.
+
 ## Document controls
 
 SOPs belong to a Business Unit and may be classified by group, industry,

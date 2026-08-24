@@ -14,6 +14,8 @@
     "db:vector:verify": "node scripts/verify-pgvector.js",
     "env:check": "node --env-file-if-exists=.env scripts/validate-environment.js",
     "ai:smoke": "node --env-file-if-exists=.env scripts/ai-smoke.js",
+    "refinement:offline:prepare": "node --env-file-if-exists=.env scripts/refinement-prepare-offline.js",
+    "refinement:offline:import": "node --env-file-if-exists=.env scripts/refinement-import-offline.js",
     "db:seed": "prisma db seed",
     "db:seed:production": "node prisma/seed-production.js",
     "db:clone:local-to-neon": "node scripts/clone-local-postgres-to-neon.js",

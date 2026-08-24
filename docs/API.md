@@ -110,6 +110,123 @@ never a manually calculated total.
 | POST | `/api/governance/refinement/clarifications/:clarificationId/respond` | Submit an assigned Business Unit clarification response. |
 | POST | `/api/governance/refinement/clarifications/:clarificationId/close` | Close a responded clarification. |
 
+## AI
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/api/ai/chat` | Ask the Procurement Governance Hub assistant a question. Returns `answer`, `dataAvailable`, `references`, `inScope`, `topics`, and `conversationId`. |
+| GET | `/api/ai/chat/conversations` | List the caller's own chatbot conversation threads. `?userId=` is honoured only for actors with `ACTIVITY_LOG_VIEW`; otherwise it is ignored and the caller's own conversations are returned. |
+| GET | `/api/ai/chat/conversations/:conversationId` | One conversation's transcript with every message. Requires ownership or `ACTIVITY_LOG_VIEW`; otherwise `404`, so a conversation's existence is not disclosed either. |
+| GET | `/api/ai/health` | Superuser-only AI runtime check. Makes one small provider request and returns provider, model, latency, and feature-flag state. Returns `503` when the provider is unconfigured or unreachable. |
+
+Responses carry `mode`: `AI` for a provider answer, `DATA_SUMMARY` for a
+deterministic answer built from records without a provider call, and
+`OUT_OF_SCOPE` for a refused question. An interface must label a `DATA_SUMMARY`
+answer as such rather than present it as AI analysis.
+
+`POST /api/ai/chat` accepts `{ "question": string, "history": [{ "role": "user"|"assistant", "content": string }] }`.
+The question is limited to 2,000 characters and history to the six most recent
+turns of 1,000 characters each; a caller-supplied `system` turn is discarded
+rather than forwarded. Requests are rate limited per user.
+
+The route runs authentication, authorization, rate limiting, deterministic scope
+classification, and scoped retrieval **before** any provider call. An
+out-of-scope question is answered deterministically, is recorded as an
+`AiEvent` with `BLOCKED_SCOPE`, and never reaches the model. Retrieved context
+is restricted to the caller's effective Business Unit scope, follows the
+stricter calendar rule for audit appointments, and never contains personal
+contact data, certification credential IDs, or evidence links.
+
+The assembled context states how many records were found, how many were omitted
+for size, and which topics failed to load, so a genuine zero result is reported
+as zero rather than as missing data.
+
+Every citation the model returns is verified against the records that were
+actually retrieved (`lib/ai/chat/grounding.js`) before the response leaves the
+server -- the output schema only constrains a reference's shape, not that it
+points at something real. A reference whose `recordId` (or, failing that,
+`label`) does not match a retrieved record is dropped. If `dataAvailable: true`
+is claimed with zero traceable citations remaining, the whole answer is
+replaced with an honest "cannot be confirmed" response and `dataAvailable` is
+forced to `false`; the event is recorded as `AiEvent.INVALID_OUTPUT` with
+reason `UNGROUNDED_ANSWER`. An honest `dataAvailable: false` answer is never
+altered by this check.
+
+The response never contains a credential, a raw provider payload, or a prompt.
+Provider failures are reported as a fixed code (`AI_NOT_CONFIGURED`,
+`AI_AUTHENTICATION_FAILED`, `AI_RATE_LIMITED`, `AI_TIMEOUT`,
+`AI_INVALID_OUTPUT`, `AI_PROVIDER_UNAVAILABLE`, `AI_DISABLED`) with a safe
+message; the underlying provider error is logged server-side only.
+
+Every exchange is written to `AiChatConversation`/`AiChatMessage` -- the
+literal question and answer text, capped at 4,000 characters, plus `mode`,
+`dataAvailable`, `inScope`, `topics`, and `references`. This is a UAT-quality
+and audit log distinct from `AiUsage`, which is the metered-cost record and
+never holds conversation text. Every mode is recorded, including a rejected
+out-of-scope question and an answer downgraded by the grounding check, so the
+transcript reflects exactly what the caller received. The write is
+best-effort: a transcript failure never changes or blocks the answer returned
+to the caller.
+
+The server assigns `conversationId` on a thread's first turn if the caller does
+not supply one; resending the same id on later turns appends to the same
+conversation. Retention is operational, not automatic -- see
+`scripts/purge-chat-transcripts.js` in the Technical Guide.
+
+## AI-assisted Refinement
+
+`/hub/refinement` is a dedicated React page, not the static hub asset. Every
+other hub page keeps rendering `procurement-governance-hub.html` in an iframe;
+this is the one screen with genuinely new functionality -- starting an AI
+analysis, reviewing candidate findings, recording a human decision -- that the
+static asset has no equivalent for. Its Refinement tab remains demo markup and
+was left untouched. `app/hub/[page]/page.js` no longer lists `'refinement'`:
+Next.js gives a static route priority over a dynamic one at the same path, so
+`app/hub/refinement/page.js` intercepts it regardless.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET, POST | `/api/governance/refinement/:versionId/ai-runs` | List analyses for a SOP version, or start one against approved reference sources. |
+| GET | `/api/governance/refinement/:versionId/ai-runs/:runId` | Analysis status and its candidate findings. |
+| POST | `/api/governance/refinement/ai-findings/:findingId/decision` | Record the human validation decision on one AI candidate finding. |
+
+`POST` accepts `{ "sourceIds": [string] }` and is restricted to Superuser and
+Tim Procurement within the SOP's Business Unit scope. Only approved reference
+sources are accepted; an unapproved or unknown source is rejected. It returns
+`202` for newly queued work and `200` when an identical analysis is reused or is
+already running.
+
+One analysis is one SOP version, one set of source versions, and one
+analysis-method version. That combination is hashed into
+`RefinementJob.fingerprint`, so an identical request reuses the completed result
+instead of paying for the same analysis again, and a duplicate request joins the
+run already in flight.
+
+Analysis runs in the `refinement-analysis` Trigger.dev task, not in the request.
+`RefinementJob.status` advances through `QUEUED`, `PREPARING`, `RETRIEVING`,
+`ANALYZING`, and then `COMPLETED` or `FAILED`, so the UI polls real progress.
+The stored provider error message is never returned; only its classified
+`errorType` is.
+
+Results are candidate findings written to `RefinementFinding` with
+`humanStatus: PENDING`. They are input to human validation and never approve a
+finding, edit the official SOP, or publish a version. MVP input scope is a
+text-layer PDF; a DOCX or scanned PDF is rejected with a stated reason.
+
+Run responses include `generatedOffline`. When it is `true` the analysis was
+produced with Claude Code by a developer and imported, not produced by the
+deployed application calling a provider. **An interface that renders a run must
+display that distinction visibly.** Presenting an imported run as a live
+application result would misrepresent it.
+
+The decision route accepts `{ "decision", "comment", "metadata" }`. It is a thin
+entry point onto the existing `decideRefinementFinding` service, which enforces
+the reviewer role and Business Unit scope, requires a comment for
+`REVISI`/`ABAIKAN`, writes the `ValidationDecision` record, and appends the
+audit event. `decision` accepts the product vocabulary `VALID`, `REVISI`, and
+`ABAIKAN`, mapped onto `ACCEPTED`, `ACCEPTED_WITH_MODIFICATION`, and `REJECTED`;
+the raw `ValidationDecisionType` values remain accepted.
+
 ## Integrations
 
 | Method | Route | Purpose |

@@ -92,6 +92,178 @@ which may incur provider charges:
 npm run ai:smoke
 ```
 
+## AI runtime for Chatbot and Refinement
+
+Chatbot and Refinement call one internal surface, `lib/ai/ai-service.js`. That
+service owns the prompts, output schemas, retry policy, and usage telemetry; a
+provider owns transport only. Neither feature imports an Anthropic client, so
+changing the runtime is a configuration change rather than an application
+rewrite.
+
+```text
+Chatbot ─┐
+         ├─> AIService ─> provider-factory (AI_PROVIDER) ─> AIProvider
+Refinement ┘                                                ├── AnthropicApiProvider
+                                                              └── ZaiProvider
+```
+
+### Supported providers
+
+| `AI_PROVIDER` | Status |
+| --- | --- |
+| `anthropic-api` | Supported. Metered Claude Developer Platform access through `ANTHROPIC_API_KEY`. |
+| `zai` | Supported. z.ai's pay-per-token GLM API, OpenAI-compatible, through `ZAI_API_KEY`. |
+| `claude-max-agent` | Reserved identifier with no deployable implementation. Selecting it fails validation with an explanatory error. |
+
+Anthropic's Legal and compliance policy restricts Free, Pro, and Max OAuth
+credentials to Claude Code and claude.ai, and does not permit routing
+application requests through them on behalf of users. The z.ai GLM Coding Plan
+is under the same constraint: it is sold for use inside a coding tool
+(Claude Code, Cline, OpenCode), not as a general application API. A deployed
+Procurement Governance Hub therefore authenticates with a pay-per-token API
+key -- Anthropic's or z.ai's -- never a coding-tool subscription credential.
+The provider boundary exists so a runtime can be swapped without touching
+Chatbot, Refinement, retrieval, schemas, or the interface.
+
+z.ai's API offers JSON mode only, with no server-side schema enforcement. Its
+provider (`lib/ai/providers/zai-provider.js`) sends the JSON Schema as an
+instruction and validates the parsed response against it
+(`lib/ai/schema-validator.js`) before returning; a mismatch is treated as a
+retryable `AI_INVALID_OUTPUT`. The Anthropic provider does not need this step:
+`messages.parse()` enforces the schema server-side.
+
+### Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `AI_PROVIDER` | Runtime selection: `anthropic-api` or `zai`. Defaults to `anthropic-api`. |
+| `ANTHROPIC_API_KEY` | Server-only credential for `anthropic-api`. Configure in Vercel and in the Trigger.dev environment. |
+| `ANTHROPIC_MODEL` | Defaults to `claude-opus-5`. |
+| `ZAI_API_KEY` | Server-only credential for `zai`. Must be a pay-per-token API key, not a GLM Coding Plan credential. |
+| `ZAI_MODEL` | Defaults to `glm-4.7`. |
+| `ZAI_BASE_URL` | Defaults to `https://api.z.ai/api/paas/v4`. |
+| `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED` | Kill switches. A feature is enabled unless the value is explicitly `false`. |
+| `AI_CHAT_MODE` | `ai` (default) answers through the provider; `data-summary` answers deterministically from retrieved records with no provider call. |
+| `AI_MAX_CONTEXT_TOKENS` | Upper bound applied when building retrieval context. |
+| `AI_REQUEST_TIMEOUT_MS` | Provider request timeout. |
+| `AI_CHAT_RATE_LIMIT_PER_MINUTE` | Per-user chat request ceiling. |
+
+No browser, static hub script, client DTO, or database record receives a
+credential. Provider failures are translated into a fixed code set and a safe
+user message; the underlying provider error is logged server-side only.
+
+### Deployment checklist
+
+| Where | Variables |
+| --- | --- |
+| Vercel | `AI_PROVIDER`, the credential for the selected provider (`ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL` or `ZAI_API_KEY`/`ZAI_MODEL`), `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED`, and the optional budget variables |
+| Trigger.dev | the same AI variables, plus `DATABASE_URL`, `STORAGE_PROVIDER`, and the Google Drive variables the analysis task needs to read documents |
+
+Deploy the Trigger.dev worker with `npm run trigger:deploy` after the web
+application deployment, so a queued analysis is not picked up by an older
+worker build.
+
+### Verifying the deployed runtime
+
+`npm run env:check` validates the provider selection without making a request.
+For a live check, sign in as Superuser and request:
+
+```bash
+curl -s -H "Cookie: session=<session>" https://<deployment>/api/ai/health
+```
+
+The route makes one small structured request and returns provider, model,
+latency, and flag state. It returns `503` when the provider is unreachable or
+unconfigured, and never returns a credential or a raw provider payload.
+
+### Chatbot transcripts and retention
+
+Every chatbot exchange is written to `AiChatConversation`/`AiChatMessage`: the
+literal question and answer text (capped at 4,000 characters), the response
+mode, and its scope/grounding outcome. This is separate from `AiUsage`, which
+tracks cost and never holds conversation text. It exists as a UAT-quality and
+audit log -- to see the real questions users ask, find where an answer came
+back empty or wrong, and keep a record of what a decision-maker was told --
+not as a permanent chat archive.
+
+Every response mode is recorded, including a rejected out-of-scope question and
+an answer the grounding check downgraded, so the transcript always reflects
+what the caller actually received. Writing a transcript never blocks or
+changes the chatbot's answer; a write failure is logged and swallowed.
+
+Visibility follows the existing audit pattern: any authenticated user can read
+their own conversations; `Permission.ACTIVITY_LOG_VIEW` (Superuser, Tim
+Procurement, Executive) is required to read another user's.
+
+Retention is operational, not automatic. Purge conversations whose last message
+is older than a chosen window with a dry run first:
+
+```bash
+node --env-file-if-exists=.env scripts/purge-chat-transcripts.js --days 30
+node --env-file-if-exists=.env scripts/purge-chat-transcripts.js --days 30 --apply
+```
+
+`--apply` is required to actually delete; without it the script only reports
+what would be removed. Deleting a conversation cascades to its messages.
+
+### Chatbot without an API budget
+
+Set `AI_CHAT_MODE=data-summary` to answer from retrieved records without calling
+a provider. It covers factual list and count questions — documents awaiting
+review, mandatory coverage gaps, vacant positions, upcoming audits, open
+findings and submissions — and states plainly when a question needs reasoning it
+cannot do.
+
+Authorization is unchanged: the same scope classifier and the same
+Business-Unit-scoped retrievers run, so an out-of-scope question is still
+refused and no cross-Business-Unit record is ever rendered. Responses carry
+`mode: "DATA_SUMMARY"` and the interface labels them **Ringkasan data · tanpa
+AI**; they must never be presented as AI analysis. Switching back to
+`AI_CHAT_MODE=ai` requires no code change.
+
+### Offline analysis before an API budget exists
+
+The deployed application calls a provider itself. Until an API credential is
+funded, a Refinement analysis can instead be produced by a developer with Claude
+Code on their own machine and imported. This is a legitimate use of Claude Code
+— the subscriber generating content at their own machine — and it is not the
+application routing user requests through a subscription credential, which is
+not permitted.
+
+Prepare the brief. The job is created but no worker is enqueued, so no provider
+is called:
+
+```bash
+npm run refinement:offline:prepare -- --actor admin@example.com --version <sopVersionId> --sources <sourceId,sourceId>
+```
+
+The brief contains the same retrieval context the deployed runner would build,
+the analysis instructions, and the required output schema. Produce the JSON with
+Claude Code, then import it:
+
+```bash
+npm run refinement:offline:import -- --job <jobId> --file hasil.json
+```
+
+The import validates the payload before writing anything, records the run with
+`generatedOffline: true` and `generatedWith: "claude-code"`, and leaves every
+finding awaiting human validation. `AiUsage` is not written, so it stays an
+accurate record of what the deployed application itself spent.
+
+Set `AI_REFINEMENT_ENABLED=false` in the deployment while operating this way:
+imported results remain readable, but the interface does not offer to start a
+run that would fail. Any interface rendering a run must show the
+`generatedOffline` distinction rather than presenting it as a live result.
+
+### Usage and cost accounting
+
+Every call writes an `AiUsage` row with feature, provider, model, prompt
+version, latency, token counts, and an estimated cost derived from the rate
+table in `lib/ai/telemetry.js`. Update `PRICING_VERSION` there whenever a rate
+changes so historical rows stay interpretable. Rate limiting, malformed output,
+retries, and scope refusals are recorded as `AiEvent` rows. Telemetry never
+blocks a feature: a failed write is logged and swallowed.
+
 ## Docker local setup
 
 ```bash
@@ -241,7 +413,12 @@ Run Trigger.dev workers locally:
 npm run trigger:dev
 ```
 
-The initial tasks are `refinement-smoke` and `refinement-pdf-smoke`. Trigger.dev
+The tasks are `refinement-smoke`, `refinement-pdf-smoke`, `sop-blob-transfer`,
+and `refinement-analysis`. `refinement-analysis` runs one AI Refinement job:
+it reads the SOP and source PDFs, builds retrieval context, calls the AI
+service, and writes candidate findings. Its Trigger.dev environment therefore
+needs `ANTHROPIC_API_KEY` and `AI_PROVIDER` in addition to `DATABASE_URL`, the
+Google Drive variables, and `STORAGE_PROVIDER`. Trigger.dev
 requires a configured project id and environment secret key before the local
 worker can connect to the cloud project. If the CLI reports `Project not found`,
 login with the Trigger.dev account/profile that has access to the configured
