@@ -14,12 +14,11 @@ test('Repository begins empty and renders only a loading state until database da
 });
 
 test('The dynamic hub route uses the static asset version containing the current Repository master-data flow', async () => {
-  // Home (app/page.js) is a React page and no longer renders the static
-  // asset at all -- it is intentionally not checked here. Repository,
-  // Calendar, Engagement, Insights, People, and Directory are still served
-  // through app/hub/[page]/page.js as those pages are converted one at a
-  // time; this guards against that route silently serving a stale cached
-  // copy of the asset in the meantime.
+  // Home (app/page.js) and every other converted page are React pages that
+  // no longer render the static asset at all -- they are intentionally not
+  // checked here. Only 'requests' still goes through app/hub/[page]/page.js;
+  // this guards against that route silently serving a stale cached copy of
+  // the asset in the meantime.
   const { readFile } = await import('node:fs/promises');
   const hub = await readFile(new URL('../app/hub/[page]/page.js', import.meta.url), 'utf8');
   assert.match(hub, /v=20260810-05/);
