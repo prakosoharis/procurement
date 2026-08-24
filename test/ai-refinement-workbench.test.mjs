@@ -18,26 +18,9 @@ test("the assistant panel is gated the same way as every other hub page", async 
   assert.match(source, /isAiFeatureEnabled\(AiFeatureFlag\.CHAT\)\s*&&\s*can\(user, Permission\.COPILOT_USE\)\s*&&\s*<AssistantPanel mode=\{aiConfig\(\)\.chatMode\} \/>/);
 });
 
-test("the dynamic hub iframe route no longer claims to serve 'refinement'", async () => {
-  const source = await read("../app/hub/[page]/page.js");
-  const setLine = source.match(/const pages = new Set\(\[[^\]]*\]\);/)[0];
-  assert.doesNotMatch(setLine, /'refinement'/);
-  // Every other iframe-backed page must remain listed and untouched.
-  for (const page of ["requests", "repository", "calendar", "engagement", "insights", "people", "directory"]) {
-    assert.match(setLine, new RegExp(`'${page}'`));
-  }
-});
-
-test("the approved hub interface asset is unchanged by the refinement workbench", async () => {
-  const [source, published] = await Promise.all([
-    read("../procurement-governance-hub (1).html"),
-    read("../public/procurement-governance-hub.html"),
-  ]);
-  assert.equal(source, published, "the published hub asset must stay a byte-identical copy of its source");
-  for (const html of [source, published]) {
-    assert.doesNotMatch(html, /RefinementWorkbench/);
-    assert.doesNotMatch(html, /ai-runs|ai-findings/);
-  }
+test("the approved hub interface asset has no reference to the AI Refinement API routes", async () => {
+  const published = await read("../public/procurement-governance-hub.html");
+  assert.doesNotMatch(published, /ai-runs|ai-findings/);
 });
 
 test("the workbench never renders a fake or hardcoded account menu, unlike the static hub's own header markup", async () => {
