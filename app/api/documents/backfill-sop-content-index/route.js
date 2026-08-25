@@ -32,3 +32,22 @@ export async function POST() {
 
   return NextResponse.json({ queued: versions.length });
 }
+
+// Progress for the Repository UI's indexed-counter: how many approved/
+// published versions have extracted sections vs. not yet. "Not yet" is not a
+// promise of eventual completion -- a DOCX or scanned PDF is skipped by
+// design and stays unindexed -- so the UI presents this as a plain X/Y count
+// rather than a percentage bar that implies it must reach 100%.
+export async function GET() {
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+  if (!canManageBusinessUnit(user)) return NextResponse.json({ error: 'You do not have access to view this.' }, { status: 403 });
+
+  const approvedWhere = { sopDocument: { status: { in: ['APPROVED', 'PUBLISHED'] } } };
+  const [total, indexed] = await Promise.all([
+    db.sopVersion.count({ where: approvedWhere }),
+    db.sopVersion.count({ where: { ...approvedWhere, sections: { some: {} } } })
+  ]);
+
+  return NextResponse.json({ total, indexed, pending: total - indexed });
+}
