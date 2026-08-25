@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createGeminiProvider, GEMINI_DEFAULT_BASE_URL, GEMINI_DEFAULT_MODEL } from "../lib/ai/providers/gemini-provider.js";
+import { createGeminiProvider, GEMINI_DEFAULT_BASE_URL, GEMINI_DEFAULT_MODEL, GEMINI_DEFAULT_REASONING_EFFORT } from "../lib/ai/providers/gemini-provider.js";
 import { AiServiceError } from "../lib/ai/errors.js";
 import { REFINEMENT_RESPONSE_SCHEMA } from "../lib/ai/schemas.js";
 
@@ -49,6 +49,32 @@ test("defaults are the OpenAI-compatible endpoint and gemini-3.7-flash", () => {
   assert.equal(GEMINI_DEFAULT_BASE_URL, "https://generativelanguage.googleapis.com/v1beta/openai/");
   assert.equal(provider.productionReady, true);
   assert.equal(provider.telemetryProvider, "GEMINI");
+});
+
+// --- Thinking budget ---------------------------------------------------------
+// Gemini 3 always thinks, and thinking tokens count against max_tokens. Sending
+// no reasoning_effort made the real free tier return finish_reason "length" with
+// completion_tokens 0 -- the entire budget went to thinking and no answer came
+// back. These tests lock in that reasoning_effort is always sent.
+
+test("reasoning_effort is always sent, defaulting to low, so thinking cannot consume the whole token budget and leave an empty answer", async () => {
+  const client = stubClient(chatResponse({ summary: "s", findings: [] }));
+  const provider = createGeminiProvider({ client });
+  await provider.generateStructured({ prompt: "x", schema: REFINEMENT_RESPONSE_SCHEMA });
+  assert.equal(client.calls[0].reasoning_effort, "low");
+  assert.equal(GEMINI_DEFAULT_REASONING_EFFORT, "low");
+});
+
+test("the reasoning effort is overridable for a paid tier where higher levels are provisioned", async () => {
+  const client = stubClient(chatResponse({ summary: "s", findings: [] }));
+  const provider = createGeminiProvider({ client, reasoningEffort: "high" });
+  await provider.generateStructured({ prompt: "x", schema: REFINEMENT_RESPONSE_SCHEMA });
+  assert.equal(client.calls[0].reasoning_effort, "high");
+});
+
+test("an unsupported reasoning effort is rejected at construction rather than failing per-request", () => {
+  // 'minimal' appears in Gemini's docs but this model rejects it with HTTP 400.
+  assert.throws(() => createGeminiProvider({ apiKey: "k", reasoningEffort: "minimal" }), { code: "AI_NOT_CONFIGURED" });
 });
 
 // --- JSON mode: schema is sent as an instruction, not enforced server-side ---
