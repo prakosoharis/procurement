@@ -22,6 +22,13 @@ test("indexing is idempotent: existing sections for a version are replaced, not 
   assert.match(source, /db\.sopSection\.deleteMany\(\{ where: \{ sopVersionId \} \}\)/);
 });
 
+test("a unique (sopVersionId, pageNumber) constraint makes duplicate pages physically impossible even when two runs for the same version execute concurrently", async () => {
+  const migration = await read("../prisma/migrations/20260826000000_unique_sop_section_page/migration.sql");
+  assert.match(migration, /CREATE UNIQUE INDEX "SopSection_sopVersionId_pageNumber_key" ON "SopSection"\("sopVersionId", "pageNumber"\)/);
+  const schema = await read("../prisma/schema.prisma");
+  assert.match(schema, /@@unique\(\[sopVersionId, pageNumber\]\)/);
+});
+
 test("a DOCX or scanned/no-text PDF is skipped, not treated as an indexing failure -- the document keeps working everywhere else, it just has no searchable content", async () => {
   const source = await read("../lib/sop-content/index-service.js");
   assert.match(source, /if \(isAiServiceError\(error\)\) return \{ indexed: 0, skipped: true, reason: error\.code, message: error\.message \};/);
