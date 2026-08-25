@@ -54,6 +54,14 @@ test("PDF inspection marks text below the configured threshold as not searchable
   assert.equal(result.characterCount, 3);
 });
 
+test("PDF inspection accepts a real Node Buffer, not just a pre-converted Uint8Array (the exact shape lib/ai/refinement/document-text.js's toBuffer() and Buffer.concat produce when reading a stored file)", async () => {
+  const bytes = Buffer.from(searchablePdf("Kebijakan Pengadaan Tender Terbuka"));
+  assert.equal(bytes.constructor, Buffer);
+  const result = await inspectSearchablePdf({ bytes, minimumTextCharacters: 20 });
+  assert.equal(result.isSearchable, true);
+  assert.match(result.text, /Kebijakan Pengadaan Tender Terbuka/);
+});
+
 test("PDF inspection rejects empty input before parsing", async () => {
   await assert.rejects(
     inspectSearchablePdf({ bytes: new Uint8Array() }),
