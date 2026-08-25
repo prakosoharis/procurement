@@ -4,10 +4,10 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("the engagement route requires no extra permission beyond authentication, matching every role's read access", async () => {
+test("the engagement route requires no extra permission beyond authentication, matching every role's read access, but still redirects to /login when there is no valid session", async () => {
   const source = await read("../app/hub/engagement/page.js");
   assert.doesNotMatch(source, /requirePageAccess/);
-  assert.match(source, /currentUser\(\)/);
+  assert.match(source, /requireUser\(\)/);
 });
 
 test("only a non-BU viewer sees the business unit selector", async () => {

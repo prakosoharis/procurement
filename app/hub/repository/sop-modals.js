@@ -175,6 +175,7 @@ export function SopDetailModal({ open, onClose, documentId, canManage, viewerId,
   const [document, setDocument] = useState(null);
   const [error, setError] = useState(null);
   const [approving, setApproving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!open || !documentId) return;
@@ -195,9 +196,23 @@ export function SopDetailModal({ open, onClose, documentId, canManage, viewerId,
     }
   }
 
+  async function remove() {
+    if (!window.confirm(`Hapus draft "${document.title}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    setDeleting(true);
+    try {
+      await fetch(`/api/documents/${document.id}`, { method: 'DELETE' }).then(readJson);
+      onUpdate(null, true);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const hasFile = Boolean(document?.fileKey);
   const isPdf = hasFile && (document.contentType === 'application/pdf' || /\.pdf$/i.test(document.fileName || ''));
   const canApprove = canManage && document?.status === 'DRAFT' && document?.reviewer?.id === viewerId;
+  const canDelete = canManage && document?.status === 'DRAFT';
   const actionStyle = { padding: '0 14px', height: 32, borderRadius: 7, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' };
 
   return <Modal open={open} onClose={onClose} title={document?.title} width={600}>
@@ -245,6 +260,7 @@ export function SopDetailModal({ open, onClose, documentId, canManage, viewerId,
           {canManage && isPdf && <a href={documentFileUrl(document.fileKey, true)} target="_blank" rel="noopener noreferrer" style={actionStyle}>Preview</a>}
           {canManage && hasFile && <a href={documentFileUrl(document.fileKey, false)} download={document.fileName} style={actionStyle}>Download</a>}
           {canManage && <button onClick={() => onUpdate(document)} style={actionStyle}>Update</button>}
+          {canDelete && <button disabled={deleting} onClick={remove} style={{ ...actionStyle, color: '#b91c1c', borderColor: '#f0caca' }}>{deleting ? 'Menghapus…' : 'Hapus'}</button>}
           {canApprove && <button disabled={approving} onClick={approve} style={{ ...actionStyle, background: PRIMARY, color: '#fff', border: 'none' }}>{approving ? 'Memproses…' : 'Approve'}</button>}
           <button onClick={onClose} style={actionStyle}>Tutup</button>
         </div>
