@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { runRefinementPdfSmoke } from "../lib/refinement/pdf/refinement-pdf-smoke.js";
 import { inspectSearchablePdf } from "../lib/refinement/pdf/searchable-pdf.js";
 
@@ -60,6 +63,16 @@ test("PDF inspection accepts a real Node Buffer, not just a pre-converted Uint8A
   const result = await inspectSearchablePdf({ bytes, minimumTextCharacters: 20 });
   assert.equal(result.isSearchable, true);
   assert.match(result.text, /Kebijakan Pengadaan Tender Terbuka/);
+});
+
+test("pdfjs-dist's worker is resolved through Node's own module resolution, not a bundler-relative path -- pdfjs-dist's default workerSrc ('./pdf.worker.mjs') is resolved relative to its OWN module location, which breaks under Trigger.dev's esbuild task bundle (it relocates the module into .trigger/tmp/build-<hash>/ with no sibling pdf.worker.mjs, throwing 'Setting up fake worker failed: Cannot find module ... pdf.worker.mjs' -- confirmed live against a real Trigger.dev worker before this fix)", async () => {
+  const source = await readFile(new URL("../lib/refinement/pdf/searchable-pdf.js", import.meta.url), "utf8");
+  assert.match(source, /pdfjs\.GlobalWorkerOptions\.workerSrc = import\.meta\.resolve\("pdfjs-dist\/legacy\/build\/pdf\.worker\.mjs"\);/);
+
+  // The resolution target must actually exist -- a passing string-match
+  // alone wouldn't catch a typo'd package path.
+  const workerPath = fileURLToPath(import.meta.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs"));
+  assert.ok(existsSync(workerPath), `expected ${workerPath} to exist`);
 });
 
 test("PDF inspection rejects empty input before parsing", async () => {
