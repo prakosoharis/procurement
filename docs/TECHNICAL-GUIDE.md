@@ -136,12 +136,15 @@ retryable `AI_INVALID_OUTPUT`. The Anthropic provider does not need this step:
 
 | Variable | Purpose |
 | --- | --- |
-| `AI_PROVIDER` | Runtime selection: `anthropic-api` or `zai`. Defaults to `anthropic-api`. |
+| `AI_PROVIDER` | Runtime selection: `anthropic-api`, `zai`, or `gemini`. Defaults to `anthropic-api`. |
 | `ANTHROPIC_API_KEY` | Server-only credential for `anthropic-api`. Configure in Vercel and in the Trigger.dev environment. |
 | `ANTHROPIC_MODEL` | Defaults to `claude-opus-5`. |
 | `ZAI_API_KEY` | Server-only credential for `zai`. Must be a pay-per-token API key, not a GLM Coding Plan credential. |
 | `ZAI_MODEL` | Defaults to `glm-4.7`. |
 | `ZAI_BASE_URL` | Defaults to `https://api.z.ai/api/paas/v4`. |
+| `GEMINI_API_KEY` | Server-only credential for `gemini`, through Google's OpenAI-compatible endpoint. Get a free key from Google AI Studio (aistudio.google.com) -- no billing account required to start. **Free-tier data-usage tradeoff**: Google's free tier terms allow prompts/responses to be used to improve Google's products; the paid tier does not. Since this application's context can include SOP text, Business Unit names, and personnel data, weigh that before sending sensitive content through the free tier. |
+| `GEMINI_MODEL` | Defaults to `gemini-3.7-flash`. |
+| `GEMINI_BASE_URL` | Defaults to `https://generativelanguage.googleapis.com/v1beta/openai/`. |
 | `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED` | Kill switches. A feature is enabled unless the value is explicitly `false`. |
 | `AI_CHAT_MODE` | `ai` (default) answers through the provider; `data-summary` answers deterministically from retrieved records with no provider call. |
 | `AI_MAX_CONTEXT_TOKENS` | Upper bound applied when building retrieval context. |
@@ -156,7 +159,7 @@ user message; the underlying provider error is logged server-side only.
 
 | Where | Variables |
 | --- | --- |
-| Vercel | `AI_PROVIDER`, the credential for the selected provider (`ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL` or `ZAI_API_KEY`/`ZAI_MODEL`), `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED`, and the optional budget variables |
+| Vercel | `AI_PROVIDER`, the credential for the selected provider (`ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL`, `ZAI_API_KEY`/`ZAI_MODEL`, or `GEMINI_API_KEY`/`GEMINI_MODEL`), `AI_CHAT_ENABLED`, `AI_REFINEMENT_ENABLED`, and the optional budget variables |
 | Trigger.dev | the same AI variables, plus `DATABASE_URL`, `STORAGE_PROVIDER`, and the Google Drive variables the analysis task needs to read documents |
 
 Deploy the Trigger.dev worker with `npm run trigger:deploy` after the web

@@ -62,6 +62,18 @@ test("zai is included in the list of supported providers", () => {
   assert.ok(supportedAiProviders().includes("zai"));
 });
 
+test("the factory selects the gemini provider when AI_PROVIDER=gemini", () => {
+  const environment = { AI_PROVIDER: "gemini", GEMINI_API_KEY: "test-gemini-key" };
+  const provider = getAiProvider({ environment, config: aiConfig(environment) });
+  assert.equal(provider.id, "gemini");
+  assert.equal(provider.productionReady, true);
+  assert.equal(provider.telemetryProvider, "GEMINI");
+});
+
+test("gemini is included in the list of supported providers", () => {
+  assert.ok(supportedAiProviders().includes("gemini"));
+});
+
 test("claude-max-agent is a reserved identifier without a deployable runtime", () => {
   const environment = { ...baseEnvironment, AI_PROVIDER: "claude-max-agent" };
   assert.ok(supportedAiProviders().includes("claude-max-agent"));

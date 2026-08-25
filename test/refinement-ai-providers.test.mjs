@@ -123,6 +123,18 @@ test("environment validation rejects claude-max-agent even when zai is otherwise
   assert.match(result.errors.join(" "), /claude-max-agent has no deployable runtime/);
 });
 
+test("environment validation accepts AI_PROVIDER=gemini and warns without GEMINI_API_KEY", () => {
+  const base = { DATABASE_URL: "postgresql://example", AUTH_SECRET: "secret", AI_PROVIDER: "gemini" };
+  const result = validateEnvironment(base);
+  assert.equal(result.valid, true);
+  assert.match(result.warnings.join(" "), /AI_PROVIDER=gemini requires GEMINI_API_KEY/);
+});
+
+test("environment validation is satisfied once AI_PROVIDER=gemini has GEMINI_API_KEY", () => {
+  const result = validateEnvironment({ DATABASE_URL: "postgresql://example", AUTH_SECRET: "secret", AI_PROVIDER: "gemini", GEMINI_API_KEY: "key" });
+  assert.doesNotMatch(result.warnings.join(" "), /GEMINI_API_KEY/);
+});
+
 test("environment validation rejects an unknown AI_PROVIDER value", () => {
   const result = validateEnvironment({ DATABASE_URL: "postgresql://example", AUTH_SECRET: "secret", AI_PROVIDER: "some-other-runtime" });
   assert.equal(result.valid, false);
