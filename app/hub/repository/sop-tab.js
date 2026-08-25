@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BORDER, CARD, FG, MUTED, PRIMARY } from '../_shared/tokens';
 import { fmtDate, readJson } from './repository-api';
 import { CreateSopModal, MasterDataModal, RequirementDocumentsModal, SopDetailModal, UpdateSopModal } from './sop-modals';
@@ -33,6 +33,8 @@ export default function SopTab({ canManage, viewerId }) {
   const [requirementModal, setRequirementModal] = useState(null);
   const [masterDataOpen, setMasterDataOpen] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
+  const [indexStatus, setIndexStatus] = useState(null);
+  const indexPollRef = useRef(null);
 
   async function load() {
     try {
@@ -44,10 +46,41 @@ export default function SopTab({ canManage, viewerId }) {
     }
   }
 
+  async function loadIndexStatus() {
+    try {
+      const status = await fetch('/api/documents/backfill-sop-content-index', { cache: 'no-store' }).then(readJson);
+      setIndexStatus(status);
+      return status;
+    } catch {
+      return null;
+    }
+  }
+
   useEffect(() => { load(); }, []);
   useEffect(() => {
-    if (canManage) fetch('/api/pics').then(readJson).then(setPics).catch(() => {});
+    if (canManage) {
+      fetch('/api/pics').then(readJson).then(setPics).catch(() => {});
+      loadIndexStatus();
+    }
+    return () => { if (indexPollRef.current) clearInterval(indexPollRef.current); };
   }, [canManage]);
+
+  // After a backfill is queued, refresh the indexed-counter every few seconds
+  // so the manager can watch it climb without reloading. Stops when nothing
+  // is pending or after ~2 minutes -- a version that stays pending is a
+  // skipped file (DOCX/scanned PDF, or an unreadable store), not a hang.
+  function watchIndexProgress() {
+    if (indexPollRef.current) clearInterval(indexPollRef.current);
+    let polls = 0;
+    indexPollRef.current = setInterval(async () => {
+      polls += 1;
+      const status = await loadIndexStatus();
+      if (polls >= 24 || (status && status.pending === 0)) {
+        clearInterval(indexPollRef.current);
+        indexPollRef.current = null;
+      }
+    }, 5000);
+  }
 
   const businessUnitOptions = useMemo(() => !overview ? [] : overview.businessUnits.filter((u) => (!groupId || u.organizationGroupId === groupId) && (!industryId || u.industryId === industryId)), [overview, groupId, industryId]);
 
@@ -93,9 +126,12 @@ export default function SopTab({ canManage, viewerId }) {
     setBackfilling(true);
     try {
       const result = await fetch('/api/documents/backfill-sop-content-index', { method: 'POST' }).then(readJson);
-      alert(result.queued
-        ? `${result.queued} dokumen dijadwalkan untuk di-index. Proses berjalan di background, tidak perlu ditunggu di halaman ini.`
-        : 'Semua dokumen yang sudah Approved/Published sudah ter-index. Tidak ada yang perlu dijadwalkan.');
+      if (result.queued) {
+        alert(`${result.queued} dokumen dijadwalkan untuk di-index. Proses berjalan di background — pantau angka "Isi dokumen ter-index" di samping tombol ini; angkanya naik sendiri setiap beberapa detik.`);
+        watchIndexProgress();
+      } else {
+        alert('Semua dokumen yang sudah Approved/Published sudah ter-index. Tidak ada yang perlu dijadwalkan.');
+      }
     } catch (err) {
       alert(err.message);
     } finally {
@@ -113,7 +149,10 @@ export default function SopTab({ canManage, viewerId }) {
   }
 
   return <>
-    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+      {canManage && indexStatus && <span title="Berapa versi dokumen Approved/Published yang isi teksnya sudah bisa dicari AI Copilot. Dokumen non-PDF atau hasil scan tidak dapat di-index dan akan tetap tercatat sebagai belum ter-index." style={{ marginRight: 'auto', fontSize: 11.5, color: indexStatus.pending === 0 ? '#15803d' : MUTED, fontWeight: 600 }}>
+        {indexStatus.pending === 0 ? '✓' : '⏳'} Isi dokumen ter-index: {indexStatus.indexed}/{indexStatus.total} versi
+      </span>}
       {canManage && <button onClick={runBackfill} disabled={backfilling} title="Menjadwalkan indexing isi dokumen untuk SOP yang sudah Approved/Published tapi belum ter-index (mis. diupload sebelum fitur pencarian isi SOP ada). Tidak menunggu proses selesai." style={{ padding: '0 14px', height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12.5, fontWeight: 600, cursor: backfilling ? 'default' : 'pointer', opacity: backfilling ? .6 : 1 }}>{backfilling ? 'Menjadwalkan…' : '🔎 Index Isi Dokumen'}</button>}
       {canManage && <button onClick={() => setMasterDataOpen(true)} style={{ padding: '0 14px', height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>⚙ Kelola Master Data</button>}
       {canManage && <button onClick={() => setCreateTarget(null)} style={{ padding: '0 14px', height: 34, borderRadius: 8, border: 'none', background: PRIMARY, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>+ Buat SOP Baru</button>}

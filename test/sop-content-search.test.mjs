@@ -95,3 +95,19 @@ test("the Repository UI's index button is manager-only, disabled while dispatchi
   assert.match(source, /\{canManage && <button onClick=\{runBackfill\} disabled=\{backfilling\}/);
   assert.match(source, /fetch\('\/api\/documents\/backfill-sop-content-index', \{ method: 'POST' \}\)/);
 });
+
+test("indexing progress is visible: a manager-gated GET reports indexed vs total approved versions, and the UI shows the count and polls it after queueing a backfill", async () => {
+  const route = await read("../app/api/documents/backfill-sop-content-index/route.js");
+  assert.match(route, /export async function GET\(\)/);
+  assert.match(route, /if \(!canManageBusinessUnit\(user\)\) return NextResponse\.json\(\{ error: 'You do not have access to view this\.' \}, \{ status: 403 \}\);/);
+  assert.match(route, /sections: \{ some: \{\} \}/);
+  assert.match(route, /\{ total, indexed, pending: total - indexed \}/);
+
+  const ui = await read("../app/hub/repository/sop-tab.js");
+  assert.match(ui, /Isi dokumen ter-index: \{indexStatus\.indexed\}\/\{indexStatus\.total\} versi/);
+  // Polling stops on its own: either everything pending finished, or the
+  // ~2-minute cap was hit (a version that stays pending is a skipped
+  // DOCX/scanned file, not a hang worth polling forever for).
+  assert.match(ui, /if \(polls >= 24 \|\| \(status && status\.pending === 0\)\)/);
+  assert.match(ui, /watchIndexProgress\(\);/);
+});
