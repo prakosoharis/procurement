@@ -81,3 +81,17 @@ test("the backfill script only targets already-approved/published SOP versions a
   assert.match(source, /status: \{ in: \['APPROVED', 'PUBLISHED'\] \}/);
   assert.match(source, /import \{ indexSopVersion \} from '\.\.\/lib\/sop-content\/index-service\.js';/);
 });
+
+test("the backfill API route (for an admin to trigger from the Repository UI, since a deployment like Vercel has no shell to run the CLI script from) is manager-gated the same way document creation is, only queries versions with zero sections yet, and dispatches without waiting for a single PDF to finish parsing", async () => {
+  const source = await read("../app/api/documents/backfill-sop-content-index/route.js");
+  assert.match(source, /if \(!canManageBusinessUnit\(user\)\) return NextResponse\.json\(\{ error: 'You do not have access to run this\.' \}, \{ status: 403 \}\);/);
+  assert.match(source, /where: \{ sopDocument: \{ status: \{ in: \['APPROVED', 'PUBLISHED'\] \} \}, sections: \{ none: \{\} \} \}/);
+  assert.match(source, /sopContentIndex\.trigger\(\{ sopVersionId: version\.id \}\)\.catch\(/);
+  assert.doesNotMatch(source, /await indexSopVersion/, "the route must dispatch background jobs, not run extraction inline and block the response");
+});
+
+test("the Repository UI's index button is manager-only, disabled while dispatching, and never blocks on the response body beyond the queue count", async () => {
+  const source = await read("../app/hub/repository/sop-tab.js");
+  assert.match(source, /\{canManage && <button onClick=\{runBackfill\} disabled=\{backfilling\}/);
+  assert.match(source, /fetch\('\/api\/documents\/backfill-sop-content-index', \{ method: 'POST' \}\)/);
+});

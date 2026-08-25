@@ -32,6 +32,7 @@ export default function SopTab({ canManage, viewerId }) {
   const [detailDocumentId, setDetailDocumentId] = useState(null);
   const [requirementModal, setRequirementModal] = useState(null);
   const [masterDataOpen, setMasterDataOpen] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
 
   async function load() {
     try {
@@ -88,6 +89,20 @@ export default function SopTab({ canManage, viewerId }) {
 
   const draftCount = overview.documents.filter((d) => d.status === 'DRAFT').length;
 
+  async function runBackfill() {
+    setBackfilling(true);
+    try {
+      const result = await fetch('/api/documents/backfill-sop-content-index', { method: 'POST' }).then(readJson);
+      alert(result.queued
+        ? `${result.queued} dokumen dijadwalkan untuk di-index. Proses berjalan di background, tidak perlu ditunggu di halaman ini.`
+        : 'Semua dokumen yang sudah Approved/Published sudah ter-index. Tidak ada yang perlu dijadwalkan.');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setBackfilling(false);
+    }
+  }
+
   function openRequirementAction(businessUnit, documentType) {
     const docs = matrix.byKey[requirementKey(businessUnit.id, documentType.id)] || [];
     if (documentType.category === 'ADDITIONAL' || docs.length) {
@@ -99,6 +114,7 @@ export default function SopTab({ canManage, viewerId }) {
 
   return <>
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+      {canManage && <button onClick={runBackfill} disabled={backfilling} title="Menjadwalkan indexing isi dokumen untuk SOP yang sudah Approved/Published tapi belum ter-index (mis. diupload sebelum fitur pencarian isi SOP ada). Tidak menunggu proses selesai." style={{ padding: '0 14px', height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12.5, fontWeight: 600, cursor: backfilling ? 'default' : 'pointer', opacity: backfilling ? .6 : 1 }}>{backfilling ? 'Menjadwalkan…' : '🔎 Index Isi Dokumen'}</button>}
       {canManage && <button onClick={() => setMasterDataOpen(true)} style={{ padding: '0 14px', height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>⚙ Kelola Master Data</button>}
       {canManage && <button onClick={() => setCreateTarget(null)} style={{ padding: '0 14px', height: 34, borderRadius: 8, border: 'none', background: PRIMARY, color: '#fff', fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>+ Buat SOP Baru</button>}
     </div>
