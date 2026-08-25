@@ -593,12 +593,30 @@ model SopVersion {
   auditReviews                  AuditReview[]
   generatedSubmissionConversion SubmissionConversion?    @relation("SubmissionConversionResultVersion")
   sourceSubmissionConversions   SubmissionConversion[]   @relation("SubmissionConversionSourceVersion")
+  sections                      SopSection[]
 
   @@unique([sopDocumentId, versionNo])
   @@index([lifecycleState])
   @@index([nextReviewAt])
   @@index([reviewerId])
   @@index([submittedById])
+}
+
+// One row per extracted PDF page of an approved SOP version, searched by the
+// AI Copilot chatbot (lib/ai/chat/retrievers/sop-content.js). searchVector is
+// a generated tsvector column added via raw SQL in the migration -- Prisma
+// cannot model tsvector directly, same approach already used for pgvector
+// (see prisma/migrations/20260803000000_enable_pgvector).
+model SopSection {
+  id             String     @id @default(cuid())
+  sopVersionId   String
+  sopVersion     SopVersion @relation(fields: [sopVersionId], references: [id], onDelete: Cascade)
+  pageNumber     Int
+  text           String
+  characterCount Int
+  createdAt      DateTime   @default(now())
+
+  @@index([sopVersionId])
 }
 
 model DocumentType {
