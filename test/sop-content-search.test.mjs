@@ -29,9 +29,16 @@ test("a unique (sopVersionId, pageNumber) constraint makes duplicate pages physi
   assert.match(schema, /@@unique\(\[sopVersionId, pageNumber\]\)/);
 });
 
-test("a DOCX or scanned/no-text PDF is skipped, not treated as an indexing failure -- the document keeps working everywhere else, it just has no searchable content", async () => {
+test("a DOCX or scanned/no-text PDF is skipped, but an infrastructure failure (wrapped cause: Drive auth, module resolution, corrupt read) fails the run visibly instead of masquerading as a skip", async () => {
   const source = await read("../lib/sop-content/index-service.js");
-  assert.match(source, /if \(isAiServiceError\(error\)\) return \{ indexed: 0, skipped: true, reason: error\.code, message: error\.message \};/);
+  assert.match(source, /if \(isAiServiceError\(error\) && !error\.cause\) \{/);
+  assert.match(source, /return \{ indexed: 0, skipped: true, reason: error\.code, message: error\.message \};/);
+  assert.match(source, /throw error;/);
+});
+
+test("pdfjs-dist is external in the Trigger.dev build so the deployed worker resolves pdf.worker.mjs from a real node_modules, matching dev behaviour", async () => {
+  const config = await read("../trigger.config.ts");
+  assert.match(config, /external: \["pdfjs-dist"\]/);
 });
 
 test("indexing is queued (not awaited/blocking) from both places a SOP version becomes official: the direct approve route and the governance publishing service", async () => {
