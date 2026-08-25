@@ -616,6 +616,13 @@ model SopSection {
   characterCount Int
   createdAt      DateTime   @default(now())
 
+  // Indexing is delete-then-create in one transaction, which is idempotent
+  // for sequential runs -- but two runs for the SAME version executing
+  // concurrently (e.g. the backfill button clicked twice before the worker
+  // finishes) could interleave under READ COMMITTED such that both insert.
+  // This constraint makes that physically impossible: the second concurrent
+  // transaction conflicts and aborts, leaving exactly one clean set of pages.
+  @@unique([sopVersionId, pageNumber])
   @@index([sopVersionId])
 }
 
