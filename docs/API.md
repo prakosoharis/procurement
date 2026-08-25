@@ -124,6 +124,18 @@ deterministic answer built from records without a provider call, and
 `OUT_OF_SCOPE` for a refused question. An interface must label a `DATA_SUMMARY`
 answer as such rather than present it as AI analysis.
 
+The chatbot can also answer questions about a SOP's actual text content (e.g.
+"apa isi Pasal 3.2"), not just its metadata. Text is extracted page-by-page
+from an `APPROVED`/`PUBLISHED` version's PDF (`lib/sop-content/index-service.js`,
+triggered automatically on approve/publish, or backfilled with
+`node --env-file-if-exists=.env scripts/backfill-sop-content-index.mjs`) and
+searched with PostgreSQL full-text search (`lib/ai/chat/retrievers/sop-content.js`).
+DOCX and scanned/no-text-layer PDFs are not indexed; the document still works
+everywhere else, chat retrieval just has no content records for it. This
+topic has no `DATA_SUMMARY` renderer -- "what does this SOP say" is a
+reasoning/quoting question the deterministic mode cannot answer, so it is
+silently absent from that mode's answer rather than attempted.
+
 `POST /api/ai/chat` accepts `{ "question": string, "history": [{ "role": "user"|"assistant", "content": string }] }`.
 The question is limited to 2,000 characters and history to the six most recent
 turns of 1,000 characters each; a caller-supplied `system` turn is discarded
