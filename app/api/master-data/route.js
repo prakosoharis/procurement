@@ -10,16 +10,17 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
 
-  const [groups, industries, businessUnits, documentTypes] = await Promise.all([
+  const [groups, industries, businessUnits, documentTypes, companySizes] = await Promise.all([
     db.organizationGroup.findMany({ orderBy: { name: 'asc' } }),
     db.industry.findMany({ orderBy: { name: 'asc' } }),
     db.businessUnit.findMany({
-      select: { id: true, name: true, groupName: true, industry: true, organizationGroupId: true, industryId: true },
+      select: { id: true, name: true, groupName: true, industry: true, organizationGroupId: true, industryId: true, companySizeId: true },
       orderBy: { name: 'asc' }
     }),
-    db.documentType.findMany({ orderBy: { sortOrder: 'asc' } })
+    db.documentType.findMany({ orderBy: { sortOrder: 'asc' } }),
+    db.companySize.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] })
   ]);
-  return NextResponse.json({ groups, industries, businessUnits, documentTypes });
+  return NextResponse.json({ groups, industries, businessUnits, documentTypes, companySizes });
 }
 
 export async function POST(request) {
@@ -37,6 +38,12 @@ export async function POST(request) {
     }
     if (kind === 'industry') {
       return NextResponse.json(await db.industry.create({ data: { name: name.trim() } }), { status: 201 });
+    }
+    if (kind === 'companySize') {
+      // sortOrder keeps Kecil/Menengah/Besar in a meaningful order rather
+      // than alphabetical, which would read as Besar/Kecil/Menengah.
+      const last = await db.companySize.findFirst({ orderBy: { sortOrder: 'desc' }, select: { sortOrder: true } });
+      return NextResponse.json(await db.companySize.create({ data: { name: name.trim(), sortOrder: (last?.sortOrder ?? 0) + 1 } }), { status: 201 });
     }
     if (kind === 'businessUnit') {
       if (!organizationGroupId || !industryId) {
@@ -108,28 +115,33 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Corporate Governance access required' }, { status: 403 });
   }
 
-  const { kind, businessUnitId, organizationGroupId, industryId } = await request.json();
+  const { kind, businessUnitId, organizationGroupId, industryId, companySizeId } = await request.json();
   if (kind !== 'businessUnit' || !businessUnitId || !organizationGroupId || !industryId) {
     return NextResponse.json({ error: 'Business Unit, group, and industry are required.' }, { status: 400 });
   }
 
   try {
     const updated = await db.$transaction(async (tx) => {
-      const [businessUnit, group, industry] = await Promise.all([
+      // Company size stays optional: the Business Units that existed before
+      // this field was introduced must keep saving without one.
+      const [businessUnit, group, industry, companySize] = await Promise.all([
         tx.businessUnit.findUnique({ where: { id: businessUnitId } }),
         tx.organizationGroup.findUnique({ where: { id: organizationGroupId } }),
-        tx.industry.findUnique({ where: { id: industryId } })
+        tx.industry.findUnique({ where: { id: industryId } }),
+        companySizeId ? tx.companySize.findUnique({ where: { id: companySizeId } }) : Promise.resolve(null)
       ]);
       if (!businessUnit || !group || !industry) {
         throw new Error('INVALID_MASTER_DATA_REFERENCE');
       }
+      if (companySizeId && !companySize) throw new Error('INVALID_MASTER_DATA_REFERENCE');
       const next = await tx.businessUnit.update({
         where: { id: businessUnit.id },
         data: {
           groupName: group.name,
           industry: industry.name,
           organizationGroupId: group.id,
-          industryId: industry.id
+          industryId: industry.id,
+          companySizeId: companySize?.id ?? null
         }
       });
       await tx.auditLog.create({

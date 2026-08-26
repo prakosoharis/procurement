@@ -274,6 +274,8 @@ model BusinessUnit {
   organizationGroup                 OrganizationGroup?        @relation(fields: [organizationGroupId], references: [id])
   industryId                        String?
   industryMaster                    Industry?                 @relation(fields: [industryId], references: [id])
+  companySizeId                     String?
+  companySize                       CompanySize?              @relation(fields: [companySizeId], references: [id])
   users                             User[]
   sops                              SopDocument[]
   requestedSopRequests              SopRequest[]              @relation("RequestedSopBusinessUnit")
@@ -314,10 +316,57 @@ model OrganizationGroup {
 }
 
 model Industry {
-  id            String         @id @default(cuid())
-  name          String         @unique
-  businessUnits BusinessUnit[]
-  createdAt     DateTime       @default(now())
+  id                String             @id @default(cuid())
+  name              String             @unique
+  businessUnits     BusinessUnit[]
+  documentTemplates DocumentTemplate[]
+  createdAt         DateTime           @default(now())
+}
+
+// Editable master data, deliberately not an enum: the categories a business
+// actually uses (Kecil/Menengah/Besar, or something else) are theirs to
+// define and change, exactly like Industry.
+model CompanySize {
+  id                String             @id @default(cuid())
+  name              String             @unique
+  sortOrder         Int                @default(0)
+  businessUnits     BusinessUnit[]
+  documentTemplates DocumentTemplate[]
+  createdAt         DateTime           @default(now())
+}
+
+// A starting-point file a Business Unit downloads, edits offline, gets
+// approved outside the application, and only then uploads as a Draft SOP
+// through the normal Repository flow. The application stores and serves it;
+// it never authors or alters the content.
+//
+// industryId / companySizeId are nullable and mean "applies to all": one
+// generic Ethic Policy template can serve every industry instead of being
+// duplicated per combination. Matching prefers the most specific row.
+//
+// Templates are intentionally NOT indexed for chatbot search -- they are
+// blank examples, and the assistant must never quote one as if it were a
+// Business Unit's governing policy.
+model DocumentTemplate {
+  id             String       @id @default(cuid())
+  documentTypeId String
+  documentType   DocumentType @relation(fields: [documentTypeId], references: [id])
+  industryId     String?
+  industry       Industry?    @relation(fields: [industryId], references: [id])
+  companySizeId  String?
+  companySize    CompanySize? @relation(fields: [companySizeId], references: [id])
+  title          String
+  description    String?
+  fileKey        String
+  fileName       String
+  fileSize       Int?
+  contentType    String
+  uploadedById   String?
+  uploadedBy     User?        @relation("DocumentTemplateUploader", fields: [uploadedById], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([documentTypeId])
 }
 
 model User {
@@ -337,6 +386,7 @@ model User {
   auditLogs                         AuditLog[]
   approvedVersions                  SopVersion[]              @relation("VersionApprover")
   ownedSopDocuments                 SopDocument[]             @relation("DocumentOwner")
+  uploadedDocumentTemplates         DocumentTemplate[]        @relation("DocumentTemplateUploader")
   requestMessages                   RequestMessage[]
   ticketNotifications               TicketNotification[]
   createdAuditEvents                AuditEvent[]              @relation("AuditEventCreator")
@@ -652,13 +702,14 @@ model SopSection {
 }
 
 model DocumentType {
-  id        String        @id @default(cuid())
-  code      String        @unique
-  name      String        @unique
+  id        String             @id @default(cuid())
+  code      String             @unique
+  name      String             @unique
   category  String
   sortOrder Int
   documents SopDocument[]
-  createdAt DateTime      @default(now())
+  templates DocumentTemplate[]
+  createdAt DateTime           @default(now())
 }
 
 model SopRequest {

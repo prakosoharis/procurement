@@ -5,8 +5,9 @@ import { BG, BORDER, FG, MUTED, PRIMARY } from '../_shared/tokens';
 import SopTab from './sop-tab';
 import SourcesTab from './sources-tab';
 import LinksTab from './links-tab';
+import TemplatesTab from './templates-tab';
 
-const TABS = [['sop', 'SOP'], ['sources', 'Sumber Pembanding'], ['links', 'Hubungan SOP & Sumber']];
+const TABS = [['sop', 'SOP'], ['templates', 'Template'], ['sources', 'Sumber Pembanding'], ['links', 'Hubungan SOP & Sumber']];
 
 export default function RepositoryPage({ role, viewerId }) {
   const [section, setSection] = useState('sop');
@@ -29,6 +30,7 @@ export default function RepositoryPage({ role, viewerId }) {
       </div>
 
       {section === 'sop' && <SopTab canManage={canManage} viewerId={viewerId} />}
+      {section === 'templates' && <TemplatesTab />}
       {section === 'sources' && <SourcesTab />}
       {section === 'links' && <LinksTab />}
     </div>

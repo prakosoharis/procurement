@@ -359,6 +359,12 @@ export function MasterDataModal({ open, onClose, overview, onChanged }) {
         <label style={labelStyle}>Nama industry</label><input name="name" required placeholder="Contoh: Financial Services" style={{ ...fieldStyle, marginBottom: 10 }} />
         <button type="submit" disabled={busy} style={{ padding: '0 14px', height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Tambah Industry</button>
       </form>
+      <form onSubmit={(e) => { e.preventDefault(); submitJson('/api/master-data', 'POST', { kind: 'companySize', name: e.target.name.value.trim() }, e.target); }} style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14 }}>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>▤ Ukuran Perusahaan</div>
+        <p style={{ fontSize: 11, color: MUTED, margin: '4px 0 8px' }}>Dipakai untuk memilah template dokumen. Tambahkan sesuai urutan dari terkecil.</p>
+        <label style={labelStyle}>Nama ukuran</label><input name="name" required placeholder="Contoh: Kecil" style={{ ...fieldStyle, marginBottom: 10 }} />
+        <button type="submit" disabled={busy} style={{ padding: '0 14px', height: 32, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>+ Tambah Ukuran</button>
+      </form>
     </div>
     <form onSubmit={(e) => {
       e.preventDefault();
@@ -377,14 +383,17 @@ export function MasterDataModal({ open, onClose, overview, onChanged }) {
     <form onSubmit={(e) => {
       e.preventDefault();
       const form = e.target;
-      submitJson('/api/master-data', 'PATCH', { kind: 'businessUnit', businessUnitId: editUnitId, organizationGroupId: form.organizationGroupId.value, industryId: form.industryId.value }, null);
+      submitJson('/api/master-data', 'PATCH', { kind: 'businessUnit', businessUnitId: editUnitId, organizationGroupId: form.organizationGroupId.value, industryId: form.industryId.value, companySizeId: form.companySizeId.value || null }, null);
     }} style={{ border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, marginBottom: 20 }}>
       <div style={{ fontSize: 13, fontWeight: 700 }}>↻ Perbarui Klasifikasi Business Unit</div>
       <p style={{ fontSize: 11, color: MUTED, margin: '4px 0 8px' }}>Ubah Group atau Industry Business Unit yang sudah ada. Nama Business Unit dan folder Google Drive tidak diubah.</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
         <div><label style={labelStyle}>Business Unit</label><select value={editUnitId} onChange={(e) => setEditUnitId(e.target.value)} required style={fieldStyle}><option value="">Pilih Business Unit</option>{overview.businessUnits.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
         <div><label style={labelStyle}>Group</label><select name="organizationGroupId" required defaultValue={editUnit?.organizationGroupId || ''} key={`g-${editUnitId}`} style={fieldStyle}><option value="" disabled>Pilih Group</option>{overview.groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
         <div><label style={labelStyle}>Industry</label><select name="industryId" required defaultValue={editUnit?.industryId || ''} key={`i-${editUnitId}`} style={fieldStyle}><option value="" disabled>Pilih Industry</option>{overview.industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</select></div>
+        {/* Optional on purpose: the Business Units that predate this field
+            must still be editable without being forced to pick a size. */}
+        <div><label style={labelStyle}>Ukuran <span style={{ color: MUTED, fontWeight: 400 }}>(opsional)</span></label><select name="companySizeId" defaultValue={editUnit?.companySizeId || ''} key={`s-${editUnitId}`} style={fieldStyle}><option value="">Belum ditentukan</option>{(overview.companySizes || []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>
       </div>
       <button type="submit" disabled={busy || !editUnitId} style={{ padding: '0 14px', height: 32, borderRadius: 8, border: 'none', background: PRIMARY, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Simpan Perubahan</button>
     </form>
