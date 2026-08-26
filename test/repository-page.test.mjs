@@ -70,6 +70,20 @@ test("a soft-deleted (ARCHIVED) document is excluded from the Repository listing
   assert.match(source, /where:\{\.\.\.sopDocumentScopeWhere\(user\),status:\{not:'ARCHIVED'\}\}/);
 });
 
+test("the SOP library paginates at 10 rows and resets to page 1 when a filter changes, so a filter applied from a later page cannot leave the table blank", async () => {
+  const source = await read("../app/hub/repository/sop-tab.js");
+  assert.match(source, /const PAGE_SIZE = 10;/);
+  assert.match(source, /useEffect\(\(\) => \{ setPage\(1\); \}, \[search, groupId, industryId, buId\]\);/);
+  // Clamped on render too: deleting the last row of the final page shrinks
+  // the list without any filter changing.
+  assert.match(source, /const currentPage = Math\.min\(page, pageCount\);/);
+  assert.match(source, /const pagedDocuments = filteredDocuments\.slice\(\(currentPage - 1\) \* PAGE_SIZE, currentPage \* PAGE_SIZE\);/);
+  // The table renders the page slice, while the count line still describes
+  // the whole filtered set.
+  assert.match(source, /\{pagedDocuments\.length \? pagedDocuments\.map/);
+  assert.match(source, /dari \{filteredDocuments\.length\} dokumen/);
+});
+
 test("the delete button in the SOP detail modal is gated the same way as the API (manager + draft-only) and confirms before calling DELETE", async () => {
   const source = await read("../app/hub/repository/sop-modals.js");
   assert.match(source, /const canDelete = canManage && document\?\.status === 'DRAFT';/);

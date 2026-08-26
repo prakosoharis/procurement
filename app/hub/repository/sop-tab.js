@@ -14,6 +14,14 @@ const fieldStyle = { fontSize: 12.5, padding: '0 10px', height: 32, borderRadius
 const STATUS_LABEL = { DRAFT: 'Draft', APPROVED: 'Approved', ARCHIVED: 'Archived' };
 const STATUS_TONE = { DRAFT: { background: '#fef3c7', color: '#b45309' }, APPROVED: { background: '#dcfce7', color: '#15803d' }, ARCHIVED: { background: '#eff1f4', color: MUTED } };
 
+const PAGE_SIZE = 10;
+
+const pageButtonStyle = (disabled) => ({
+  height: 28, padding: '0 10px', borderRadius: 7, border: `1px solid ${BORDER}`,
+  background: CARD, color: disabled ? MUTED : FG, fontSize: 11.5, fontWeight: 600,
+  cursor: disabled ? 'default' : 'pointer', opacity: disabled ? .5 : 1
+});
+
 function requirementKey(businessUnitId, documentTypeId) {
   return `${businessUnitId}|${documentTypeId}`;
 }
@@ -24,6 +32,7 @@ export default function SopTab({ canManage, viewerId }) {
   const [pics, setPics] = useState([]);
   const [view, setView] = useState('library');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [groupId, setGroupId] = useState('');
   const [industryId, setIndustryId] = useState('');
   const [buId, setBuId] = useState('');
@@ -105,6 +114,17 @@ export default function SopTab({ canManage, viewerId }) {
       return true;
     });
   }, [overview, search, groupId, industryId, buId]);
+
+  // Changing a filter can shrink the result set below the current page, which
+  // would leave the table blank with no obvious cause. Go back to page 1
+  // whenever the filters change.
+  useEffect(() => { setPage(1); }, [search, groupId, industryId, buId]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredDocuments.length / PAGE_SIZE));
+  // Also clamp on the render itself: deleting the last document on the final
+  // page shrinks the list without any filter changing.
+  const currentPage = Math.min(page, pageCount);
+  const pagedDocuments = filteredDocuments.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const matrix = useMemo(() => {
     if (!overview) return null;
@@ -206,7 +226,7 @@ export default function SopTab({ canManage, viewerId }) {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 960 }}>
           <thead><tr>{['ID', 'Nama SOP', 'Group', 'Bisnis Unit', 'Industry', 'PIC', 'Versi', 'Status', 'Terakhir Diperbarui', 'Aksi'].map((h) => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: MUTED, fontWeight: 600, fontSize: 11 }}>{h}</th>)}</tr></thead>
           <tbody>
-            {filteredDocuments.length ? filteredDocuments.map((d) => (
+            {pagedDocuments.length ? pagedDocuments.map((d) => (
               <tr key={d.id} onClick={() => setDetailDocumentId(d.id)} style={{ cursor: 'pointer' }}>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontFamily: 'monospace', color: MUTED }}>{d.id.slice(0, 8)}</td>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontWeight: 500 }}>{d.title}{d.status === 'DRAFT' && <div style={{ fontSize: 10, color: MUTED, marginTop: 3 }}>Reviewer: {d.reviewer?.name || 'Belum ditugaskan'}</div>}</td>
@@ -231,6 +251,16 @@ export default function SopTab({ canManage, viewerId }) {
             )) : <tr><td colSpan={10} style={{ textAlign: 'center', color: MUTED, padding: 24 }}>Tidak ada SOP yang sesuai dengan filter.</td></tr>}
           </tbody>
         </table>
+        {filteredDocuments.length > 0 && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 12px', borderTop: `1px solid ${BORDER}`, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11.5, color: MUTED }}>
+            Menampilkan {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredDocuments.length)} dari {filteredDocuments.length} dokumen
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1} style={pageButtonStyle(currentPage <= 1)}>‹ Sebelumnya</button>
+            <span style={{ fontSize: 11.5, color: MUTED, minWidth: 78, textAlign: 'center' }}>Hal. {currentPage} / {pageCount}</span>
+            <button onClick={() => setPage(currentPage + 1)} disabled={currentPage >= pageCount} style={pageButtonStyle(currentPage >= pageCount)}>Berikutnya ›</button>
+          </div>
+        </div>}
       </div>
     ) : (
       <div style={{ border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'auto', background: CARD }}>
