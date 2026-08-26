@@ -9,8 +9,13 @@ test('Repository accepts multiple named documents for one Business Unit and type
     readFile(new URL('../procurement-governance-hub (1).html', import.meta.url), 'utf8')
   ]);
 
-  assert.match(service, /businessUnitId, documentTypeId, title, status: \{ not: 'ARCHIVED' \}/);
-  assert.match(service, /businessUnitId, documentTypeId, title \}/);
+  // The uniqueness key is now scope-aware (businessUnitId OR
+  // organizationGroupId via scopeKey), but still keyed on the owner plus
+  // documentTypeId plus title -- so one owner can hold several differently
+  // named documents of the same type.
+  assert.match(service, /\.\.\.scopeKey, documentTypeId, title, status: \{ not: 'ARCHIVED' \}/);
+  assert.match(service, /\.\.\.scopeKey, documentTypeId, title \}/);
+  assert.match(service, /const scopeKey = isGroup \? \{ organizationGroupId \} : \{ businessUnitId \};/);
   assert.match(legacyRoute, /businessUnitId, documentTypeId, title, status: \{ not: 'ARCHIVED' \}/);
   assert.match(ui, /documentByRequirementKey\[key\]\|\|\(documentByRequirementKey\[key\]=\[\]\)\)\.push\(d\)/);
   assert.match(ui, /requirementDocuments\(bu,type,index\)/);

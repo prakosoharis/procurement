@@ -40,6 +40,7 @@ function matches(record, where) {
 
 const SMI = "bu-smi";
 const SUN = "bu-sun";
+const GROUP_SSM = "grp-ssm";
 
 const fixtures = {
   businessUnit: [
@@ -51,8 +52,11 @@ const fixtures = {
     { id: "dt-6", code: "M6", name: "Value Creation", category: "MANDATORY", sortOrder: 6 },
   ],
   sopDocument: [
-    { id: "sop-smi", title: "SOP Pengadaan SMI", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-01"), businessUnit: { id: SMI, name: "SMI" }, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [{ versionNo: "v1.0", approvalStatus: "APPROVED", uploadedAt: new Date("2026-08-01"), reviewer: { name: "Reviewer A" } }] },
-    { id: "sop-sun", title: "SOP RAHASIA SUN", status: "APPROVED", currentVersion: "v2.0", updatedAt: new Date("2026-08-02"), businessUnit: { id: SUN, name: "SUN" }, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [{ versionNo: "v2.0", approvalStatus: "APPROVED", uploadedAt: new Date("2026-08-02"), reviewer: { name: "Reviewer B" } }] },
+    { id: "sop-smi", title: "SOP Pengadaan SMI", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-01"), scopeType: "BUSINESS_UNIT", businessUnitId: SMI, organizationGroupId: null, businessUnit: { id: SMI, name: "SMI" }, organizationGroup: null, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [{ versionNo: "v1.0", approvalStatus: "APPROVED", uploadedAt: new Date("2026-08-01"), reviewer: { name: "Reviewer A" } }] },
+    { id: "sop-sun", title: "SOP RAHASIA SUN", status: "APPROVED", currentVersion: "v2.0", updatedAt: new Date("2026-08-02"), scopeType: "BUSINESS_UNIT", businessUnitId: SUN, organizationGroupId: null, businessUnit: { id: SUN, name: "SUN" }, organizationGroup: null, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [{ versionNo: "v2.0", approvalStatus: "APPROVED", uploadedAt: new Date("2026-08-02"), reviewer: { name: "Reviewer B" } }] },
+    // Issued by the Group that contains SMI: visible to SMI's PIC, but it
+    // must NOT close SMI's own M6 mandatory requirement.
+    { id: "sop-group", title: "Kebijakan Pengadaan Group SSM", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-03"), scopeType: "GROUP", businessUnitId: null, organizationGroupId: GROUP_SSM, businessUnit: null, organizationGroup: { id: GROUP_SSM, name: "SSM", businessUnits: [{ id: SMI }, { id: SUN }] }, documentType: { code: "M6", name: "Value Creation", category: "MANDATORY" }, versions: [{ versionNo: "v1.0", approvalStatus: "APPROVED", uploadedAt: new Date("2026-08-03"), reviewer: { name: "Reviewer C" } }] },
   ],
   sopRequest: [
     { id: "req-smi", title: "Usulan revisi SMI", status: "SUBMITTED", priority: "HIGH", createdAt: new Date("2026-08-03"), reviewedAt: null, requester: { name: "Budi", businessUnitId: SMI, businessUnit: { name: "SMI" } }, sopDocument: { title: "SOP Pengadaan SMI" } },
@@ -152,6 +156,24 @@ test("repository coverage is derived only from documents in scope", async () => 
   assert.deepEqual(coverage.map((record) => record.label), ["SMI"]);
   assert.deepEqual(coverage[0].approvedMandatoryTypes, ["M1"]);
   assert.ok(coverage[0].missingMandatoryTypes.some((entry) => entry.startsWith("M6")));
+});
+
+test("a Business Unit user also sees documents issued by the Group that contains their Business Unit", async () => {
+  const results = await retrieveForTopics({ actor: smiPic, db: fakeDb(), topics: ["repository"] });
+  const documents = results[0].records.filter((record) => record.type === "SOP_DOCUMENT");
+  const group = documents.find((record) => record.label === "Kebijakan Pengadaan Group SSM");
+  assert.ok(group, "the Group document should be visible to a Business Unit inside that Group");
+  // Reported as the Group that issued it, never as if it were a Business Unit.
+  assert.equal(group.issuer, "SSM");
+  assert.equal(group.issuerLevel, "GROUP");
+});
+
+test("a Group document does NOT close a Business Unit's mandatory requirement -- compliance stays strictly per-Business-Unit", async () => {
+  const results = await retrieveForTopics({ actor: smiPic, db: fakeDb(), topics: ["repository"] });
+  const coverage = results[0].records.find((record) => record.type === "REPOSITORY_COVERAGE" && record.label === "SMI");
+  // The Group's approved M6 is visible to SMI, but SMI still lacks its own.
+  assert.ok(!coverage.approvedMandatoryTypes.includes("M6"));
+  assert.ok(coverage.missingMandatoryTypes.some((entry) => entry.startsWith("M6")));
 });
 
 test("chat context never carries personal contact data", async () => {

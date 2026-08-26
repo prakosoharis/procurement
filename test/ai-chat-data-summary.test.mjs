@@ -137,12 +137,14 @@ function stubDb() {
     aiUsage: { count: async () => 0 },
     aiEvent: { create: async ({ data }) => data },
     sopDocument: { findMany: async ({ where }) => {
-      const ids = where?.businessUnit?.id?.in;
+      // Scoping now arrives as sopDocumentScopeWhere's OR (own Business Unit,
+      // or a Group containing it) rather than a businessUnit relation filter.
+      const ids = where?.OR?.[0]?.businessUnitId?.in;
       const all = [
-        { id: "d1", title: "SOP Pengadaan SMI", status: "DRAFT", currentVersion: "v1.0", updatedAt: new Date(), businessUnit: { id: "bu-smi", name: "SMI" }, documentType: { code: "M1", name: "Policy", category: "MANDATORY" }, versions: [{ approvalStatus: "DRAFT", reviewer: { name: "Andi" } }] },
-        { id: "d2", title: "SOP RAHASIA SUN", status: "DRAFT", currentVersion: "v1.0", updatedAt: new Date(), businessUnit: { id: "bu-sun", name: "SUN" }, documentType: { code: "M1", name: "Policy", category: "MANDATORY" }, versions: [{ approvalStatus: "DRAFT", reviewer: { name: "Budi" } }] },
+        { id: "d1", title: "SOP Pengadaan SMI", status: "DRAFT", currentVersion: "v1.0", updatedAt: new Date(), scopeType: "BUSINESS_UNIT", businessUnitId: "bu-smi", businessUnit: { id: "bu-smi", name: "SMI" }, organizationGroup: null, documentType: { code: "M1", name: "Policy", category: "MANDATORY" }, versions: [{ approvalStatus: "DRAFT", reviewer: { name: "Andi" } }] },
+        { id: "d2", title: "SOP RAHASIA SUN", status: "DRAFT", currentVersion: "v1.0", updatedAt: new Date(), scopeType: "BUSINESS_UNIT", businessUnitId: "bu-sun", businessUnit: { id: "bu-sun", name: "SUN" }, organizationGroup: null, documentType: { code: "M1", name: "Policy", category: "MANDATORY" }, versions: [{ approvalStatus: "DRAFT", reviewer: { name: "Budi" } }] },
       ];
-      return ids ? all.filter((d) => ids.includes(d.businessUnit.id)) : all;
+      return ids ? all.filter((d) => ids.includes(d.businessUnitId)) : all;
     } },
     businessUnit: { findMany: async ({ where }) => { const ids = where?.id?.in; const all = [{ id: "bu-smi", name: "SMI" }, { id: "bu-sun", name: "SUN" }]; return ids ? all.filter((u) => ids.includes(u.id)) : all; } },
     documentType: { findMany: async () => [{ id: "dt1", code: "M1", name: "Policy" }] },

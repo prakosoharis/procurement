@@ -15,15 +15,17 @@ const procurement = { id: "user-cg", role: "CORPORATE_GOVERNANCE", businessUnitI
 function stubDb({ usageCount = 0, documents } = {}) {
   const state = { conversations: [], messages: [] };
   const allDocuments = documents ?? [
-    { id: "sop-smi", title: "SOP Pengadaan SMI", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-01"), businessUnit: { id: SMI, name: "SMI" }, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [] },
-    { id: "sop-sun", title: "SOP RAHASIA SUN", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-02"), businessUnit: { id: SUN, name: "SUN" }, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [] },
+    { id: "sop-smi", title: "SOP Pengadaan SMI", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-01"), scopeType: "BUSINESS_UNIT", businessUnitId: SMI, businessUnit: { id: SMI, name: "SMI" }, organizationGroup: null, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [] },
+    { id: "sop-sun", title: "SOP RAHASIA SUN", status: "APPROVED", currentVersion: "v1.0", updatedAt: new Date("2026-08-02"), scopeType: "BUSINESS_UNIT", businessUnitId: SUN, businessUnit: { id: SUN, name: "SUN" }, organizationGroup: null, documentType: { code: "M1", name: "Procurement Policy", category: "MANDATORY" }, versions: [] },
   ];
-  const allowed = (where) => where?.businessUnit?.id?.in ?? where?.id?.in ?? null;
+  // sopDocumentScopeWhere sends an OR (own Business Unit, or a Group holding
+  // it); other models still use the plain id filter.
+  const allowed = (where) => where?.OR?.[0]?.businessUnitId?.in ?? where?.businessUnit?.id?.in ?? where?.id?.in ?? null;
   return {
     state,
     aiUsage: { count: async () => usageCount },
     aiEvent: { create: async ({ data }) => data },
-    sopDocument: { findMany: async ({ where }) => { const ids = allowed(where); return ids ? allDocuments.filter((d) => ids.includes(d.businessUnit.id)) : allDocuments; } },
+    sopDocument: { findMany: async ({ where }) => { const ids = allowed(where); return ids ? allDocuments.filter((d) => ids.includes(d.businessUnitId)) : allDocuments; } },
     businessUnit: { findMany: async ({ where }) => { const ids = allowed(where); const units = [{ id: SMI, name: "SMI", groupName: "SSM", industry: "X" }, { id: SUN, name: "SUN", groupName: "SSM", industry: "Y" }]; return ids ? units.filter((u) => ids.includes(u.id)) : units; } },
     documentType: { findMany: async () => [{ id: "dt-1", code: "M1", name: "Procurement Policy" }] },
     sopRequest: { findMany: async () => [] },

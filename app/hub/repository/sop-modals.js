@@ -37,10 +37,12 @@ function useUpload(onDone) {
 }
 
 export function CreateSopModal({ open, onClose, overview, pics, prefill, onCreated }) {
+  const [scopeType, setScopeType] = useState('BUSINESS_UNIT');
   const [groupId, setGroupId] = useState('');
   const [industryId, setIndustryId] = useState('');
   const [businessUnitId, setBusinessUnitId] = useState('');
   const [documentTypeId, setDocumentTypeId] = useState('');
+  const isGroup = scopeType === 'GROUP';
   const { run, busy, statusText } = useUpload((result) => {
     onCreated(result);
   });
@@ -48,6 +50,9 @@ export function CreateSopModal({ open, onClose, overview, pics, prefill, onCreat
   useEffect(() => {
     if (!open) return;
     const unit = prefill?.businessUnitId ? overview.businessUnits.find((u) => u.id === prefill.businessUnitId) : null;
+    // A prefill always comes from the compliance matrix, which is per
+    // Business Unit, so it can never mean a Group document.
+    setScopeType('BUSINESS_UNIT');
     setGroupId(unit?.organizationGroupId || '');
     setIndustryId(unit?.industryId || '');
     setBusinessUnitId(prefill?.businessUnitId || '');
@@ -56,7 +61,12 @@ export function CreateSopModal({ open, onClose, overview, pics, prefill, onCreat
 
   const businessUnits = useMemo(() => overview.businessUnits.filter((u) => (!groupId || u.organizationGroupId === groupId) && (!industryId || u.industryId === industryId)), [overview, groupId, industryId]);
   const documentTypes = useMemo(() => [...overview.documentTypes].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)), [overview]);
-  const scopedPics = useMemo(() => pics.filter((p) => p.businessUnitId === businessUnitId), [pics, businessUnitId]);
+  // For a Group document the PIC may come from any Business Unit inside that
+  // Group -- the same containment rule the server enforces.
+  const scopedPics = useMemo(() => isGroup
+    ? pics.filter((p) => overview.businessUnits.some((u) => u.id === p.businessUnitId && u.organizationGroupId === groupId))
+    : pics.filter((p) => p.businessUnitId === businessUnitId),
+  [pics, businessUnitId, isGroup, groupId, overview]);
 
   function submit(event) {
     event.preventDefault();
@@ -65,13 +75,19 @@ export function CreateSopModal({ open, onClose, overview, pics, prefill, onCreat
     const title = form.title.value.trim();
     const ownerId = form.ownerId.value;
     const reviewerId = form.reviewerId.value;
-    if (!title || !businessUnitId || !documentTypeId || !ownerId || !reviewerId || !file) {
-      alert('Lengkapi Group, Industry, BU, PIC, reviewer, jenis dokumen, dan file');
+    const owner = isGroup ? groupId : businessUnitId;
+    if (!title || !owner || !documentTypeId || !ownerId || !reviewerId || !file) {
+      alert(isGroup ? 'Lengkapi Group, PIC, reviewer, jenis dokumen, dan file' : 'Lengkapi Group, Industry, BU, PIC, reviewer, jenis dokumen, dan file');
       return;
     }
     run({
       prepareUrl: '/api/documents/direct-upload-sessions', file,
-      metadata: { businessUnitId, documentTypeId, ownerId, reviewerId, title, language: 'id', fileName: file.name, fileSize: file.size, contentType: file.type }
+      metadata: {
+        scopeType,
+        ...(isGroup ? { organizationGroupId: groupId } : { businessUnitId }),
+        documentTypeId, ownerId, reviewerId, title, language: 'id',
+        fileName: file.name, fileSize: file.size, contentType: file.type
+      }
     });
   }
 
@@ -85,16 +101,34 @@ export function CreateSopModal({ open, onClose, overview, pics, prefill, onCreat
         <input name="title" required placeholder="Contoh: Procurement Policy — Kebijakan Umum" style={fieldStyle} />
         <p style={{ fontSize: 10, color: MUTED, marginTop: 5 }}>Satu jenis dokumen dapat memiliki beberapa file untuk Business Unit yang sama. Beri nama yang spesifik agar mudah dibedakan.</p>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      {!prefill && <div>
+        <label style={labelStyle}>Diterbitkan oleh</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {[['BUSINESS_UNIT', 'Business Unit'], ['GROUP', 'Group (holding)']].map(([value, label]) => (
+            <button key={value} type="button" onClick={() => { setScopeType(value); setBusinessUnitId(''); }} style={{
+              flex: 1, height: 34, borderRadius: 8, cursor: 'pointer', fontSize: 12.5, fontWeight: 600,
+              border: `1px solid ${scopeType === value ? PRIMARY : BORDER}`,
+              background: scopeType === value ? 'rgba(153,27,27,.06)' : CARD,
+              color: scopeType === value ? PRIMARY : FG
+            }}>{label}</button>
+          ))}
+        </div>
+        <p style={{ fontSize: 10, color: MUTED, marginTop: 5 }}>
+          {isGroup
+            ? 'Dokumen Group berlaku sebagai acuan bagi Business Unit di bawahnya, tetapi tidak menggantikan kewajiban dokumen masing-masing Business Unit.'
+            : 'Dokumen ini menjadi milik satu Business Unit dan dihitung pada matriks kepatuhannya.'}
+        </p>
+      </div>}
+      <div style={{ display: 'grid', gridTemplateColumns: isGroup ? '1fr' : '1fr 1fr', gap: 12 }}>
         <div><label style={labelStyle}>Group</label><select value={groupId} onChange={(e) => { setGroupId(e.target.value); setBusinessUnitId(''); }} required style={fieldStyle}><option value="">Pilih Group</option>{overview.groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
-        <div><label style={labelStyle}>Industry</label><select value={industryId} onChange={(e) => { setIndustryId(e.target.value); setBusinessUnitId(''); }} required style={fieldStyle}><option value="">Pilih Industry</option>{overview.industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</select></div>
+        {!isGroup && <div><label style={labelStyle}>Industry</label><select value={industryId} onChange={(e) => { setIndustryId(e.target.value); setBusinessUnitId(''); }} required style={fieldStyle}><option value="">Pilih Industry</option>{overview.industries.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}</select></div>}
       </div>
-      <div><label style={labelStyle}>Bisnis Unit</label><select value={businessUnitId} onChange={(e) => setBusinessUnitId(e.target.value)} required style={fieldStyle}><option value="">Pilih Business Unit</option>{businessUnits.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+      {!isGroup && <div><label style={labelStyle}>Bisnis Unit</label><select value={businessUnitId} onChange={(e) => setBusinessUnitId(e.target.value)} required style={fieldStyle}><option value="">Pilih Business Unit</option>{businessUnits.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>}
       <div><label style={labelStyle}>Jenis Dokumen</label><select value={documentTypeId} onChange={(e) => setDocumentTypeId(e.target.value)} required style={fieldStyle}><option value="">Pilih jenis dokumen</option>{documentTypes.map((t) => <option key={t.id} value={t.id}>{t.code} — {t.name}</option>)}</select></div>
       <div>
         <label style={labelStyle}>PIC Penanggung Jawab</label>
-        <select name="ownerId" required defaultValue="" style={fieldStyle}><option value="" disabled>{businessUnitId ? 'Pilih PIC' : 'Pilih Business Unit terlebih dahulu'}</option>{scopedPics.map((p) => <option key={p.id} value={p.id}>{p.name}{p.jobTitle ? ` — ${p.jobTitle}` : ''}</option>)}</select>
-        <p style={{ fontSize: 10, color: MUTED, marginTop: 5 }}>PIC ditampilkan sesuai Business Unit. Tambahkan PIC baru dari menu Directory bila belum tersedia.</p>
+        <select name="ownerId" required defaultValue="" style={fieldStyle}><option value="" disabled>{(isGroup ? groupId : businessUnitId) ? 'Pilih PIC' : (isGroup ? 'Pilih Group terlebih dahulu' : 'Pilih Business Unit terlebih dahulu')}</option>{scopedPics.map((p) => <option key={p.id} value={p.id}>{p.name}{p.jobTitle ? ` — ${p.jobTitle}` : ''}</option>)}</select>
+        <p style={{ fontSize: 10, color: MUTED, marginTop: 5 }}>{isGroup ? 'PIC dapat berasal dari Business Unit mana pun di dalam Group tersebut.' : 'PIC ditampilkan sesuai Business Unit.'} Tambahkan PIC baru dari menu Directory bila belum tersedia.</p>
       </div>
       <div>
         <label style={labelStyle}>Reviewer approval</label>

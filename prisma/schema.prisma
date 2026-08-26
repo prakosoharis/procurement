@@ -309,6 +309,7 @@ model OrganizationGroup {
   businessUnits          BusinessUnit[]
   organizationStructures OrganizationStructure[]
   organizationPositions  OrganizationPosition[]
+  sopDocuments           SopDocument[]
   createdAt              DateTime                @default(now())
 }
 
@@ -527,10 +528,21 @@ model AuditEventParticipant {
   @@index([userId])
 }
 
+// A document is issued either by one Business Unit or by an Organization
+// Group (holding) that covers several. Mirrors OrganizationStructure's
+// scopeType, which already solved the same modelling problem for People, so
+// both menus read the same way.
+//
+// A Group document does NOT satisfy a Business Unit's mandatory-document
+// requirement: the compliance matrix stays strictly per-Business-Unit, and a
+// BU's own document always takes precedence over its Group's for that BU.
 model SopDocument {
   id                    String                 @id @default(cuid())
-  businessUnitId        String
-  businessUnit          BusinessUnit           @relation(fields: [businessUnitId], references: [id])
+  scopeType             SopDocumentScope       @default(BUSINESS_UNIT)
+  businessUnitId        String?
+  businessUnit          BusinessUnit?          @relation(fields: [businessUnitId], references: [id])
+  organizationGroupId   String?
+  organizationGroup     OrganizationGroup?     @relation(fields: [organizationGroupId], references: [id])
   ownerId               String?
   owner                 User?                  @relation("DocumentOwner", fields: [ownerId], references: [id])
   documentTypeId        String?
@@ -553,7 +565,13 @@ model SopDocument {
   auditReviews          AuditReview[]
 
   @@index([businessUnitId, documentTypeId])
+  @@index([organizationGroupId, documentTypeId])
   @@index([categoryId])
+}
+
+enum SopDocumentScope {
+  BUSINESS_UNIT
+  GROUP
 }
 
 model SopVersion {
@@ -1142,7 +1160,11 @@ model GoogleDriveUploadSession {
   id                  String                   @id @default(cuid())
   purpose             GoogleDriveUploadPurpose
   status              GoogleDriveUploadStatus  @default(PENDING)
-  businessUnitId      String
+  // Carries the eventual document's scope through the upload, since the
+  // SopDocument row is only created once the worker finishes the transfer.
+  scopeType           SopDocumentScope         @default(BUSINESS_UNIT)
+  businessUnitId      String?
+  organizationGroupId String?
   sopDocumentId       String?
   documentTypeId      String?
   ownerId             String?
