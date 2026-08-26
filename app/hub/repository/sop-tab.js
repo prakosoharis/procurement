@@ -90,6 +90,13 @@ export default function SopTab({ canManage, viewerId }) {
     if (!overview) return [];
     const keyword = search.trim().toLowerCase();
     return overview.documents.filter((d) => {
+      // A Group document has no Business Unit, so it answers the Group filter
+      // directly and is excluded by any Business-Unit or Industry filter.
+      if (d.scopeType === 'GROUP') {
+        if (buId || industryId) return false;
+        if (groupId && d.organizationGroup?.id !== groupId) return false;
+        return !keyword || `${d.title} ${d.organizationGroup?.name || ''}`.toLowerCase().includes(keyword);
+      }
       const bu = d.businessUnit;
       if (groupId && bu.organizationGroupId !== groupId) return false;
       if (industryId && bu.industryId !== industryId) return false;
@@ -106,6 +113,10 @@ export default function SopTab({ canManage, viewerId }) {
     const byKey = {};
     overview.documents.forEach((d) => {
       if (!d.documentType) return;
+      // Compliance is strictly per Business Unit: a Group document is a
+      // reference for the Business Units under it, but never closes their
+      // mandatory requirement, so it must not enter this matrix at all.
+      if (d.scopeType === 'GROUP') return;
       const key = requirementKey(d.businessUnit.id, d.documentType.id);
       (byKey[key] ||= []).push(d);
     });
@@ -199,9 +210,13 @@ export default function SopTab({ canManage, viewerId }) {
               <tr key={d.id} onClick={() => setDetailDocumentId(d.id)} style={{ cursor: 'pointer' }}>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontFamily: 'monospace', color: MUTED }}>{d.id.slice(0, 8)}</td>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontWeight: 500 }}>{d.title}{d.status === 'DRAFT' && <div style={{ fontSize: 10, color: MUTED, marginTop: 3 }}>Reviewer: {d.reviewer?.name || 'Belum ditugaskan'}</div>}</td>
-                <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}><span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#eff1f4', color: MUTED }}>{d.businessUnit.groupName}</span></td>
-                <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: MUTED }}>{d.businessUnit.name}</td>
-                <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: MUTED }}>{d.businessUnit.industry}</td>
+                <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}><span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#eff1f4', color: MUTED }}>{d.scopeType === 'GROUP' ? d.organizationGroup?.name : d.businessUnit.groupName}</span></td>
+                <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: MUTED }}>
+                  {d.scopeType === 'GROUP'
+                    ? <span title="Diterbitkan di level Group. Tidak menggantikan kewajiban dokumen tiap Business Unit." style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#1d4ed8' }}>Dokumen Group</span>
+                    : d.businessUnit.name}
+                </td>
+                <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: MUTED }}>{d.scopeType === 'GROUP' ? '—' : d.businessUnit.industry}</td>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>{d.owner?.name || '—'}</td>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontFamily: 'monospace' }}>{d.currentVersion}</td>
                 <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}><span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, ...STATUS_TONE[d.status] }}>{STATUS_LABEL[d.status] || d.status}</span></td>

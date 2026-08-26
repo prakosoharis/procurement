@@ -65,7 +65,9 @@ test("deleting a draft also removes its underlying Google Drive file, since an u
 
 test("a soft-deleted (ARCHIVED) document is excluded from the Repository listing", async () => {
   const source = await read("../app/api/repository-overview/route.js");
-  assert.match(source, /where:\{businessUnit:businessUnitWhere,status:\{not:'ARCHIVED'\}\}/);
+  // Scoping is sopDocumentScopeWhere now (own BU, or a Group holding it), so
+  // Group-issued documents are not silently dropped by a relation filter.
+  assert.match(source, /where:\{\.\.\.sopDocumentScopeWhere\(user\),status:\{not:'ARCHIVED'\}\}/);
 });
 
 test("the delete button in the SOP detail modal is gated the same way as the API (manager + draft-only) and confirms before calling DELETE", async () => {

@@ -3,6 +3,7 @@ import { db } from '../../../lib/db';
 import { currentUser } from '../../../lib/current-user';
 import { documentDto } from '../../../lib/documents';
 import { scopeWhere } from '../../../lib/authorization/scope';
+import { sopDocumentScopeWhere } from '../../../lib/sop-scope';
 import { startApiTiming } from '../../../lib/api-performance';
 
 export async function GET() {
@@ -22,11 +23,15 @@ export async function GET() {
   const [businessUnits, documentTypes, documents, groups, industries, reviewers] = await timing.measure('db', () => Promise.all([
     db.businessUnit.findMany({where:businessUnitWhere,select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true},orderBy:{name:'asc'}}),
     db.documentType.findMany({select:{id:true,code:true,name:true,category:true,sortOrder:true},orderBy:{sortOrder:'asc'}}),
+    // Group-scoped documents have no businessUnit, so filtering on the
+    // relation alone would silently hide them; sopDocumentScopeWhere applies
+    // the same "own BU, or a Group containing it" rule People already uses.
     db.sopDocument.findMany({
-      where:{businessUnit:businessUnitWhere,status:{not:'ARCHIVED'}},
+      where:{...sopDocumentScopeWhere(user),status:{not:'ARCHIVED'}},
       select:{
-        id:true,title:true,status:true,language:true,currentVersion:true,updatedAt:true,
+        id:true,title:true,status:true,language:true,currentVersion:true,updatedAt:true,scopeType:true,
         businessUnit:{select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true}},
+        organizationGroup:{select:{id:true,name:true}},
         documentType:{select:{id:true,code:true,name:true,category:true,sortOrder:true}},
         owner:{select:{id:true,name:true,email:true,phone:true,jobTitle:true}},
         versions:{orderBy:{uploadedAt:'desc'},take:1,select:versionSelect}

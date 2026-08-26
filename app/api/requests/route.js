@@ -29,6 +29,11 @@ export async function POST(request){
   if(existing)return NextResponse.json({id:existing.id,duplicate:true},{status:200});
   const sop=await db.sopDocument.findUnique({where:{id:sopDocumentId}});
   if(!sop||sop.status!=='APPROVED')return NextResponse.json({error:'Hanya SOP berstatus Approved yang dapat diajukan untuk revisi.'},{status:400});
+  // Group documents are Repository-only for now: the request flow decides
+  // reviewers and clarification responders from the document's Business Unit,
+  // and there is no agreed rule yet for who represents a Group. Refused with
+  // a clear reason rather than crashing on a null businessUnitId.
+  if(sop.scopeType==='GROUP')return NextResponse.json({error:'Dokumen level Group belum didukung pada alur Request perubahan.'},{status:400});
   if(user.role==='BUSINESS_UNIT_PIC'&&user.businessUnitId!==sop.businessUnitId)return NextResponse.json({error:'Anda hanya dapat mengajukan revisi untuk SOP Business Unit sendiri.'},{status:403});
   try{
     const row=await db.sopRequest.create({data:{clientRequestKey,title,requestType,description,sopDocumentId,changeType,clauseReference,currentText:currentText||null,proposedText,businessImpact:businessImpact||null,priority,requesterId:user.id}});
