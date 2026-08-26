@@ -584,6 +584,13 @@ model SopVersion {
   submittedById                 String?
   submittedBy                   User?                    @relation("SopVersionSubmitter", fields: [submittedById], references: [id])
   contentHash                   String?
+  // Outcome of the last chatbot content-indexing attempt, so the Repository
+  // UI can tell "not processed yet" apart from "cannot be processed". Both
+  // null means never attempted; contentIndexedAt set means searchable;
+  // contentIndexSkipReason set means a known format limitation (scanned PDF,
+  // DOCX) that re-running will never fix.
+  contentIndexedAt              DateTime?
+  contentIndexSkipReason        String?
   publishedForDocument          SopDocument?             @relation("SopDocumentPublishedVersion")
   refinementJobs                RefinementJob[]
   refinementSessions            RefinementSession[]

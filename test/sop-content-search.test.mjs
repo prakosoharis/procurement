@@ -32,7 +32,7 @@ test("a unique (sopVersionId, pageNumber) constraint makes duplicate pages physi
 test("a DOCX or scanned/no-text PDF is skipped, but an infrastructure failure (wrapped cause: Drive auth, module resolution, corrupt read) fails the run visibly instead of masquerading as a skip", async () => {
   const source = await read("../lib/sop-content/index-service.js");
   assert.match(source, /if \(isAiServiceError\(error\) && !error\.cause\) \{/);
-  assert.match(source, /return \{ indexed: 0, skipped: true, reason: error\.code, message: error\.message \};/);
+  assert.match(source, /return recordSkip\(db, sopVersionId, error\.code, humanSkipReason\(error\.message\)\);/);
   assert.match(source, /throw error;/);
 });
 
@@ -99,7 +99,8 @@ test("the backfill script only targets already-approved/published SOP versions a
 test("the backfill API route (for an admin to trigger from the Repository UI, since a deployment like Vercel has no shell to run the CLI script from) is manager-gated the same way document creation is, only queries versions with zero sections yet, and dispatches without waiting for a single PDF to finish parsing", async () => {
   const source = await read("../app/api/documents/backfill-sop-content-index/route.js");
   assert.match(source, /if \(!canManageBusinessUnit\(user\)\) return NextResponse\.json\(\{ error: 'You do not have access to run this\.' \}, \{ status: 403 \}\);/);
-  assert.match(source, /where: \{ sopDocument: \{ status: \{ in: \['APPROVED', 'PUBLISHED'\] \} \}, sections: \{ none: \{\} \} \}/);
+  assert.match(source, /sopDocument: \{ status: \{ in: \['APPROVED', 'PUBLISHED'\] \} \}/);
+  assert.match(source, /sections: \{ none: \{\} \}/);
   assert.match(source, /sopContentIndex\.trigger\(\{ sopVersionId: version\.id \}\)\.catch\(/);
   assert.doesNotMatch(source, /await indexSopVersion/, "the route must dispatch background jobs, not run extraction inline and block the response");
 });
@@ -110,14 +111,33 @@ test("the Repository UI's index button is manager-only, disabled while dispatchi
   assert.match(source, /fetch\('\/api\/documents\/backfill-sop-content-index', \{ method: 'POST' \}\)/);
 });
 
+test("a version that cannot be indexed is recorded with a human-readable reason, so 'not processed yet' is distinguishable from 'cannot be processed'", async () => {
+  const service = await read("../lib/sop-content/index-service.js");
+  assert.match(service, /PDF hasil scan — isinya gambar, tidak ada teks yang bisa dibaca/);
+  assert.match(service, /data: \{ contentIndexSkipReason: humanMessage, contentIndexedAt: null \}/);
+  // A successful index must clear any previous skip reason, or a document
+  // fixed by re-upload would keep showing the old failure.
+  assert.match(service, /data: \{ contentIndexedAt: new Date\(\), contentIndexSkipReason: null \}/);
+});
+
+test("the backfill stops re-queueing versions already known to be un-indexable, which previously made the counter look stuck with no explanation", async () => {
+  const route = await read("../app/api/documents/backfill-sop-content-index/route.js");
+  assert.match(route, /contentIndexSkipReason: null/);
+});
+
 test("indexing progress is visible: a manager-gated GET reports indexed vs total approved versions, and the UI shows the count and polls it after queueing a backfill", async () => {
   const route = await read("../app/api/documents/backfill-sop-content-index/route.js");
   assert.match(route, /export async function GET\(\)/);
   assert.match(route, /if \(!canManageBusinessUnit\(user\)\) return NextResponse\.json\(\{ error: 'You do not have access to view this\.' \}, \{ status: 403 \}\);/);
   assert.match(route, /sections: \{ some: \{\} \}/);
-  assert.match(route, /\{ total, indexed, pending: total - indexed \}/);
+  // pending excludes known-un-indexable versions, so it only counts work a
+  // background job can still complete.
+  assert.match(route, /pending: total - indexed - skippedVersions\.length/);
+  assert.match(route, /skippedDetail: skippedVersions\.map/);
 
   const ui = await read("../app/hub/repository/sop-tab.js");
+  assert.match(ui, /\{indexStatus\.skipped\} tidak bisa di-index — lihat alasan/);
+  assert.match(ui, /Dokumen yang tidak dapat di-index/);
   assert.match(ui, /Isi dokumen ter-index: \{indexStatus\.indexed\}\/\{indexStatus\.total\} versi/);
   // Polling stops on its own: either everything pending finished, or the
   // ~2-minute cap was hit (a version that stays pending is a skipped

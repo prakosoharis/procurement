@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BORDER, CARD, FG, MUTED, PRIMARY } from '../_shared/tokens';
 import { fmtDate, readJson } from './repository-api';
+import Modal from '../_shared/modal';
 import { CreateSopModal, MasterDataModal, RequirementDocumentsModal, SopDetailModal, UpdateSopModal } from './sop-modals';
 
 // Faithful React port of the static hub's real, data-driven "SOP" tab:
@@ -34,6 +35,7 @@ export default function SopTab({ canManage, viewerId }) {
   const [masterDataOpen, setMasterDataOpen] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
   const [indexStatus, setIndexStatus] = useState(null);
+  const [skippedOpen, setSkippedOpen] = useState(false);
   const indexPollRef = useRef(null);
 
   async function load() {
@@ -150,8 +152,15 @@ export default function SopTab({ canManage, viewerId }) {
 
   return <>
     <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
-      {canManage && indexStatus && <span title="Berapa versi dokumen Approved/Published yang isi teksnya sudah bisa dicari AI Copilot. Dokumen non-PDF atau hasil scan tidak dapat di-index dan akan tetap tercatat sebagai belum ter-index." style={{ marginRight: 'auto', fontSize: 11.5, color: indexStatus.pending === 0 ? '#15803d' : MUTED, fontWeight: 600 }}>
-        {indexStatus.pending === 0 ? '✓' : '⏳'} Isi dokumen ter-index: {indexStatus.indexed}/{indexStatus.total} versi
+      {canManage && indexStatus && <span style={{ marginRight: 'auto', fontSize: 11.5, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span title="Berapa versi dokumen Approved/Published yang isi teksnya sudah bisa dicari AI Copilot." style={{ color: indexStatus.pending === 0 ? '#15803d' : MUTED, fontWeight: 600 }}>
+          {indexStatus.pending === 0 ? '✓' : '⏳'} Isi dokumen ter-index: {indexStatus.indexed}/{indexStatus.total} versi
+        </span>
+        {indexStatus.skipped > 0 && <button
+          onClick={() => setSkippedOpen(true)}
+          title="Lihat dokumen yang tidak dapat di-index beserta alasannya"
+          style={{ border: 'none', background: '#fef3c7', color: '#b45309', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, cursor: 'pointer' }}
+        >{indexStatus.skipped} tidak bisa di-index — lihat alasan</button>}
       </span>}
       {canManage && <button onClick={runBackfill} disabled={backfilling} title="Menjadwalkan indexing isi dokumen untuk SOP yang sudah Approved/Published tapi belum ter-index (mis. diupload sebelum fitur pencarian isi SOP ada). Tidak menunggu proses selesai." style={{ padding: '0 14px', height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12.5, fontWeight: 600, cursor: backfilling ? 'default' : 'pointer', opacity: backfilling ? .6 : 1 }}>{backfilling ? 'Menjadwalkan…' : '🔎 Index Isi Dokumen'}</button>}
       {canManage && <button onClick={() => setMasterDataOpen(true)} style={{ padding: '0 14px', height: 34, borderRadius: 8, border: `1px solid ${BORDER}`, background: CARD, color: FG, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}>⚙ Kelola Master Data</button>}
@@ -275,5 +284,16 @@ export default function SopTab({ canManage, viewerId }) {
       onAddDocument={() => { const ctx = requirementModal; setRequirementModal(null); setCreateTarget({ businessUnitId: ctx.businessUnit.id, businessUnitName: ctx.businessUnit.name, documentTypeId: ctx.documentType.id, documentTypeName: ctx.documentType.name }); }} />}
 
     {canManage && <MasterDataModal open={masterDataOpen} onClose={() => setMasterDataOpen(false)} overview={overview} onChanged={() => { load(); }} />}
+
+    <Modal open={skippedOpen} onClose={() => setSkippedOpen(false)} title="Dokumen yang tidak dapat di-index" subtitle="Isi dokumen ini tidak bisa dicari oleh AI Copilot. Mengklik tombol Index lagi tidak akan mengubahnya." width={620}>
+      {(indexStatus?.skippedDetail || []).map((item, index) => (
+        <div key={index} style={{ padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600 }}>{item.title}</div>
+          <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{item.businessUnit} · {item.fileName}</div>
+          <div style={{ fontSize: 11.5, color: '#b45309', marginTop: 5 }}>{item.reason}</div>
+        </div>
+      ))}
+      {!indexStatus?.skippedDetail?.length && <p style={{ fontSize: 12.5, color: MUTED }}>Tidak ada dokumen yang dilewati.</p>}
+    </Modal>
   </>;
 }

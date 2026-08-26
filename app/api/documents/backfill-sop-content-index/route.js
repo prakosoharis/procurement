@@ -21,8 +21,16 @@ export async function POST() {
   if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   if (!canManageBusinessUnit(user)) return NextResponse.json({ error: 'You do not have access to run this.' }, { status: 403 });
 
+  // Excludes versions already known to be un-indexable (scanned PDF, DOCX):
+  // re-running them can only fail the same way, and re-queueing them made the
+  // progress counter look stuck with nothing on screen explaining why. A
+  // replacement file arrives as a NEW version, which indexes on approve.
   const versions = await db.sopVersion.findMany({
-    where: { sopDocument: { status: { in: ['APPROVED', 'PUBLISHED'] } }, sections: { none: {} } },
+    where: {
+      sopDocument: { status: { in: ['APPROVED', 'PUBLISHED'] } },
+      sections: { none: {} },
+      contentIndexSkipReason: null
+    },
     select: { id: true }
   });
 
@@ -44,10 +52,31 @@ export async function GET() {
   if (!canManageBusinessUnit(user)) return NextResponse.json({ error: 'You do not have access to view this.' }, { status: 403 });
 
   const approvedWhere = { sopDocument: { status: { in: ['APPROVED', 'PUBLISHED'] } } };
-  const [total, indexed] = await Promise.all([
+  const [total, indexed, skippedVersions] = await Promise.all([
     db.sopVersion.count({ where: approvedWhere }),
-    db.sopVersion.count({ where: { ...approvedWhere, sections: { some: {} } } })
+    db.sopVersion.count({ where: { ...approvedWhere, sections: { some: {} } } }),
+    db.sopVersion.findMany({
+      where: { ...approvedWhere, sections: { none: {} }, contentIndexSkipReason: { not: null } },
+      select: {
+        fileName: true, contentIndexSkipReason: true,
+        sopDocument: { select: { title: true, businessUnit: { select: { name: true } } } }
+      }
+    })
   ]);
 
-  return NextResponse.json({ total, indexed, pending: total - indexed });
+  // "pending" is only what a background job can still turn into a result;
+  // a known-un-indexable version is reported separately so the UI never
+  // shows a counter that appears stuck with no explanation.
+  return NextResponse.json({
+    total,
+    indexed,
+    skipped: skippedVersions.length,
+    pending: total - indexed - skippedVersions.length,
+    skippedDetail: skippedVersions.map((version) => ({
+      businessUnit: version.sopDocument.businessUnit.name,
+      title: version.sopDocument.title,
+      fileName: version.fileName,
+      reason: version.contentIndexSkipReason
+    }))
+  });
 }
