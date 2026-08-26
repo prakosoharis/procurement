@@ -55,6 +55,35 @@ test("the sop-content retriever is registered and only searches APPROVED/PUBLISH
   assert.match(retriever, /WHERE d\.status IN \('APPROVED', 'PUBLISHED'\)/);
 });
 
+test("a natural-language question ORs its terms instead of requiring every word on one page -- plainto_tsquery ANDs everything, so 'di policy berau coal pasal I.5.1 isinya apa?' matched nothing while 8 pages actually contained the clause", async () => {
+  const source = await read("../lib/ai/chat/retrievers/sop-content.js");
+  assert.match(source, /to_tsquery\('simple', \$\{tsQuery\}\)/);
+  // The word still appears in the comment explaining the bug; what must be
+  // gone is the CALL.
+  assert.doesNotMatch(source, /plainto_tsquery\(/);
+  assert.match(source, /return terms\.join\(' \| '\);/);
+});
+
+test("query building keeps clause references intact, drops question noise, and cannot inject to_tsquery syntax", async () => {
+  const { buildSopContentTsQuery } = await import("../lib/ai/chat/retrievers/sop-content.js");
+
+  // The clause number is the whole point of the question and must survive.
+  assert.match(buildSopContentTsQuery("di policy berau coal pasal I.5.1 isinya apa?"), /i\.5\.1/);
+  // Noise words would otherwise let a page repeating "di" outrank the page
+  // that actually holds the clause.
+  const built = buildSopContentTsQuery("di policy berau coal pasal I.5.1 isinya apa?");
+  for (const noise of ["di", "isinya", "apa"]) assert.doesNotMatch(built, new RegExp(`(^|\\| )${noise}( \\||$)`));
+  // Short tokens survive only when they carry a digit ("M1" is a document code).
+  assert.match(buildSopContentTsQuery("dokumen M1"), /m1/);
+
+  // tsquery operators typed by a user must not reach to_tsquery as syntax.
+  const injected = buildSopContentTsQuery("tender & !aman | (rahasia):*");
+  assert.doesNotMatch(injected, /[&!():*]/);
+
+  // A question made only of noise still searches rather than returning nothing.
+  assert.notEqual(buildSopContentTsQuery("apa isinya?"), "");
+});
+
 test("the sop-content retriever applies the same Business Unit scoping helper every other scoped retriever/route uses, not a bespoke filter", async () => {
   const source = await read("../lib/ai/chat/retrievers/sop-content.js");
   assert.match(source, /import \{ isBusinessUnitScoped, effectiveBusinessUnitIds \} from '\.\.\/\.\.\/\.\.\/authorization\/scope\.js';/);
