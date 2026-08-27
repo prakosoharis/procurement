@@ -20,8 +20,8 @@ export async function GET() {
     reviewer: { select: { id: true, name: true, email: true } },
     approvedBy: { select: { id: true, name: true, email: true } }
   };
-  const [businessUnits, documentTypes, documents, groups, industries, reviewers] = await timing.measure('db', () => Promise.all([
-    db.businessUnit.findMany({where:businessUnitWhere,select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true},orderBy:{name:'asc'}}),
+  const [businessUnits, documentTypes, documents, groups, industries, companySizes, reviewers] = await timing.measure('db', () => Promise.all([
+    db.businessUnit.findMany({where:businessUnitWhere,select:{id:true,name:true,groupName:true,industry:true,organizationGroupId:true,industryId:true,companySizeId:true},orderBy:{name:'asc'}}),
     db.documentType.findMany({select:{id:true,code:true,name:true,category:true,sortOrder:true},orderBy:{sortOrder:'asc'}}),
     // Group-scoped documents have no businessUnit, so filtering on the
     // relation alone would silently hide them; sopDocumentScopeWhere applies
@@ -40,10 +40,11 @@ export async function GET() {
     }),
     db.organizationGroup.findMany({select:{id:true,name:true},orderBy:{name:'asc'}}),
     db.industry.findMany({select:{id:true,name:true},orderBy:{name:'asc'}}),
+    db.companySize.findMany({select:{id:true,name:true},orderBy:[{sortOrder:'asc'},{name:'asc'}]}),
     db.user.findMany({where:{role:{in:['SUPER_USER','CORPORATE_GOVERNANCE']}},select:{id:true,name:true,email:true,role:true,jobTitle:true},orderBy:{name:'asc'}})
   ]));
   const payload = await timing.measure('serialize', () => ({
-    viewer:{id:user.id,name:user.name,role:user.role},businessUnits,documentTypes,groups,industries,reviewers,
+    viewer:{id:user.id,name:user.name,role:user.role},businessUnits,documentTypes,groups,industries,companySizes,reviewers,
     documents:documents.map((document) => documentDto(document, { includeVersionHistory: false }))
   }));
   return timing.apply(NextResponse.json(payload));
