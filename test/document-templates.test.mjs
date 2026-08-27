@@ -94,6 +94,16 @@ test("uploading or deleting a template is manager-gated, and an empty industry/s
   assert.match(detail, /if \(!canManageTemplates\(user\)\)/);
 });
 
+test("a rejected upload takes its file back out of Drive, since the file is stored before the row exists and a duplicate is an ordinary mistake rather than an edge case", async () => {
+  const route = await read("../app/api/document-templates/route.js");
+  // Cleanup must run for ANY failure of the insert, not only the duplicate
+  // case, and must happen before the error is rethrown.
+  assert.match(route, /\} catch \(error\) \{\s*\n\s*await discardStoredFile\(stored\.key\);/);
+  assert.match(route, /async function discardStoredFile\(fileKey\)/);
+  // Failing to clean up must not mask the real error the caller needs.
+  assert.match(route, /deleteGoogleDriveFile\(fileKey\.slice\('gdrive:'\.length\)\)\s*\n\s*\.catch\(/);
+});
+
 test("templates are stored outside the SOP tree so nobody browsing Drive mistakes a blank template for an issued policy", async () => {
   const folders = await read("../lib/google-drive-folders.js");
   assert.match(folders, /segments: \["Template SOP", documentTypeCode\]/);

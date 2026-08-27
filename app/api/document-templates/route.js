@@ -6,6 +6,7 @@ import { allowedDocumentTypes, writeAudit } from '../../../lib/documents';
 import { canManageTemplates, listTemplates, templateDto, templateSelect } from '../../../lib/document-templates';
 import { assertStorageReady, isGoogleDriveStorage, StorageConfigurationError, uploadObject } from '../../../lib/storage';
 import { ensureTemplateFolder } from '../../../lib/google-drive-folders';
+import { deleteGoogleDriveFile } from '../../../lib/google-drive';
 
 export const runtime = 'nodejs';
 
@@ -70,19 +71,27 @@ export async function POST(request) {
       googleDriveFileName: `${documentType.code} — ${title} — ${file.name}`
     });
 
-    const template = await db.documentTemplate.create({
-      data: {
-        documentTypeId, industryId, companySizeId, title, description,
-        fileKey: stored.key, fileName: file.name, fileSize: file.size, contentType: file.type,
-        uploadedById: user.id
-      },
-      select: templateSelect
-    }).catch((error) => {
+    // The file reaches Drive before the row exists, so any failure after this
+    // point must take the file back out. Without this a rejected duplicate --
+    // an ordinary user mistake, not an edge case -- left an orphaned file in
+    // Drive on every attempt.
+    let template;
+    try {
+      template = await db.documentTemplate.create({
+        data: {
+          documentTypeId, industryId, companySizeId, title, description,
+          fileKey: stored.key, fileName: file.name, fileSize: file.size, contentType: file.type,
+          uploadedById: user.id
+        },
+        select: templateSelect
+      });
+    } catch (error) {
+      await discardStoredFile(stored.key);
       if (error?.code === 'P2002') {
         throw new TemplateConflict('Sudah ada template untuk kombinasi jenis dokumen, industry, dan ukuran tersebut. Hapus atau ganti template lama terlebih dahulu.');
       }
       throw error;
-    });
+    }
 
     await writeAudit(user.id, 'DocumentTemplate', template.id, 'CREATE_TEMPLATE', JSON.stringify({ documentTypeId, industryId, companySizeId, title }));
     return NextResponse.json(templateDto(template), { status: 201 });
@@ -95,3 +104,11 @@ export async function POST(request) {
 }
 
 class TemplateConflict extends Error {}
+
+// Best-effort: a file left behind is untidy, but failing the cleanup must not
+// replace the real error the caller needs to see.
+async function discardStoredFile(fileKey) {
+  if (!fileKey?.startsWith('gdrive:')) return;
+  await deleteGoogleDriveFile(fileKey.slice('gdrive:'.length))
+    .catch((error) => console.error('Could not remove orphaned template file from Google Drive.', error));
+}
